@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import NewsList from "@/components/NewsList";
+import '@/app/globals.css';
 
 export default function Home() {
     return (

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 export async function GET() {
     const res = await fetch(
-        "https://cryptopanic.com/api/developer/v2/posts/?auth_token=ad3d65ed53699656e4f6ff88e5210a357cb25dff&currencies=BTC,ETH",
+        "https://cryptopanic.com/api/developer/v2/posts/?auth_token=ad3d65ed53699656e4f6ff88e5210a357cb25dff&regions=ko",
         { cache: "no-store" } // 캐싱 방지
     );
 
