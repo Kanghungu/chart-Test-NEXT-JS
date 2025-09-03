@@ -1,83 +1,24 @@
 "use client";
-import { useEffect, useState } from "react";
-import TradingViewChart from "@/components/TradingViewChart";
+import Link from "next/link";
+import NewsList from "@/components/NewsList";
 
 export default function Home() {
-    const [trades, setTrades] = useState([]);
-    const symbols = ["BINANCE:BTCUSDT", "BINANCE:ETHUSDT", "NASDAQ:AAPL"];
-
-    useEffect(() => {
-        fetch("/api/trades")
-            .then((res) => res.json())
-            .then((data) => setTrades(data));
-    }, []);
-
     return (
-        <div style={{ padding: "2rem" }}>
-            <h1>📈 나만의 거래소 블로그</h1>
+        <div className="p-8 space-y-8">
+            <h1 className="text-3xl font-bold text-center">내 프로젝트 메인 화면</h1>
+            <p className="text-center text-gray-700">
+                여기는 차트가 아닌 첫 페이지입니다. 최신 코인 및 주식 뉴스를 확인할 수 있어요.
+            </p>
 
-            {/* 여러 차트 */}
-            <h2>실시간 차트</h2>
-            <div
-                style={{
-                    display: "grid",
-                    gridTemplateColumns: "1fr 1fr",
-                    gap: "20px",
-                    marginBottom: "2rem",
-                }}
-            >
-                {symbols.map((symbol) => (
-                    <div
-                        key={symbol}
-                        style={{
-                            border: "1px solid #ddd",
-                            borderRadius: "10px",
-                            padding: "1rem",
-                            background: "#000000",
-                        }}
-                    >
-                        <h3>{symbol}</h3>
-                        <TradingViewChart symbol={symbol} />
-                    </div>
-                ))}
+            <NewsList />
+
+            <div className="text-center">
+                <Link href="/chart">
+                    <button className="px-6 py-3 bg-blue-500 text-white rounded-xl shadow hover:bg-blue-600">
+                        차트 화면으로 이동
+                    </button>
+                </Link>
             </div>
-
-            {/* 거래 내역 */}
-            <h2>최근 거래 내역</h2>
-            <table
-                style={{
-                    width: "100%",
-                    borderCollapse: "collapse",
-                    marginTop: "1rem",
-                }}
-            >
-                <thead>
-                <tr style={{ background: "#f0f0f0" }}>
-                    <th style={{ border: "1px solid #ddd", padding: "8px" }}>Symbol</th>
-                    <th style={{ border: "1px solid #ddd", padding: "8px" }}>Price</th>
-                    <th style={{ border: "1px solid #ddd", padding: "8px" }}>Volume</th>
-                    <th style={{ border: "1px solid #ddd", padding: "8px" }}>Time</th>
-                </tr>
-                </thead>
-                <tbody>
-                {trades.map((t) => (
-                    <tr key={t.id}>
-                        <td style={{ border: "1px solid #ddd", padding: "8px" }}>
-                            {t.symbol}
-                        </td>
-                        <td style={{ border: "1px solid #ddd", padding: "8px" }}>
-                            {t.price}
-                        </td>
-                        <td style={{ border: "1px solid #ddd", padding: "8px" }}>
-                            {t.volume}
-                        </td>
-                        <td style={{ border: "1px solid #ddd", padding: "8px" }}>
-                            {new Date(t.createdAt).toLocaleString()}
-                        </td>
-                    </tr>
-                ))}
-                </tbody>
-            </table>
         </div>
     );
 }

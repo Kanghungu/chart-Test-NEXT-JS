@@ -16,6 +16,8 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
+    "@types/node": "24.3.0",
+    "@types/react": "19.1.12",
     "eslint": "^9",
     "eslint-config-next": "15.5.2",
     "prisma": "^6.15.0"

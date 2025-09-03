@@ -38,5 +38,5 @@ export default function TradingViewChart({ symbol }: { symbol: string }) {
         return () => clearInterval(interval);
     }, [symbol, chartId]);
 
-    return <div id={chartId} />;
+    return <div id={chartId}/>;
 }
