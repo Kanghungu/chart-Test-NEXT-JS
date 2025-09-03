@@ -3,6 +3,13 @@ import React from "react";
 import { useEffect, useState } from "react";
 
 interface NewsItem {
+    publisher: any;
+    summary_ko: any;
+    title_ko: any;
+    content_url: any;
+    description: any;
+    slug: string | undefined;
+    id: any;
     title: string;
     url: string;
     source_name?: string;
@@ -54,8 +61,8 @@ export default function NewsList() {
                                 {n.description ? n.description.slice(0, 80) + "..." : ""}
                             </div>
                             <div className="text-gray-400 text-xs mt-1">
-                                {n.published_at
-                                    ? new Date(n.published_at).toLocaleString()
+                                {n.publishedAt
+                                    ? new Date(n.publishedAt).toLocaleString()
                                     : "날짜 없음"}
                             </div>
                         </li>
@@ -80,7 +87,7 @@ export default function NewsList() {
                                 {n.title_ko}
                             </a>
                             <div className="text-gray-500 text-sm mt-1">{n.summary_ko.slice(0, 100)}...</div>
-                            <div className="text-gray-400 text-xs mt-1">{new Date(n.published_at).toLocaleString()}</div>
+                            <div className="text-gray-400 text-xs mt-1">{new Date(n.publishedAt).toLocaleString()}</div>
                             <div className="text-gray-400 text-xs mt-1">출처: {n.publisher}</div>
                         </li>
                     ))}
