@@ -13,7 +13,7 @@ interface NewsItem {
     title: string;
     url: string;
     source_name?: string;
-    publishedAt: string;
+    published_at: string;
 }
 
 export default function NewsList() {
@@ -29,19 +29,16 @@ export default function NewsList() {
         // 주식 뉴스
         fetch("/api/news/stock")
             .then((res) => res.json())
-            .then((data) => {
-                console.log("Stock 뉴스 수:", data.results.length, "");
-                setStockNews(data.results || []);
-            });
+            .then((json) => setStockNews(json.data || []));
     }, []);
 
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Crypto News 섹션 */}
-            <section className="p-6 bg-gray-50 rounded-lg shadow-md">
-                <h2 className="text-3xl font-bold mb-4 border-b-2 border-gray-300 pb-2">
+            <section className="p-6 bg-gray-50 rounded-lg shadow-md max-h-[600px] overflow-y-auto">
+                {/*<h2 className="text-3xl font-bold mb-4 border-b-2 border-gray-300 pb-2 text-black">
                     Crypto News
-                </h2>
+                </h2>*/}
                 <ul className="divide-y divide-gray-200">
                     {cryptoNews.map((n) => (
                         <li
@@ -61,8 +58,8 @@ export default function NewsList() {
                                 {n.description ? n.description.slice(0, 80) + "..." : ""}
                             </div>
                             <div className="text-gray-400 text-xs mt-1">
-                                {n.publishedAt
-                                    ? new Date(n.publishedAt).toLocaleString()
+                                {n.published_at
+                                    ? new Date(n.published_at).toLocaleString()
                                     : "날짜 없음"}
                             </div>
                         </li>
@@ -71,10 +68,10 @@ export default function NewsList() {
             </section>
 
             {/* Stock News 섹션 */}
-            <section className="p-6 bg-gray-50 rounded-lg shadow-md">
-                <h2 className="text-3xl font-bold mb-4 border-b-2 border-gray-300 pb-2">
+            <section className="p-6 bg-gray-50 rounded-lg shadow-md max-h-[600px] overflow-y-auto">
+                {/*<h2 className="text-3xl font-bold mb-4 border-b-2 border-gray-300 pb-2 text-black">
                     Stock News
-                </h2>
+                </h2>*/}
                 <ul className="list-disc pl-5">
                     {stockNews.map((n) => (
                         <li key={n.id} className="mb-4">
@@ -86,9 +83,12 @@ export default function NewsList() {
                             >
                                 {n.title_ko}
                             </a>
-                            <div className="text-gray-500 text-sm mt-1">{n.summary_ko.slice(0, 100)}...</div>
-                            <div className="text-gray-400 text-xs mt-1">{new Date(n.publishedAt).toLocaleString()}</div>
-                            <div className="text-gray-400 text-xs mt-1">출처: {n.publisher}</div>
+                            <div className="text-gray-500 text-sm mt-1">
+                                {n.summary_ko.slice(0, 100)}...
+                            </div>
+                            <div className="text-gray-400 text-xs mt-1">
+                                출처: {n.publisher}
+                            </div>
                         </li>
                     ))}
                 </ul>

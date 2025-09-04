@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import NewsList from "@/components/NewsList";
+import NewsTitle from "@/components/NewsTitle";
 import '@/app/globals.css';
 
 export default function Home() {
@@ -10,10 +11,11 @@ export default function Home() {
             <p className="text-center text-gray-700">
                 여기는 차트가 아닌 첫 페이지입니다. 최신 코인 및 주식 뉴스를 확인할 수 있어요.
             </p>
-
+            <NewsTitle/>
             <NewsList />
 
             <div className="text-center">
+
                 <Link href="/chart">
                     <button className="px-6 py-3 bg-blue-500 text-white rounded-xl shadow hover:bg-blue-600">
                         차트 화면으로 이동
