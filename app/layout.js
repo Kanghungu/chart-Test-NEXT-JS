@@ -21,11 +21,11 @@ export default function RootLayout({ children }) {
     <html lang="en">
       <body>
         <header style={{ padding: "1rem", background: "#000000" }}>
-          <h1>나만의 거래소 블로그</h1>
+          <h1 className="text-3xl font-bold text-center">내 프로젝트 메인 화면</h1>
         </header>
         <main>{children}</main>
         <footer style={{ padding: "1rem", background: "#000000" }}>
-          © 2025 My Blog
+          © 2025.09.01 Hungu Blog
         </footer>
       </body>
     </html>
