@@ -1,26 +1,37 @@
 "use client";
+
 import Link from "next/link";
 import NewsList from "@/components/NewsList";
 import NewsTitle from "@/components/NewsTitle";
-import '@/app/globals.css';
+import "@/app/globals.css";
+import MarketOverview from "@/components/MarketOverview";
 
 export default function Home() {
     return (
-        <div className="p-8 space-y-8">
-            <p className="text-center text-gray-700">
-                여기는 차트가 아닌 첫 페이지입니다. 최신 코인 및 주식 뉴스를 확인할 수 있어요.
-            </p>
-            <NewsTitle/>
-            <NewsList />
+        <main className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-950 to-gray-800 py-12 px-2 md:px-0">
+            <div className="max-w-3xl mx-auto space-y-10">
+                {/* 시세 요약 */}
+                <section className="rounded-2xl shadow-xl bg-gray-800/80 p-6 border border-gray-700">
+                    <MarketOverview />
+                </section>
 
-            <div className="text-center">
+                {/* 뉴스 섹션 */}
+                <section className="rounded-2xl shadow-xl bg-gray-800/80 p-6 border border-gray-700">
+                    <NewsTitle />
+                    <div className="mt-4">
+                        <NewsList />
+                    </div>
+                </section>
 
-                <Link href="/chart">
-                    <button className="px-6 py-3 bg-blue-500 text-white rounded-xl shadow hover:bg-blue-600">
-                        차트 화면으로 이동
-                    </button>
-                </Link>
+                {/* 차트 이동 버튼 */}
+                <div className="flex justify-center">
+                    <Link href="/chart">
+                        <button className="px-8 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-semibold rounded-full shadow-lg hover:scale-105 hover:from-blue-600 hover:to-indigo-700 transition-all duration-200">
+                            📈 차트 화면으로 이동
+                        </button>
+                    </Link>
+                </div>
             </div>
-        </div>
+        </main>
     );
 }

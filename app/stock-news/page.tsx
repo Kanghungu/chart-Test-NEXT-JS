@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import Link from "next/link";
 
 export default function StockNewsPage() {
     const [stockNews, setStockNews] = useState([]);
@@ -84,6 +85,13 @@ export default function StockNewsPage() {
                     </li>
                 ))}
             </ul>
+            <div className="text-center">
+                <Link href="/">
+                    <button className="px-6 py-3 bg-blue-500 text-white rounded-xl shadow hover:bg-blue-600 transition">
+                        첫 화면으로
+                    </button>
+                </Link>
+            </div>
         </section>
     );
 }

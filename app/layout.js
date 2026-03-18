@@ -1,31 +1,20 @@
-import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
 export const metadata = {
-  title: "My Next App",
+  title: "Project Chart",
   description: "나만의 거래소 블로그",
 };
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
 
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body>
         <header style={{ padding: "1rem", background: "#000000" }}>
-          <h1 className="text-3xl font-bold text-center">내 프로젝트 메인 화면</h1>
+          <h1 className="text-3xl font-bold text-center">GUGU CHART</h1>
         </header>
         <main>{children}</main>
         <footer style={{ padding: "1rem", background: "#000000" }}>
-          © 2025.09.01 Hungu Blog
+          © 2025.09.01 ~ 2025.10.15 Hungu Blog
         </footer>
       </body>
     </html>
