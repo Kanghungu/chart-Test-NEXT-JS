@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 const DEFAULT_ASSETS = [
   { symbol: "BTC", price: null, changePercent: null, currency: "USD" },
@@ -25,7 +25,6 @@ function formatPercent(value) {
 }
 
 export default function MarketOverview() {
-  const containerRef = useRef(null);
   const [snapshot, setSnapshot] = useState({
     assets: DEFAULT_ASSETS,
     fearGreed: null,
@@ -33,51 +32,8 @@ export default function MarketOverview() {
     warnings: [],
     updatedAt: null
   });
+  const [tickerItems, setTickerItems] = useState([]);
   const [fetchError, setFetchError] = useState("");
-
-  useEffect(() => {
-    if (!containerRef.current) return;
-
-    containerRef.current.innerHTML = "";
-
-    const widgetContainer = document.createElement("div");
-    widgetContainer.className = "tradingview-widget-container";
-
-    const widget = document.createElement("div");
-    widget.className = "tradingview-widget-container__widget";
-
-    const script = document.createElement("script");
-    script.type = "text/javascript";
-    script.src = "https://s3.tradingview.com/external-embedding/embed-widget-ticker-tape.js";
-    script.async = true;
-    script.text = JSON.stringify({
-      colorTheme: "dark",
-      locale: "en",
-      isTransparent: true,
-      showSymbolLogo: true,
-      width: "100%",
-      symbols: [
-        { proName: "BINANCE:BTCUSDT", title: "Bitcoin" },
-        { proName: "BINANCE:ETHUSDT", title: "Ethereum" },
-        { proName: "BINANCE:SOLUSDT", title: "Solana" },
-        { proName: "BINANCE:DOGEUSDT", title: "Dogecoin" },
-        { proName: "NASDAQ:TSLA", title: "Tesla" },
-        { proName: "NASDAQ:AAPL", title: "Apple" },
-        { proName: "NASDAQ:NVDA", title: "NVIDIA" }
-      ],
-      displayMode: "adaptive"
-    });
-
-    widgetContainer.appendChild(widget);
-    widgetContainer.appendChild(script);
-    containerRef.current.appendChild(widgetContainer);
-
-    return () => {
-      if (containerRef.current) {
-        containerRef.current.innerHTML = "";
-      }
-    };
-  }, []);
 
   useEffect(() => {
     let mounted = true;
@@ -101,6 +57,17 @@ export default function MarketOverview() {
             warnings: json.warnings || [],
             updatedAt: json.updatedAt || prev.updatedAt
           }));
+
+          if ((json.assets || []).length) {
+            setTickerItems(
+              json.assets.map((item) => ({
+                symbol: item.symbol,
+                name: item.symbol,
+                price: item.price,
+                changePercent: item.changePercent
+              }))
+            );
+          }
         }
       } catch (_error) {
         if (mounted) {
@@ -111,6 +78,44 @@ export default function MarketOverview() {
 
     loadSnapshot();
     const timer = setInterval(loadSnapshot, 60000);
+
+    return () => {
+      mounted = false;
+      clearInterval(timer);
+    };
+  }, []);
+
+  useEffect(() => {
+    let mounted = true;
+
+    const loadWatchlist = async () => {
+      try {
+        const res = await fetch("/api/market/watchlist", { cache: "no-store" });
+        const json = await res.json();
+        const items = Array.isArray(json?.items) ? json.items : [];
+
+        if (!mounted || !items.length) return;
+
+        setTickerItems((prev) => {
+          const map = new Map();
+          [...prev, ...items].forEach((item) => {
+            if (!item?.symbol) return;
+            map.set(item.symbol, {
+              symbol: item.symbol,
+              name: item.name || item.symbol,
+              price: item.price,
+              changePercent: item.changePercent
+            });
+          });
+          return Array.from(map.values());
+        });
+      } catch {
+        // keep latest ticker items
+      }
+    };
+
+    loadWatchlist();
+    const timer = setInterval(loadWatchlist, 60000);
 
     return () => {
       mounted = false;
@@ -146,6 +151,11 @@ export default function MarketOverview() {
 
     return list.slice(0, 4);
   }, [snapshot]);
+
+  const tape = useMemo(() => {
+    if (!tickerItems.length) return [];
+    return [...tickerItems, ...tickerItems];
+  }, [tickerItems]);
 
   return (
     <section className="relative overflow-hidden rounded-2xl border border-blue-500/20 bg-gradient-to-br from-slate-900 via-slate-900 to-slate-800 p-5 shadow-2xl">
@@ -204,22 +214,38 @@ export default function MarketOverview() {
           </ul>
         </div>
 
-        <div className="relative overflow-hidden rounded-xl border border-sky-400/25 bg-gradient-to-r from-sky-500/10 via-cyan-500/5 to-indigo-500/10 p-2 shadow-[0_0_25px_rgba(56,189,248,0.12)]">
+        <div className="relative overflow-hidden rounded-xl border border-sky-400/25 bg-gradient-to-r from-sky-500/10 via-cyan-500/5 to-indigo-500/10 p-2 shadow-[0_0_25px_rgba(56,189,248,0.14)]">
           <div className="mb-2 flex items-center justify-between px-2">
             <div className="flex items-center gap-2">
               <span className="relative inline-flex h-2.5 w-2.5">
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
                 <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-400" />
               </span>
-              <p className="text-xs font-semibold tracking-wide text-sky-200">실시간 변동 티커</p>
+              <p className="text-xs font-semibold tracking-wide text-sky-200">실시간 가격 변동</p>
             </div>
             <span className="rounded-full border border-sky-300/30 bg-sky-500/10 px-2 py-0.5 text-[10px] text-sky-200">
               LIVE
             </span>
           </div>
 
-          <div className="rounded-lg border border-slate-700/70 bg-black/35 p-1.5">
-            <div ref={containerRef} className="w-full min-h-[72px]" />
+          <div className="rounded-lg border border-slate-700/70 bg-slate-950/70 p-2">
+            <div className="tape-wrap">
+              <div className="tape-track">
+                {tape.map((item, idx) => {
+                  const hasChange = typeof item.changePercent === "number";
+                  const up = hasChange && item.changePercent >= 0;
+                  return (
+                    <article key={`${item.symbol}-${idx}`} className="tape-card">
+                      <p className="tape-name">{item.name || item.symbol}</p>
+                      <p className="tape-price">{formatMoney(item.price, "USD")}</p>
+                      <p className={`tape-change ${hasChange ? (up ? "up" : "down") : ""}`}>
+                        {formatPercent(item.changePercent)}
+                      </p>
+                    </article>
+                  );
+                })}
+              </div>
+            </div>
           </div>
 
           <div className="pointer-events-none absolute inset-y-0 left-0 w-8 bg-gradient-to-r from-slate-900/90 to-transparent" />
@@ -230,6 +256,59 @@ export default function MarketOverview() {
           업데이트: {snapshot?.updatedAt ? new Date(snapshot.updatedAt).toLocaleTimeString() : "-"}
         </p>
       </div>
+
+      <style jsx>{`
+        .tape-wrap {
+          overflow: hidden;
+          width: 100%;
+        }
+        .tape-track {
+          display: flex;
+          width: max-content;
+          gap: 10px;
+          animation: tickerMove 28s linear infinite;
+        }
+        .tape-card {
+          min-width: 140px;
+          border: 1px solid rgba(51, 65, 85, 0.8);
+          background: linear-gradient(145deg, rgba(15, 23, 42, 0.9), rgba(2, 6, 23, 0.9));
+          border-radius: 10px;
+          padding: 8px 10px;
+          box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.08);
+        }
+        .tape-name {
+          color: #94a3b8;
+          font-size: 11px;
+          margin: 0;
+        }
+        .tape-price {
+          color: #f8fafc;
+          font-size: 15px;
+          font-weight: 700;
+          margin: 2px 0;
+          line-height: 1.2;
+        }
+        .tape-change {
+          color: #94a3b8;
+          font-size: 12px;
+          font-weight: 600;
+          margin: 0;
+        }
+        .tape-change.up {
+          color: #34d399;
+        }
+        .tape-change.down {
+          color: #fb7185;
+        }
+        @keyframes tickerMove {
+          from {
+            transform: translateX(0);
+          }
+          to {
+            transform: translateX(-50%);
+          }
+        }
+      `}</style>
     </section>
   );
 }

@@ -74,6 +74,58 @@ async function fetchIndexesStooqSnapshot() {
   return [toRow("S&P 500", spx), toRow("NASDAQ", ixic)];
 }
 
+async function fetchIndexesYahooSnapshot() {
+  type YahooQuoteRow = {
+    symbol?: string;
+    regularMarketPrice?: number;
+    regularMarketChangePercent?: number;
+  };
+
+  const res = await fetch(
+    "https://query1.finance.yahoo.com/v7/finance/quote?symbols=%5EGSPC,%5EIXIC",
+    { cache: "no-store" }
+  );
+
+  if (!res.ok) {
+    throw new Error(`Yahoo index request failed: ${res.status}`);
+  }
+
+  const json = await res.json();
+  const rows = json?.quoteResponse?.result as YahooQuoteRow[] | undefined;
+  if (!Array.isArray(rows)) {
+    throw new Error("Yahoo index payload malformed");
+  }
+
+  const spx = rows.find((r) => r?.symbol === "^GSPC");
+  const ixic = rows.find((r) => r?.symbol === "^IXIC");
+
+  const toRow = (label: string, row?: YahooQuoteRow) => {
+    const price = typeof row?.regularMarketPrice === "number" ? row.regularMarketPrice : null;
+    const changePercent =
+      typeof row?.regularMarketChangePercent === "number"
+        ? row.regularMarketChangePercent
+        : null;
+
+    return {
+      symbol: label,
+      price,
+      changePercent,
+      volume: null,
+      currency: "USD"
+    };
+  };
+
+  return [toRow("S&P 500", spx), toRow("NASDAQ", ixic)];
+}
+
+async function fetchIndexesSnapshot() {
+  try {
+    return await fetchIndexesYahooSnapshot();
+  } catch {
+    return await fetchIndexesStooqSnapshot();
+  }
+}
+
 async function fetchFearGreedIndex() {
   const res = await fetch("https://api.alternative.me/fng/?limit=1", { cache: "no-store" });
   if (!res.ok) {
@@ -106,7 +158,7 @@ async function fetchCryptoGlobalVolume() {
 export async function GET() {
   const settled = await Promise.allSettled([
     fetchCryptoBinanceSnapshot(),
-    fetchIndexesStooqSnapshot(),
+    fetchIndexesSnapshot(),
     fetchFearGreedIndex(),
     fetchCryptoGlobalVolume()
   ]);
