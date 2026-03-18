@@ -62,9 +62,8 @@ export default function SideWatchlist() {
 
   return (
     <section className="rounded-2xl border border-slate-700 bg-slate-900/70 p-3 shadow-xl">
-      <h3 className="text-sm font-semibold text-slate-200 mb-2">Watchlist</h3>
+      <h3 className="text-sm font-semibold text-slate-200 mb-2">관심 자산</h3>
       <div ref={containerRef} className="w-full min-h-[420px]" />
     </section>
   );
 }
-

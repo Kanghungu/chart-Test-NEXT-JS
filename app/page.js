@@ -26,7 +26,7 @@ export default function Home() {
           <div className="flex justify-center">
             <Link href="/chart">
               <button className="px-8 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-semibold rounded-full shadow-lg hover:scale-105 hover:from-blue-600 hover:to-indigo-700 transition-all duration-200">
-                Open Chart Dashboard
+                차트 대시보드 열기
               </button>
             </Link>
           </div>

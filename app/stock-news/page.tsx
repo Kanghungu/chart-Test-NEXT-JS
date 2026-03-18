@@ -20,7 +20,7 @@ export default function StockNewsPage() {
 
     return (
         <section className="p-6 max-w-4xl bg-gray-300 mx-auto">
-            <h1 className="text-4xl font-bold mb-6 text-black">전체 Stock News</h1>
+            <h1 className="text-4xl font-bold mb-6 text-black">전체 주식 뉴스</h1>
             <ul className="divide-y divide-gray-200">
                 {stockNews.map((n: any) => (
                     <li key={n.id} className="py-4">

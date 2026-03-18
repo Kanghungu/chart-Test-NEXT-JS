@@ -88,7 +88,7 @@ export default function MarketOverview() {
         const json = await res.json();
         if (mounted) {
           if (json.error) {
-            setFetchError("Some sources are temporarily unavailable.");
+            setFetchError("일부 데이터 소스가 일시적으로 불안정합니다.");
           } else {
             setFetchError("");
           }
@@ -103,7 +103,7 @@ export default function MarketOverview() {
         }
       } catch (_error) {
         if (mounted) {
-          setFetchError("Network issue while loading market snapshot.");
+          setFetchError("시장 요약 데이터를 불러오는 중 네트워크 오류가 발생했습니다.");
         }
       }
     };
@@ -125,22 +125,22 @@ export default function MarketOverview() {
     snapshot.assets.forEach((asset) => {
       if (typeof asset.changePercent === "number") {
         if (asset.changePercent >= 3) {
-          list.push(`${asset.symbol} bullish momentum: ${formatPercent(asset.changePercent)}`);
+          list.push(`${asset.symbol} 상승 모멘텀: ${formatPercent(asset.changePercent)}`);
         } else if (asset.changePercent <= -3) {
-          list.push(`${asset.symbol} sharp pullback: ${formatPercent(asset.changePercent)}`);
+          list.push(`${asset.symbol} 급락 신호: ${formatPercent(asset.changePercent)}`);
         }
       }
     });
 
     if (snapshot.fearGreed?.value >= 75) {
-      list.push(`Fear & Greed is high (${snapshot.fearGreed.value}) - market may be overheated.`);
+      list.push(`공포·탐욕 지수 과열 (${snapshot.fearGreed.value}) - 단기 과열 가능성`);
     }
     if (snapshot.fearGreed?.value <= 25) {
-      list.push(`Fear & Greed is low (${snapshot.fearGreed.value}) - panic zone detected.`);
+      list.push(`공포·탐욕 지수 공포 구간 (${snapshot.fearGreed.value}) - 변동성 주의`);
     }
 
     if (!list.length) {
-      list.push("No strong market signal yet. Monitoring live changes.");
+      list.push("강한 시그널은 아직 없습니다. 실시간 변동을 모니터링 중입니다.");
     }
 
     return list.slice(0, 4);
@@ -153,8 +153,8 @@ export default function MarketOverview() {
 
       <div className="relative z-10 space-y-4">
         <div className="flex flex-col gap-1">
-          <h2 className="text-xl md:text-2xl font-bold text-white">Live Market Pulse</h2>
-          <p className="text-sm text-slate-300">Today summary, filters-ready signals, and real-time tape.</p>
+          <h2 className="text-xl md:text-2xl font-bold text-white">실시간 시장 요약</h2>
+          <p className="text-sm text-slate-300">오늘 핵심 지표, 시그널, 실시간 티커를 한눈에 확인하세요.</p>
         </div>
 
         {fetchError ? (
@@ -181,19 +181,19 @@ export default function MarketOverview() {
 
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
           <div className="rounded-xl border border-slate-700 bg-slate-900/70 p-3">
-            <p className="text-xs text-slate-400">Fear &amp; Greed</p>
+            <p className="text-xs text-slate-400">공포·탐욕 지수</p>
             <p className="text-lg font-bold text-white mt-1">
               {snapshot?.fearGreed ? `${snapshot.fearGreed.value} (${snapshot.fearGreed.classification})` : "-"}
             </p>
           </div>
           <div className="rounded-xl border border-slate-700 bg-slate-900/70 p-3">
-            <p className="text-xs text-slate-400">24h Crypto Volume</p>
+            <p className="text-xs text-slate-400">24시간 코인 거래대금</p>
             <p className="text-lg font-bold text-white mt-1">{formatMoney(snapshot?.cryptoVolumeUsd || null, "USD")}</p>
           </div>
         </div>
 
         <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3">
-          <p className="text-xs font-semibold text-amber-300 mb-2">Signal Feed</p>
+          <p className="text-xs font-semibold text-amber-300 mb-2">알림 시그널</p>
           <ul className="space-y-1">
             {signals.map((signal, idx) => (
               <li key={`${signal}-${idx}`} className="text-sm text-amber-100">
@@ -208,7 +208,7 @@ export default function MarketOverview() {
         </div>
 
         <p className="text-[11px] text-slate-500">
-          Updated: {snapshot?.updatedAt ? new Date(snapshot.updatedAt).toLocaleTimeString() : "-"}
+          업데이트: {snapshot?.updatedAt ? new Date(snapshot.updatedAt).toLocaleTimeString() : "-"}
         </p>
       </div>
     </section>

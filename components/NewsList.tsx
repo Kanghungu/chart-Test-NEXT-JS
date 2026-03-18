@@ -162,10 +162,10 @@ export default function NewsList() {
     list.sort((a, b) => b.score - a.score);
 
     if (!list.length) {
-      return ["No high-impact signal right now. Filtering live headlines..."];
+      return ["현재 강한 뉴스 시그널은 없습니다. 실시간 헤드라인을 추적 중입니다."];
     }
 
-    return list.slice(0, 3).map((item) => `${item.type.toUpperCase()} signal: ${item.title}`);
+    return list.slice(0, 3).map((item) => `${item.type === "crypto" ? "코인" : "주식"} 시그널: ${item.title}`);
   }, [preparedCryptoNews, preparedStockNews]);
 
   const showCrypto = filterType === "all" || filterType === "crypto";
@@ -183,7 +183,7 @@ export default function NewsList() {
                 filterType === type ? "bg-blue-500 text-white" : "bg-slate-800 text-slate-300 hover:bg-slate-700"
               }`}
             >
-              {type === "all" ? "All" : type === "crypto" ? "Crypto" : "Stock"}
+              {type === "all" ? "전체" : type === "crypto" ? "코인" : "주식"}
             </button>
           ))}
         </div>
@@ -192,7 +192,7 @@ export default function NewsList() {
           <input
             value={keyword}
             onChange={(e) => setKeyword(e.target.value)}
-            placeholder="Search keyword (ETF, Fed, Tesla...)"
+            placeholder="키워드 검색 (ETF, 금리, 테슬라...)"
             className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-blue-500"
           />
 
@@ -201,18 +201,18 @@ export default function NewsList() {
             onChange={(e) => setSortType(e.target.value as SortType)}
             className="rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-blue-500"
           >
-            <option value="latest">Latest</option>
-            <option value="impact">High Impact</option>
+            <option value="latest">최신순</option>
+            <option value="impact">영향도순</option>
           </select>
 
           <div className="rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-xs text-slate-300 flex items-center">
-            Crypto {preparedCryptoNews.length} | Stock {preparedStockNews.length}
+            코인 {preparedCryptoNews.length} | 주식 {preparedStockNews.length}
           </div>
         </div>
       </div>
 
       <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3">
-        <p className="text-xs font-semibold text-amber-300 mb-2">News Signals</p>
+        <p className="text-xs font-semibold text-amber-300 mb-2">뉴스 시그널</p>
         <ul className="space-y-1">
           {newsSignals.map((signal, idx) => (
             <li key={`${signal}-${idx}`} className="text-sm text-amber-100">
@@ -226,7 +226,7 @@ export default function NewsList() {
         {showCrypto && (
           <section className={`w-full min-w-0 overflow-hidden bg-gray-900/80 rounded-2xl shadow-lg p-4 border border-gray-700 flex flex-col max-h-[620px] ${showCrypto && !showStock ? "md:col-span-2" : ""}`}>
             <h3 className="text-xl font-bold text-blue-400 mb-3 flex items-center gap-2">
-              <span>CRYPTO</span> News
+              <span>코인</span> 뉴스
             </h3>
             <ul className="space-y-4 overflow-y-auto pr-1 max-h-[540px]">
               {preparedCryptoNews.map((n, idx) => (
@@ -241,7 +241,7 @@ export default function NewsList() {
                     {getTitle(n)}
                   </a>
                   <div className="grid grid-cols-2 gap-2 text-xs text-gray-400 mt-2">
-                    <span className="truncate">{n.publisher || "Unknown"}</span>
+                    <span className="truncate">{n.publisher || "출처 미상"}</span>
                     <span className="truncate text-right">{getPublishedAt(n) || "-"}</span>
                   </div>
                 </li>
@@ -253,7 +253,7 @@ export default function NewsList() {
         {showStock && (
           <section className={`w-full min-w-0 overflow-hidden bg-gray-900/80 rounded-2xl shadow-lg p-4 border border-gray-700 flex flex-col max-h-[620px] ${showStock && !showCrypto ? "md:col-span-2" : ""}`}>
             <h3 className="text-xl font-bold text-green-400 mb-3 flex items-center gap-2">
-              <span>STOCK</span> News
+              <span>주식</span> 뉴스
             </h3>
             <ul className="space-y-4 overflow-y-auto pr-1 max-h-[540px]">
               {preparedStockNews.map((n, idx) => (
@@ -268,7 +268,7 @@ export default function NewsList() {
                     {getTitle(n)}
                   </a>
                   <div className="grid grid-cols-2 gap-2 text-xs text-gray-400 mt-2">
-                    <span className="truncate">{n.publisher || "Unknown"}</span>
+                    <span className="truncate">{n.publisher || "출처 미상"}</span>
                     <span className="truncate text-right">{getPublishedAt(n) || "-"}</span>
                   </div>
                 </li>
