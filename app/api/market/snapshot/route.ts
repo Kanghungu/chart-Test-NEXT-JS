@@ -61,25 +61,44 @@ async function fetchCryptoGlobalVolume() {
 }
 
 export async function GET() {
-  try {
-    const [assets, fearGreed, cryptoVolumeUsd] = await Promise.all([
-      fetchYahooSnapshot(),
-      fetchFearGreedIndex(),
-      fetchCryptoGlobalVolume()
-    ]);
+  const settled = await Promise.allSettled([
+    fetchYahooSnapshot(),
+    fetchFearGreedIndex(),
+    fetchCryptoGlobalVolume()
+  ]);
 
-    return NextResponse.json({
-      assets,
-      fearGreed,
-      cryptoVolumeUsd,
-      updatedAt: new Date().toISOString()
-    });
-  } catch (error) {
-    return NextResponse.json(
-      {
-        error: error instanceof Error ? error.message : "Failed to load market snapshot"
-      },
-      { status: 500 }
-    );
+  const warnings: string[] = [];
+
+  const assets =
+    settled[0].status === "fulfilled"
+      ? settled[0].value
+      : TRACKED.map((item) => ({
+          symbol: item.label,
+          price: null,
+          changePercent: null,
+          volume: null,
+          currency: "USD"
+        }));
+
+  if (settled[0].status === "rejected") {
+    warnings.push("price_source_unavailable");
   }
+
+  const fearGreed = settled[1].status === "fulfilled" ? settled[1].value : null;
+  if (settled[1].status === "rejected") {
+    warnings.push("fear_greed_unavailable");
+  }
+
+  const cryptoVolumeUsd = settled[2].status === "fulfilled" ? settled[2].value : null;
+  if (settled[2].status === "rejected") {
+    warnings.push("volume_source_unavailable");
+  }
+
+  return NextResponse.json({
+    assets,
+    fearGreed,
+    cryptoVolumeUsd,
+    warnings,
+    updatedAt: new Date().toISOString()
+  });
 }

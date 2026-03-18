@@ -2,6 +2,13 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 
+const DEFAULT_ASSETS = [
+  { symbol: "BTC", price: null, changePercent: null, currency: "USD" },
+  { symbol: "ETH", price: null, changePercent: null, currency: "USD" },
+  { symbol: "S&P 500", price: null, changePercent: null, currency: "USD" },
+  { symbol: "NASDAQ", price: null, changePercent: null, currency: "USD" }
+];
+
 function formatMoney(value, currency = "USD") {
   if (typeof value !== "number") return "-";
   return new Intl.NumberFormat("en-US", {
@@ -19,7 +26,14 @@ function formatPercent(value) {
 
 export default function MarketOverview() {
   const containerRef = useRef(null);
-  const [snapshot, setSnapshot] = useState(null);
+  const [snapshot, setSnapshot] = useState({
+    assets: DEFAULT_ASSETS,
+    fearGreed: null,
+    cryptoVolumeUsd: null,
+    warnings: [],
+    updatedAt: null
+  });
+  const [fetchError, setFetchError] = useState("");
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -72,10 +86,25 @@ export default function MarketOverview() {
       try {
         const res = await fetch("/api/market/snapshot", { cache: "no-store" });
         const json = await res.json();
-        if (mounted && !json.error) {
-          setSnapshot(json);
+        if (mounted) {
+          if (json.error) {
+            setFetchError("Some sources are temporarily unavailable.");
+          } else {
+            setFetchError("");
+          }
+
+          setSnapshot((prev) => ({
+            assets: json.assets?.length ? json.assets : prev.assets,
+            fearGreed: json.fearGreed ?? null,
+            cryptoVolumeUsd: json.cryptoVolumeUsd ?? null,
+            warnings: json.warnings || [],
+            updatedAt: json.updatedAt || prev.updatedAt
+          }));
         }
       } catch (_error) {
+        if (mounted) {
+          setFetchError("Network issue while loading market snapshot.");
+        }
       }
     };
 
@@ -128,8 +157,14 @@ export default function MarketOverview() {
           <p className="text-sm text-slate-300">Today summary, filters-ready signals, and real-time tape.</p>
         </div>
 
+        {fetchError ? (
+          <div className="rounded-lg border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-xs text-rose-200">
+            {fetchError}
+          </div>
+        ) : null}
+
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-          {(snapshot?.assets || []).map((asset) => {
+          {(snapshot?.assets || DEFAULT_ASSETS).map((asset) => {
             const up = typeof asset.changePercent === "number" && asset.changePercent >= 0;
             return (
               <div key={asset.symbol} className="rounded-xl border border-slate-700 bg-slate-900/80 p-3">
@@ -171,7 +206,9 @@ export default function MarketOverview() {
           <div ref={containerRef} className="w-full min-h-[72px]" />
         </div>
 
-        <p className="text-[11px] text-slate-500">Updated: {snapshot?.updatedAt ? new Date(snapshot.updatedAt).toLocaleTimeString() : "-"}</p>
+        <p className="text-[11px] text-slate-500">
+          Updated: {snapshot?.updatedAt ? new Date(snapshot.updatedAt).toLocaleTimeString() : "-"}
+        </p>
       </div>
     </section>
   );
