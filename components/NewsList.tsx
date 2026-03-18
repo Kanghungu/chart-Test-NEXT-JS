@@ -1,6 +1,6 @@
-"use client";
+﻿"use client";
 import React, { useEffect, useMemo, useState } from "react";
-import "./NewsList.css";
+import styles from "./NewsList.module.css";
 
 type NewsType = "crypto" | "stock";
 type FilterType = "all" | NewsType;
@@ -172,77 +172,73 @@ export default function NewsList() {
   const showStock = filterType === "all" || filterType === "stock";
 
   return (
-    <div className="w-full space-y-4">
-      <div className="rounded-xl border border-slate-700 bg-slate-900/60 p-3 space-y-3">
-        <div className="flex flex-wrap gap-2">
+    <div className={styles.root}>
+      <div className={styles.controlPanel}>
+        <div className={styles.filterButtons}>
           {(["all", "crypto", "stock"] as const).map((type) => (
             <button
               key={type}
               onClick={() => setFilterType(type)}
-              className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
-                filterType === type ? "bg-blue-500 text-white" : "bg-slate-800 text-slate-300 hover:bg-slate-700"
-              }`}
+              className={filterType === type ? styles.filterBtnActive : styles.filterBtn}
             >
               {type === "all" ? "전체" : type === "crypto" ? "코인" : "주식"}
             </button>
           ))}
         </div>
 
-        <div className="grid grid-cols-1 gap-2 md:grid-cols-3">
+        <div className={styles.controlGrid}>
           <input
             value={keyword}
             onChange={(e) => setKeyword(e.target.value)}
             placeholder="키워드 검색 (ETF, 금리, 테슬라...)"
-            className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-blue-500"
+            className={styles.keywordInput}
           />
 
           <select
             value={sortType}
             onChange={(e) => setSortType(e.target.value as SortType)}
-            className="rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-blue-500"
+            className={styles.sortSelect}
           >
             <option value="latest">최신순</option>
             <option value="impact">영향도순</option>
           </select>
 
-          <div className="rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-xs text-slate-300 flex items-center">
-            코인 {preparedCryptoNews.length} | 주식 {preparedStockNews.length}
-          </div>
+          <div className={styles.countInfo}>코인 {preparedCryptoNews.length} | 주식 {preparedStockNews.length}</div>
         </div>
       </div>
 
-      <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3">
-        <p className="text-xs font-semibold text-amber-300 mb-2">뉴스 시그널</p>
-        <ul className="space-y-1">
+      <div className={styles.signalPanel}>
+        <p className={styles.signalTitle}>뉴스 시그널</p>
+        <ul className={styles.signalList}>
           {newsSignals.map((signal, idx) => (
-            <li key={`${signal}-${idx}`} className="text-sm text-amber-100">
+            <li key={`${signal}-${idx}`} className={styles.signalItem}>
               {signal}
             </li>
           ))}
         </ul>
       </div>
 
-      <div className="news-container w-full">
+      <div className={styles.newsContainer}>
         {showCrypto && (
-          <section className={`w-full min-w-0 overflow-hidden bg-gray-900/80 rounded-2xl shadow-lg p-4 border border-gray-700 flex flex-col max-h-[620px] ${showCrypto && !showStock ? "md:col-span-2" : ""}`}>
-            <h3 className="text-xl font-bold text-blue-400 mb-3 flex items-center gap-2">
+          <section className={`${styles.newsSection} ${showCrypto && !showStock ? styles.fullColumn : ""}`}>
+            <h3 className={`${styles.sectionTitle} ${styles.cryptoTitle}`}>
               <span>코인</span> 뉴스
             </h3>
-            <ul className="space-y-4 overflow-y-auto pr-1 max-h-[540px]">
+            <ul className={styles.newsList}>
               {preparedCryptoNews.map((n, idx) => (
-                <li key={n.id || `${n.slug}-${idx}`} className="bg-gray-800 rounded-xl p-4 shadow hover:shadow-xl border border-gray-700 transition-all group">
+                <li key={n.id || `${n.slug}-${idx}`} className={styles.newsItem}>
                   <a
                     href={getLink(n, "crypto")}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="block text-lg font-semibold text-gray-100 group-hover:text-blue-300 truncate"
+                    className={`${styles.newsLink} ${styles.cryptoLink}`}
                     title={getTitle(n)}
                   >
                     {getTitle(n)}
                   </a>
-                  <div className="grid grid-cols-2 gap-2 text-xs text-gray-400 mt-2">
-                    <span className="truncate">{n.publisher || "출처 미상"}</span>
-                    <span className="truncate text-right">{getPublishedAt(n) || "-"}</span>
+                  <div className={styles.metaRow}>
+                    <span className={styles.metaText}>{n.publisher || "출처 미상"}</span>
+                    <span className={`${styles.metaText} ${styles.metaRight}`}>{getPublishedAt(n) || "-"}</span>
                   </div>
                 </li>
               ))}
@@ -251,25 +247,25 @@ export default function NewsList() {
         )}
 
         {showStock && (
-          <section className={`w-full min-w-0 overflow-hidden bg-gray-900/80 rounded-2xl shadow-lg p-4 border border-gray-700 flex flex-col max-h-[620px] ${showStock && !showCrypto ? "md:col-span-2" : ""}`}>
-            <h3 className="text-xl font-bold text-green-400 mb-3 flex items-center gap-2">
+          <section className={`${styles.newsSection} ${showStock && !showCrypto ? styles.fullColumn : ""}`}>
+            <h3 className={`${styles.sectionTitle} ${styles.stockTitle}`}>
               <span>주식</span> 뉴스
             </h3>
-            <ul className="space-y-4 overflow-y-auto pr-1 max-h-[540px]">
+            <ul className={styles.newsList}>
               {preparedStockNews.map((n, idx) => (
-                <li key={n.id || `${n.content_url}-${idx}`} className="bg-gray-800 rounded-xl p-4 shadow hover:shadow-xl border border-gray-700 transition-all group">
+                <li key={n.id || `${n.content_url}-${idx}`} className={styles.newsItem}>
                   <a
                     href={getLink(n, "stock")}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="block text-lg font-semibold text-gray-100 group-hover:text-green-300 truncate"
+                    className={`${styles.newsLink} ${styles.stockLink}`}
                     title={getTitle(n)}
                   >
                     {getTitle(n)}
                   </a>
-                  <div className="grid grid-cols-2 gap-2 text-xs text-gray-400 mt-2">
-                    <span className="truncate">{n.publisher || "출처 미상"}</span>
-                    <span className="truncate text-right">{getPublishedAt(n) || "-"}</span>
+                  <div className={styles.metaRow}>
+                    <span className={styles.metaText}>{n.publisher || "출처 미상"}</span>
+                    <span className={`${styles.metaText} ${styles.metaRight}`}>{getPublishedAt(n) || "-"}</span>
                   </div>
                 </li>
               ))}
@@ -280,3 +276,4 @@ export default function NewsList() {
     </div>
   );
 }
+

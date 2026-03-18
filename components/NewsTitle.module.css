@@ -1,0 +1,76 @@
+﻿.wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+@media (min-width: 768px) {
+  .wrapper {
+    flex-direction: row;
+  }
+}
+
+.card {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgb(17 24 39 / 0.8);
+  border-radius: 0.75rem;
+  padding: 1rem 1.5rem;
+  box-shadow: 0 10px 15px rgb(0 0 0 / 0.25);
+}
+
+.cryptoCard {
+  border-bottom: 4px solid rgb(59 130 246);
+}
+
+.stockCard {
+  border-bottom: 4px solid rgb(34 197 94);
+}
+
+.title {
+  font-size: 1.5rem;
+  line-height: 1.2;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+@media (min-width: 768px) {
+  .title {
+    font-size: 1.875rem;
+  }
+}
+
+.cryptoTitle {
+  color: rgb(147 197 253);
+}
+
+.stockTitle {
+  color: rgb(134 239 172);
+}
+
+.link {
+  font-size: 0.875rem;
+  transition: color 0.2s ease;
+}
+
+.cryptoLink {
+  color: rgb(191 219 254);
+}
+
+.cryptoLink:hover {
+  color: rgb(96 165 250);
+  text-decoration: underline;
+}
+
+.stockLink {
+  color: rgb(187 247 208);
+}
+
+.stockLink:hover {
+  color: rgb(74 222 128);
+  text-decoration: underline;
+}
+
