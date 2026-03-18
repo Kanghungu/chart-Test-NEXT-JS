@@ -2,9 +2,9 @@
     display: grid;
     grid-template-columns: 1fr;
     gap: 1.5rem;
-    padding: 1rem;
-    background-color: #111827;
-    min-height: 100vh;
+    padding: 0.25rem;
+    background-color: transparent;
+    min-height: auto;
 }
 
 @media (min-width: 768px) {
