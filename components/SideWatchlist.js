@@ -1,69 +1,98 @@
-"use client";
+﻿"use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useState } from "react";
+import styles from "./SideWatchlist.module.css";
+
+function formatPrice(v) {
+  if (typeof v !== "number") return "-";
+  return new Intl.NumberFormat("en-US", {
+    minimumFractionDigits: v < 1 ? 4 : 2,
+    maximumFractionDigits: v < 1 ? 4 : 2
+  }).format(v);
+}
+
+function formatChange(v) {
+  if (typeof v !== "number") return "-";
+  const sign = v > 0 ? "+" : "";
+  return `${sign}${v.toFixed(2)}%`;
+}
 
 export default function SideWatchlist() {
-  const containerRef = useRef(null);
+  const [items, setItems] = useState([]);
 
   useEffect(() => {
-    if (!containerRef.current) return;
+    let mounted = true;
 
-    containerRef.current.innerHTML = "";
-
-    const widgetContainer = document.createElement("div");
-    widgetContainer.className = "tradingview-widget-container";
-
-    const widget = document.createElement("div");
-    widget.className = "tradingview-widget-container__widget";
-
-    const script = document.createElement("script");
-    script.type = "text/javascript";
-    script.src = "https://s3.tradingview.com/external-embedding/embed-widget-market-quotes.js";
-    script.async = true;
-    script.text = JSON.stringify({
-      width: "100%",
-      height: 420,
-      symbolsGroups: [
-        {
-          name: "Crypto",
-          symbols: [
-            { name: "BINANCE:BTCUSDT", displayName: "BTC" },
-            { name: "BINANCE:ETHUSDT", displayName: "ETH" },
-            { name: "BINANCE:SOLUSDT", displayName: "SOL" },
-            { name: "BINANCE:DOGEUSDT", displayName: "DOGE" }
-          ]
-        },
-        {
-          name: "US Stocks",
-          symbols: [
-            { name: "NASDAQ:NVDA", displayName: "NVIDIA" },
-            { name: "NASDAQ:AAPL", displayName: "Apple" },
-            { name: "NASDAQ:TSLA", displayName: "Tesla" },
-            { name: "NASDAQ:MSFT", displayName: "Microsoft" }
-          ]
+    const load = async () => {
+      try {
+        const res = await fetch("/api/market/watchlist", { cache: "no-store" });
+        const json = await res.json();
+        if (mounted) {
+          setItems(Array.isArray(json?.items) ? json.items : []);
         }
-      ],
-      showSymbolLogo: true,
-      colorTheme: "dark",
-      isTransparent: true,
-      locale: "en"
-    });
+      } catch {
+        if (mounted) setItems([]);
+      }
+    };
 
-    widgetContainer.appendChild(widget);
-    widgetContainer.appendChild(script);
-    containerRef.current.appendChild(widgetContainer);
+    load();
+    const timer = setInterval(load, 60000);
 
     return () => {
-      if (containerRef.current) {
-        containerRef.current.innerHTML = "";
-      }
+      mounted = false;
+      clearInterval(timer);
     };
   }, []);
 
+  const crypto = items.filter((i) => i.group === "crypto");
+  const stocks = items.filter((i) => i.group === "stock");
+
   return (
-    <section className="rounded-2xl border border-slate-700 bg-slate-900/70 p-3 shadow-xl">
-      <h3 className="text-sm font-semibold text-slate-200 mb-2">관심 자산</h3>
-      <div ref={containerRef} className="w-full min-h-[420px]" />
+    <section className={styles.panel}>
+      <h3 className={styles.title}>관심 자산</h3>
+
+      <div className={styles.group}>
+        <p className={styles.groupLabel}>CRYPTO</p>
+        <div className={styles.list}>
+          {crypto.map((item) => {
+            const up = typeof item.changePercent === "number" && item.changePercent >= 0;
+            return (
+              <div key={item.symbol} className={styles.row}>
+                <div>
+                  <p className={styles.name}>{item.name}</p>
+                  <p className={styles.symbol}>{item.symbol}</p>
+                </div>
+                <div className={styles.valueBox}>
+                  <p className={styles.price}>${formatPrice(item.price)}</p>
+                  <p className={`${styles.change} ${up ? styles.up : styles.down}`}>{formatChange(item.changePercent)}</p>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className={styles.group}>
+        <p className={styles.groupLabel}>US STOCKS</p>
+        <div className={styles.list}>
+          {stocks.map((item) => {
+            const up = typeof item.changePercent === "number" && item.changePercent >= 0;
+            return (
+              <div key={item.symbol} className={styles.row}>
+                <div>
+                  <p className={styles.name}>{item.name}</p>
+                  <p className={styles.symbol}>{item.symbol}</p>
+                </div>
+                <div className={styles.valueBox}>
+                  <p className={styles.price}>${formatPrice(item.price)}</p>
+                  <p className={`${styles.change} ${up ? styles.up : styles.down}`}>{formatChange(item.changePercent)}</p>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
     </section>
   );
 }
+

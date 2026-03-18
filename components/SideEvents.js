@@ -1,50 +1,54 @@
-"use client";
+﻿"use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useState } from "react";
+import styles from "./SideEvents.module.css";
 
 export default function SideEvents() {
-  const containerRef = useRef(null);
+  const [items, setItems] = useState([]);
 
   useEffect(() => {
-    if (!containerRef.current) return;
+    let mounted = true;
 
-    containerRef.current.innerHTML = "";
+    const load = async () => {
+      try {
+        const res = await fetch("/api/market/events", { cache: "no-store" });
+        const json = await res.json();
+        if (mounted) {
+          setItems(Array.isArray(json?.items) ? json.items : []);
+        }
+      } catch {
+        if (mounted) {
+          setItems([]);
+        }
+      }
+    };
 
-    const widgetContainer = document.createElement("div");
-    widgetContainer.className = "tradingview-widget-container";
-
-    const widget = document.createElement("div");
-    widget.className = "tradingview-widget-container__widget";
-
-    const script = document.createElement("script");
-    script.type = "text/javascript";
-    script.src = "https://s3.tradingview.com/external-embedding/embed-widget-events.js";
-    script.async = true;
-    script.text = JSON.stringify({
-      colorTheme: "dark",
-      isTransparent: true,
-      width: "100%",
-      height: 420,
-      locale: "en",
-      importanceFilter: "-1,0,1",
-      countryFilter: "us,eu,jp,cn,kr"
-    });
-
-    widgetContainer.appendChild(widget);
-    widgetContainer.appendChild(script);
-    containerRef.current.appendChild(widgetContainer);
+    load();
+    const timer = setInterval(load, 5 * 60 * 1000);
 
     return () => {
-      if (containerRef.current) {
-        containerRef.current.innerHTML = "";
-      }
+      mounted = false;
+      clearInterval(timer);
     };
   }, []);
 
   return (
-    <section className="rounded-2xl border border-slate-700 bg-slate-900/70 p-3 shadow-xl">
-      <h3 className="text-sm font-semibold text-slate-200 mb-2">경제 일정</h3>
-      <div ref={containerRef} className="w-full min-h-[420px]" />
+    <section className={styles.panel}>
+      <h3 className={styles.title}>경제 일정</h3>
+      <div className={styles.list}>
+        {items.map((item, idx) => (
+          <div key={`${item.time}-${item.title}-${idx}`} className={styles.card}>
+            <div className={styles.topRow}>
+              <span className={styles.country}>{item.country}</span>
+              <span className={styles.impact}>{item.impact}</span>
+            </div>
+            <p className={styles.eventTitle}>{item.title}</p>
+            <p className={styles.time}>{item.time}</p>
+          </div>
+        ))}
+        {!items.length ? <p className={styles.empty}>일정을 불러오는 중입니다...</p> : null}
+      </div>
     </section>
   );
 }
+
