@@ -1,8 +1,9 @@
 .news-container {
     display: grid;
+    width: 100%;
     grid-template-columns: 1fr;
     gap: 1.5rem;
-    padding: 0.25rem;
+    padding: 0;
     background-color: transparent;
     min-height: auto;
 }
