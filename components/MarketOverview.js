@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
 
@@ -86,6 +86,7 @@ export default function MarketOverview() {
       try {
         const res = await fetch("/api/market/snapshot", { cache: "no-store" });
         const json = await res.json();
+
         if (mounted) {
           if (json.error) {
             setFetchError("일부 데이터 소스가 일시적으로 불안정합니다.");
@@ -170,8 +171,8 @@ export default function MarketOverview() {
             return (
               <div key={asset.symbol} className="rounded-xl border border-slate-700 bg-slate-900/80 p-3">
                 <p className="text-xs text-slate-400">{asset.symbol}</p>
-                <p className="text-sm font-bold text-white mt-1">{formatMoney(asset.price, asset.currency || "USD")}</p>
-                <p className={`text-xs mt-1 ${hasChange ? (up ? "text-emerald-400" : "text-rose-400") : "text-slate-400"}`}>
+                <p className="mt-1 text-sm font-bold text-white">{formatMoney(asset.price, asset.currency || "USD")}</p>
+                <p className={`mt-1 text-xs ${hasChange ? (up ? "text-emerald-400" : "text-rose-400") : "text-slate-400"}`}>
                   {formatPercent(asset.changePercent)}
                 </p>
               </div>
@@ -182,18 +183,18 @@ export default function MarketOverview() {
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
           <div className="rounded-xl border border-slate-700 bg-slate-900/70 p-3">
             <p className="text-xs text-slate-400">공포·탐욕 지수</p>
-            <p className="text-lg font-bold text-white mt-1">
+            <p className="mt-1 text-lg font-bold text-white">
               {snapshot?.fearGreed ? `${snapshot.fearGreed.value} (${snapshot.fearGreed.classification})` : "-"}
             </p>
           </div>
           <div className="rounded-xl border border-slate-700 bg-slate-900/70 p-3">
             <p className="text-xs text-slate-400">24시간 코인 거래대금</p>
-            <p className="text-lg font-bold text-white mt-1">{formatMoney(snapshot?.cryptoVolumeUsd || null, "USD")}</p>
+            <p className="mt-1 text-lg font-bold text-white">{formatMoney(snapshot?.cryptoVolumeUsd || null, "USD")}</p>
           </div>
         </div>
 
         <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3">
-          <p className="text-xs font-semibold text-amber-300 mb-2">알림 시그널</p>
+          <p className="mb-2 text-xs font-semibold text-amber-300">알림 시그널</p>
           <ul className="space-y-1">
             {signals.map((signal, idx) => (
               <li key={`${signal}-${idx}`} className="text-sm text-amber-100">
@@ -203,8 +204,26 @@ export default function MarketOverview() {
           </ul>
         </div>
 
-        <div className="rounded-xl border border-slate-700/80 bg-black/30 p-2">
-          <div ref={containerRef} className="w-full min-h-[72px]" />
+        <div className="relative overflow-hidden rounded-xl border border-sky-400/25 bg-gradient-to-r from-sky-500/10 via-cyan-500/5 to-indigo-500/10 p-2 shadow-[0_0_25px_rgba(56,189,248,0.12)]">
+          <div className="mb-2 flex items-center justify-between px-2">
+            <div className="flex items-center gap-2">
+              <span className="relative inline-flex h-2.5 w-2.5">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+                <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-400" />
+              </span>
+              <p className="text-xs font-semibold tracking-wide text-sky-200">실시간 변동 티커</p>
+            </div>
+            <span className="rounded-full border border-sky-300/30 bg-sky-500/10 px-2 py-0.5 text-[10px] text-sky-200">
+              LIVE
+            </span>
+          </div>
+
+          <div className="rounded-lg border border-slate-700/70 bg-black/35 p-1.5">
+            <div ref={containerRef} className="w-full min-h-[72px]" />
+          </div>
+
+          <div className="pointer-events-none absolute inset-y-0 left-0 w-8 bg-gradient-to-r from-slate-900/90 to-transparent" />
+          <div className="pointer-events-none absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-slate-900/90 to-transparent" />
         </div>
 
         <p className="text-[11px] text-slate-500">
