@@ -38,7 +38,7 @@ export default function NewsList() {
     return (
         <div className="news-container w-full">
             {/* Crypto News 섹션 */}
-            <section className="bg-gray-900/80 rounded-2xl shadow-lg p-4 border border-gray-700 flex flex-col">
+            <section className="w-full min-w-0 overflow-hidden bg-gray-900/80 rounded-2xl shadow-lg p-4 border border-gray-700 flex flex-col">
                 <h3 className="text-xl font-bold text-blue-400 mb-3 flex items-center gap-2">
                     <span>🪙</span> Crypto News
                 </h3>
@@ -54,9 +54,9 @@ export default function NewsList() {
                             >
                                 {decodeHtmlEntities(n.title_ko || n.title)}
                             </a>
-                            <div className="flex justify-between text-xs text-gray-400 mt-2">
-                                <span>{n.publisher}</span>
-                                <span>{n.published_at}</span>
+                            <div className="grid grid-cols-2 gap-2 text-xs text-gray-400 mt-2">
+                                <span className="truncate">{n.publisher}</span>
+                                <span className="truncate text-right">{n.published_at}</span>
                             </div>
                         </li>
                     ))}
@@ -64,7 +64,7 @@ export default function NewsList() {
             </section>
 
             {/* Stock News 섹션 */}
-            <section className="bg-gray-900/80 rounded-2xl shadow-lg p-4 border border-gray-700 flex flex-col">
+            <section className="w-full min-w-0 overflow-hidden bg-gray-900/80 rounded-2xl shadow-lg p-4 border border-gray-700 flex flex-col">
                 <h3 className="text-xl font-bold text-green-400 mb-3 flex items-center gap-2">
                     <span>📈</span> Stock News
                 </h3>
@@ -80,9 +80,9 @@ export default function NewsList() {
                             >
                                 {decodeHtmlEntities(n.title_ko || n.title)}
                             </a>
-                            <div className="flex justify-between text-xs text-gray-400 mt-2">
-                                <span>{n.publisher}</span>
-                                <span>{n.published_at}</span>
+                            <div className="grid grid-cols-2 gap-2 text-xs text-gray-400 mt-2">
+                                <span className="truncate">{n.publisher}</span>
+                                <span className="truncate text-right">{n.published_at}</span>
                             </div>
                         </li>
                     ))}
