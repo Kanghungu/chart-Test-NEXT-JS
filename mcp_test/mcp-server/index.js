@@ -1,45 +1,136 @@
-import { exec } from 'child_process';
-import express from 'express';
-import dotenv from 'dotenv';
-import { Octokit } from '@octokit/rest';
+import dotenv from "dotenv";
+import { Octokit } from "@octokit/rest";
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import * as z from "zod/v4";
+import { fileURLToPath } from "url";
+import path from "path";
 
-dotenv.config();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-const app = express();
-const port = process.env.PORT || 4000;
+dotenv.config({ path: path.join(__dirname, ".env") });
 
-app.use(express.json());
+const githubToken = process.env.GITHUB_TOKEN;
 
-app.get('/', (req, res) => {
-  res.send('MCP Server is running!');
+if (!githubToken) {
+  console.error("GITHUB_TOKEN is not set. Add it in mcp_test/mcp-server/.env");
+  process.exit(1);
+}
+
+const octokit = new Octokit({ auth: githubToken });
+
+const server = new McpServer({
+  name: "github-mcp-server",
+  version: "1.0.0",
 });
 
-// GitHub 연동 예시 엔드포인트
-app.get('/github/user', async (req, res) => {
-  try {
-    const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
+server.registerTool(
+  "github_get_me",
+  {
+    description: "Get the authenticated GitHub user profile.",
+    inputSchema: {},
+  },
+  async () => {
     const { data } = await octokit.rest.users.getAuthenticated();
-    res.json(data);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
+    return {
+      content: [
+        {
+          type: "text",
+          text: JSON.stringify(
+            {
+              login: data.login,
+              name: data.name,
+              id: data.id,
+              public_repos: data.public_repos,
+              followers: data.followers,
+              following: data.following,
+              html_url: data.html_url,
+            },
+            null,
+            2
+          ),
+        },
+      ],
+    };
   }
-});
+);
 
-// Git 자동 커밋/푸시 엔드포인트
-app.post('/api/git/commit-push', async (req, res) => {
-  const { message } = req.body;
-  if (!message) {
-    return res.status(400).json({ error: '커밋 메시지를 입력하세요.' });
+server.registerTool(
+  "github_list_my_repos",
+  {
+    description: "List repositories of the authenticated user.",
+    inputSchema: {
+      per_page: z.number().int().min(1).max(100).default(20),
+      sort: z.enum(["created", "updated", "pushed", "full_name"]).default("updated"),
+    },
+  },
+  async ({ per_page, sort }) => {
+    const { data } = await octokit.rest.repos.listForAuthenticatedUser({
+      per_page,
+      sort,
+    });
+
+    const repos = data.map((repo) => ({
+      full_name: repo.full_name,
+      private: repo.private,
+      default_branch: repo.default_branch,
+      updated_at: repo.updated_at,
+      html_url: repo.html_url,
+    }));
+
+    return {
+      content: [{ type: "text", text: JSON.stringify(repos, null, 2) }],
+    };
   }
-  // git add . && git commit -m "메시지" && git push
-  exec(`git add . && git commit -m "${message}" && git push`, { cwd: process.cwd() }, (err, stdout, stderr) => {
-    if (err) {
-      return res.status(500).json({ error: stderr || err.message });
-    }
-    res.json({ success: true, stdout });
-  });
-});
+);
 
-app.listen(port, () => {
-  console.log(`MCP server listening on port ${port}`);
+server.registerTool(
+  "github_create_issue",
+  {
+    description: "Create a GitHub issue in a specific repository.",
+    inputSchema: {
+      owner: z.string().min(1),
+      repo: z.string().min(1),
+      title: z.string().min(1),
+      body: z.string().optional(),
+    },
+  },
+  async ({ owner, repo, title, body }) => {
+    const { data } = await octokit.rest.issues.create({
+      owner,
+      repo,
+      title,
+      body,
+    });
+
+    return {
+      content: [
+        {
+          type: "text",
+          text: JSON.stringify(
+            {
+              number: data.number,
+              title: data.title,
+              url: data.html_url,
+              state: data.state,
+            },
+            null,
+            2
+          ),
+        },
+      ],
+    };
+  }
+);
+
+async function main() {
+  const transport = new StdioServerTransport();
+  await server.connect(transport);
+  console.error("GitHub MCP server is running via stdio.");
+}
+
+main().catch((error) => {
+  console.error("Failed to start MCP server:", error);
+  process.exit(1);
 });
