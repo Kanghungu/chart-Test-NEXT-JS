@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import NewsList from "@/components/NewsList";
@@ -6,6 +6,7 @@ import NewsTitle from "@/components/NewsTitle";
 import MarketOverview from "@/components/MarketOverview";
 import SideWatchlist from "@/components/SideWatchlist";
 import SideEvents from "@/components/SideEvents";
+import SideEconomyAI from "@/components/SideEconomyAI";
 
 export default function Home() {
   return (
@@ -33,6 +34,7 @@ export default function Home() {
         </div>
 
         <div className="space-y-6 xl:sticky xl:top-6 self-start">
+          <SideEconomyAI />
           <SideWatchlist />
           <SideEvents />
         </div>
@@ -40,3 +42,4 @@ export default function Home() {
     </main>
   );
 }
+
