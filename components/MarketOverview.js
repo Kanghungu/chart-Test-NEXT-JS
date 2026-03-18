@@ -165,12 +165,13 @@ export default function MarketOverview() {
 
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
           {(snapshot?.assets || DEFAULT_ASSETS).map((asset) => {
-            const up = typeof asset.changePercent === "number" && asset.changePercent >= 0;
+            const hasChange = typeof asset.changePercent === "number";
+            const up = hasChange && asset.changePercent >= 0;
             return (
               <div key={asset.symbol} className="rounded-xl border border-slate-700 bg-slate-900/80 p-3">
                 <p className="text-xs text-slate-400">{asset.symbol}</p>
                 <p className="text-sm font-bold text-white mt-1">{formatMoney(asset.price, asset.currency || "USD")}</p>
-                <p className={`text-xs mt-1 ${up ? "text-emerald-400" : "text-rose-400"}`}>
+                <p className={`text-xs mt-1 ${hasChange ? (up ? "text-emerald-400" : "text-rose-400") : "text-slate-400"}`}>
                   {formatPercent(asset.changePercent)}
                 </p>
               </div>
