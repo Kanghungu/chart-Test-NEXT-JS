@@ -38,11 +38,11 @@ export default function NewsList() {
     return (
         <div className="news-container w-full">
             {/* Crypto News 섹션 */}
-            <section className="w-full min-w-0 overflow-hidden bg-gray-900/80 rounded-2xl shadow-lg p-4 border border-gray-700 flex flex-col">
+            <section className="w-full min-w-0 overflow-hidden bg-gray-900/80 rounded-2xl shadow-lg p-4 border border-gray-700 flex flex-col max-h-[620px]">
                 <h3 className="text-xl font-bold text-blue-400 mb-3 flex items-center gap-2">
                     <span>🪙</span> Crypto News
                 </h3>
-                <ul className="space-y-4">
+                <ul className="space-y-4 overflow-y-auto pr-1 max-h-[540px]">
                     {cryptoNews.map((n) => (
                         <li key={n.id} className="bg-gray-800 rounded-xl p-4 shadow hover:shadow-xl border border-gray-700 transition-all group">
                             <a
@@ -64,11 +64,11 @@ export default function NewsList() {
             </section>
 
             {/* Stock News 섹션 */}
-            <section className="w-full min-w-0 overflow-hidden bg-gray-900/80 rounded-2xl shadow-lg p-4 border border-gray-700 flex flex-col">
+            <section className="w-full min-w-0 overflow-hidden bg-gray-900/80 rounded-2xl shadow-lg p-4 border border-gray-700 flex flex-col max-h-[620px]">
                 <h3 className="text-xl font-bold text-green-400 mb-3 flex items-center gap-2">
                     <span>📈</span> Stock News
                 </h3>
-                <ul className="space-y-4">
+                <ul className="space-y-4 overflow-y-auto pr-1 max-h-[540px]">
                     {stockNews.map((n) => (
                         <li key={n.id} className="bg-gray-800 rounded-xl p-4 shadow hover:shadow-xl border border-gray-700 transition-all group">
                             <a
