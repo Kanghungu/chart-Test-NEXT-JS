@@ -8,72 +8,31 @@ const TRACKED = [
 ];
 
 async function fetchCryptoBinanceSnapshot() {
-  const symbols = ["BTCUSDT", "ETHUSDT"];
-  const rows = await Promise.all(
-    symbols.map(async (symbol) => {
-      const url = `https://api.binance.com/api/v3/ticker/24hr?symbol=${symbol}`;
-      const res = await fetch(url, { cache: "no-store" });
-      if (!res.ok) {
-        throw new Error(`Binance request failed: ${res.status}`);
-      }
-      return res.json();
-    })
-  );
+  const url =
+    "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=usd&include_24hr_change=true&include_24hr_vol=true";
+  const res = await fetch(url, { cache: "no-store" });
+  if (!res.ok) {
+    throw new Error(`CoinGecko request failed: ${res.status}`);
+  }
+
+  const json = await res.json();
+  const btc = json?.bitcoin;
+  const eth = json?.ethereum;
 
   return [
     {
       symbol: "BTC",
-      price: Number(rows[0]?.lastPrice ?? null),
-      changePercent: Number(rows[0]?.priceChangePercent ?? null),
-      volume: Number(rows[0]?.quoteVolume ?? null),
+      price: typeof btc?.usd === "number" ? btc.usd : null,
+      changePercent: typeof btc?.usd_24h_change === "number" ? btc.usd_24h_change : null,
+      volume: typeof btc?.usd_24h_vol === "number" ? btc.usd_24h_vol : null,
       currency: "USD"
     },
     {
       symbol: "ETH",
-      price: Number(rows[1]?.lastPrice ?? null),
-      changePercent: Number(rows[1]?.priceChangePercent ?? null),
-      volume: Number(rows[1]?.quoteVolume ?? null),
+      price: typeof eth?.usd === "number" ? eth.usd : null,
+      changePercent: typeof eth?.usd_24h_change === "number" ? eth.usd_24h_change : null,
+      volume: typeof eth?.usd_24h_vol === "number" ? eth.usd_24h_vol : null,
       currency: "USD"
-    }
-  ];
-}
-
-async function fetchIndexesYahooSnapshot() {
-  const url =
-    "https://query1.finance.yahoo.com/v7/finance/quote?symbols=%5EGSPC,%5EIXIC";
-  const res = await fetch(url, {
-    cache: "no-store",
-    headers: {
-      "user-agent":
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
-      accept: "application/json,text/plain,*/*"
-    }
-  });
-
-  if (!res.ok) {
-    throw new Error(`Yahoo index request failed: ${res.status}`);
-  }
-
-  const json = await res.json();
-  const rows = json?.quoteResponse?.result || [];
-
-  const spx = rows.find((item) => item.symbol === "^GSPC");
-  const ixic = rows.find((item) => item.symbol === "^IXIC");
-
-  return [
-    {
-      symbol: "S&P 500",
-      price: spx?.regularMarketPrice ?? null,
-      changePercent: spx?.regularMarketChangePercent ?? null,
-      volume: spx?.regularMarketVolume ?? null,
-      currency: spx?.currency ?? "USD"
-    },
-    {
-      symbol: "NASDAQ",
-      price: ixic?.regularMarketPrice ?? null,
-      changePercent: ixic?.regularMarketChangePercent ?? null,
-      volume: ixic?.regularMarketVolume ?? null,
-      currency: ixic?.currency ?? "USD"
     }
   ];
 }
@@ -147,7 +106,7 @@ async function fetchCryptoGlobalVolume() {
 export async function GET() {
   const settled = await Promise.allSettled([
     fetchCryptoBinanceSnapshot(),
-    fetchIndexesYahooSnapshot(),
+    fetchIndexesStooqSnapshot(),
     fetchFearGreedIndex(),
     fetchCryptoGlobalVolume()
   ]);
@@ -173,12 +132,6 @@ export async function GET() {
     indexAssets = settled[1].value;
   } else {
     warnings.push("index_price_source_unavailable");
-    try {
-      indexAssets = await fetchIndexesStooqSnapshot();
-      warnings.push("index_price_fallback_stooq");
-    } catch {
-      warnings.push("index_price_fallback_failed");
-    }
   }
 
   const assets = [...cryptoAssets, ...indexAssets];
