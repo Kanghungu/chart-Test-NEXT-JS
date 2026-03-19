@@ -5,8 +5,8 @@ import NewsFeedPage from "@/components/news/NewsFeedPage";
 export default function StockNewsPage() {
   return (
     <NewsFeedPage
-      title="\uC804\uCCB4 \uC8FC\uC2DD \uB274\uC2A4"
-      intro="\uBBF8\uAD6D \uC8FC\uC2DD \uD750\uB984\uC744 \uD06C\uAC8C \uBC14\uAFC0 \uC218 \uC788\uB294 \uD575\uC2EC \uD5E4\uB4DC\uB77C\uC778\uC744 \uC815\uB82C\uD558\uACE0, \uC990\uACA8\uCC3E\uAE30\uC640 \uD544\uD130\uB85C \uB9E4\uC77C \uBCF4\uAE30 \uC88B\uAC8C \uC815\uB9AC\uD588\uC2B5\uB2C8\uB2E4."
+      title="전체 주식 뉴스"
+      intro="미국 주식 흐름을 크게 바꿀 수 있는 핵심 헤드라인을 정렬하고, 즐겨찾기와 필터로 매일 보기 좋게 정리했습니다."
       badge="US STOCK FLOW"
       variant="stock"
       quickFilters={["ETF", "Fed", "AI", "Tesla", "NVIDIA", "Earnings"]}

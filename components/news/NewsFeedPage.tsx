@@ -42,31 +42,31 @@ interface PreparedItem {
 }
 
 const COPY = {
-  latest: "\uCD5C\uC2E0\uC21C",
-  oldest: "\uC624\uB798\uB41C\uC21C",
-  searchPlaceholder: "\uD0A4\uC6CC\uB4DC \uAC80\uC0C9 (ETF, \uAE08\uB9AC, \uBE44\uD2B8\uCF54\uC778, NVIDIA...)",
-  favoritesOnly: "\uC990\uACA8\uCC3E\uAE30 \uB9CC \uBCF4\uAE30",
-  spotlight: "\uC2A4\uD3EC\uD2B8\uB77C\uC774\uD2B8",
-  signalBoard: "\uD55C\uB208\uC5D0 \uBCF4\uB294 \uD750\uB984",
-  recentCount: "\uD45C\uC2DC \uB274\uC2A4",
-  sourceCount: "\uCD9C\uCC98 \uC218",
-  latestUpdate: "\uCD5C\uC2E0 \uC2DC\uAC01",
-  emptyDate: "\uB0A0\uC9DC \uC5C6\uC74C",
-  unknownSource: "\uCD9C\uCC98 \uBBF8\uC0C1",
-  open: "\uC6D0\uBB38",
-  expand: "\uB354\uBCF4\uAE30",
-  collapse: "\uC811\uAE30",
-  share: "\uB9C1\uD06C \uBCF5\uC0AC",
-  copied: "\uBCF5\uC0AC\uB428",
-  home: "\uD648\uC73C\uB85C",
-  loading: "\uB274\uC2A4\uB97C \uBD88\uB7EC\uC624\uB294 \uC911\uC785\uB2C8\uB2E4.",
-  error: "\uB274\uC2A4\uB97C \uBD88\uB7EC\uC624\uC9C0 \uBABB\uD588\uC2B5\uB2C8\uB2E4.",
-  noResults: "\uC870\uAC74\uC5D0 \uB9DE\uB294 \uB274\uC2A4\uAC00 \uC5C6\uC2B5\uB2C8\uB2E4.",
-  favoriteOn: "\uC990\uACA8\uCC3E\uAE30 \uC800\uC7A5",
-  favoriteOff: "\uC990\uACA8\uCC3E\uAE30 \uD574\uC81C",
-  summary: "\uC694\uC57D",
-  sourceLabel: "\uCD9C\uCC98",
-  reset: "\uC804\uCCB4"
+  latest: "최신순",
+  oldest: "오래된순",
+  searchPlaceholder: "키워드 검색 (ETF, 금리, 비트코인, NVIDIA...)",
+  favoritesOnly: "즐겨찾기만 보기",
+  spotlight: "스포트라이트",
+  signalBoard: "한눈에 보는 흐름",
+  recentCount: "표시 뉴스",
+  sourceCount: "출처 수",
+  latestUpdate: "최신 시각",
+  emptyDate: "날짜 없음",
+  unknownSource: "출처 미상",
+  open: "원문",
+  expand: "더보기",
+  collapse: "접기",
+  share: "링크 복사",
+  copied: "복사됨",
+  home: "홈으로",
+  loading: "뉴스를 불러오는 중입니다.",
+  error: "뉴스를 불러오지 못했습니다.",
+  noResults: "조건에 맞는 뉴스가 없습니다.",
+  favoriteOn: "즐겨찾기 저장",
+  favoriteOff: "즐겨찾기 해제",
+  summary: "요약",
+  sourceLabel: "출처",
+  reset: "전체"
 } as const;
 
 function formatDate(value?: string) {
@@ -83,7 +83,11 @@ function getLatestTime(items: PreparedItem[]) {
   return latest ? formatDate(latest.publishedAt) : "-";
 }
 
-function normalizeItem(item: FeedItem, index: number, helpers: Omit<NewsFeedPageProps, "title" | "intro" | "badge" | "variant" | "quickFilters" | "fetchUrl" | "getItems">): PreparedItem {
+function normalizeItem(
+  item: FeedItem,
+  index: number,
+  helpers: Omit<NewsFeedPageProps, "title" | "intro" | "badge" | "variant" | "quickFilters" | "fetchUrl" | "getItems">
+): PreparedItem {
   return {
     id: String(item.id ?? helpers.getItemKey(item, index)),
     key: helpers.getItemKey(item, index),
@@ -215,7 +219,6 @@ export default function NewsFeedPage(props: NewsFeedPageProps) {
   }, [activeFilter, favoriteIds, favoritesOnly, items, keyword, sortType]);
 
   const spotlightItems = useMemo(() => visibleItems.slice(0, 3), [visibleItems]);
-
   const publisherCount = useMemo(() => new Set(items.map((item) => item.publisher)).size, [items]);
 
   const toggleItem = (id: string) => {
@@ -318,9 +321,9 @@ export default function NewsFeedPage(props: NewsFeedPageProps) {
           <h2 className={styles.infoTitle}>{COPY.signalBoard}</h2>
           <ul className={styles.signalList}>
             <li className={styles.signalItem}>{title}</li>
-            <li className={styles.signalItem}>{`\uD544\uD130: ${activeFilter || COPY.reset}`}</li>
-            <li className={styles.signalItem}>{`\uC815\uB82C: ${sortType === "latest" ? COPY.latest : COPY.oldest}`}</li>
-            <li className={styles.signalItem}>{`\uC990\uACA8\uCC3E\uAE30: ${favoriteIds.length}`}</li>
+            <li className={styles.signalItem}>{`필터: ${activeFilter || COPY.reset}`}</li>
+            <li className={styles.signalItem}>{`정렬: ${sortType === "latest" ? COPY.latest : COPY.oldest}`}</li>
+            <li className={styles.signalItem}>{`즐겨찾기: ${favoriteIds.length}`}</li>
           </ul>
         </article>
       </div>
@@ -343,7 +346,7 @@ export default function NewsFeedPage(props: NewsFeedPageProps) {
                   className={favoriteIds.includes(item.id) ? styles.favoriteButtonActive : styles.favoriteButton}
                   aria-label={favoriteIds.includes(item.id) ? COPY.favoriteOff : COPY.favoriteOn}
                 >
-                  {favoriteIds.includes(item.id) ? "\u2605" : "\u2606"}
+                  {favoriteIds.includes(item.id) ? "★" : "☆"}
                 </button>
 
                 <button onClick={() => handleCopy(item)} className={styles.utilityButton}>
