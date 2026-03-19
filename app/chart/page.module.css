@@ -1,19 +1,363 @@
 .page {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top right, rgb(34 197 94 / 0.1), transparent 24%),
+    radial-gradient(circle at top left, rgb(59 130 246 / 0.16), transparent 28%),
+    linear-gradient(180deg, rgb(2 6 23), rgb(3 7 18) 44%, rgb(10 15 28));
   padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
 }
 
-.title {
-  margin-bottom: 1rem;
+.hero {
+  border: 1px solid rgb(71 85 105 / 0.5);
+  border-radius: 1.5rem;
+  background: linear-gradient(135deg, rgb(15 23 42 / 0.9), rgb(15 23 42 / 0.72));
+  box-shadow: 0 30px 80px rgb(0 0 0 / 0.35);
+  padding: 1.5rem;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
 }
 
-.grid {
+.heroCopy {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.heroBadge {
+  width: fit-content;
+  border: 1px solid rgb(56 189 248 / 0.35);
+  border-radius: 9999px;
+  background: rgb(14 165 233 / 0.1);
+  color: rgb(186 230 253);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  padding: 0.35rem 0.75rem;
+}
+
+.heroTitle {
+  color: white;
+  font-size: clamp(2rem, 5vw, 3.5rem);
+  line-height: 0.98;
+  letter-spacing: -0.04em;
+}
+
+.heroDescription {
+  max-width: 52rem;
+  color: rgb(191 219 254);
+  font-size: 1rem;
+  line-height: 1.65;
+}
+
+.heroStats {
   display: grid;
   grid-template-columns: repeat(1, minmax(0, 1fr));
   gap: 1rem;
 }
 
+.statCard,
+.infoPanel,
+.chartCard,
+.chartCardActive,
+.watchCard,
+.section,
+.controlGroup,
+.presetCard,
+.compareCard,
+.compareCardActive {
+  border: 1px solid rgb(51 65 85 / 0.65);
+  border-radius: 1.25rem;
+  background: rgb(15 23 42 / 0.72);
+}
+
+.statCard {
+  padding: 1rem;
+}
+
+.statLabel {
+  color: rgb(148 163 184);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.statValue {
+  margin-top: 0.35rem;
+  color: white;
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+
+.controlBar,
+.utilityGrid,
+.infoGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+.controlGroup,
+.infoPanel {
+  padding: 1rem;
+}
+
+.controlLabel {
+  margin-bottom: 0.75rem;
+  color: rgb(148 163 184);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.tabRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+}
+
+.controlButton,
+.activeControlButton {
+  border: 1px solid rgb(71 85 105);
+  border-radius: 9999px;
+  background: rgb(2 6 23 / 0.75);
+  color: rgb(203 213 225);
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 600;
+  padding: 0.55rem 0.95rem;
+  transition:
+    transform 0.18s ease,
+    border-color 0.18s ease,
+    background-color 0.18s ease,
+    color 0.18s ease;
+}
+
+.controlButton:hover,
+.activeControlButton:hover,
+.presetCard:hover,
+.compareCard:hover,
+.compareCardActive:hover {
+  transform: translateY(-1px);
+}
+
+.activeControlButton,
+.chartCardActive,
+.compareCardActive {
+  border-color: rgb(56 189 248 / 0.8);
+  background: linear-gradient(135deg, rgb(14 165 233 / 0.18), rgb(59 130 246 / 0.18));
+  color: white;
+}
+
+.infoTitle {
+  color: white;
+  font-size: 1.125rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+}
+
+.noteList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.noteItem {
+  color: rgb(203 213 225);
+  line-height: 1.6;
+}
+
+.watchGrid,
+.presetGrid,
+.compareGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+}
+
+.watchCard {
+  padding: 0.95rem;
+  background: linear-gradient(135deg, rgb(30 41 59 / 0.88), rgb(15 23 42 / 0.9));
+}
+
+.watchLabel,
+.presetName,
+.compareTitle {
+  color: rgb(125 211 252);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.watchValue,
+.presetDescription,
+.compareMeta {
+  margin-top: 0.35rem;
+  color: rgb(226 232 240);
+  line-height: 1.5;
+}
+
+.presetCard,
+.compareCard,
+.compareCardActive {
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  padding: 0.95rem;
+}
+
+.focusCard {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.focusHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.focusName {
+  color: white;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.focusCaption {
+  margin-top: 0.2rem;
+  color: rgb(148 163 184);
+}
+
+.focusRole {
+  color: rgb(165 243 252);
+  font-weight: 600;
+}
+
+.focusSummary,
+.focusHint {
+  color: rgb(226 232 240);
+  line-height: 1.65;
+}
+
+.section {
+  padding: 1.25rem;
+}
+
+.sectionHeader {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.sectionEyebrow {
+  color: rgb(103 232 249);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+}
+
+.sectionTitle {
+  color: white;
+  font-size: 1.6rem;
+  font-weight: 800;
+}
+
+.sectionDescription {
+  max-width: 46rem;
+  color: rgb(148 163 184);
+  line-height: 1.6;
+}
+
+.chartGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+.chartCard,
+.chartCardActive {
+  padding: 1rem;
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.02);
+  cursor: pointer;
+}
+
+.chartCardHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.9rem;
+}
+
+.chartTitle {
+  color: white;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.chartCaption {
+  margin-top: 0.25rem;
+  color: rgb(148 163 184);
+  font-size: 0.9rem;
+}
+
+.symbolBadge {
+  border: 1px solid rgb(71 85 105);
+  border-radius: 9999px;
+  background: rgb(2 6 23 / 0.8);
+  color: rgb(186 230 253);
+  font-size: 0.72rem;
+  padding: 0.3rem 0.65rem;
+  white-space: nowrap;
+}
+
+@media (min-width: 768px) {
+  .page {
+    padding: 2.25rem;
+  }
+
+  .heroStats {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .watchGrid,
+  .presetGrid,
+  .compareGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 @media (min-width: 1024px) {
-  .grid {
+  .controlBar,
+  .utilityGrid,
+  .infoGrid {
+    grid-template-columns: 1.2fr 1fr;
+  }
+
+  .sectionHeader {
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+    align-items: end;
+  }
+
+  .chartGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1400px) {
+  .hero {
+    grid-template-columns: minmax(0, 1.2fr) minmax(360px, 0.8fr);
+    align-items: end;
+  }
+
+  .chartGrid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }

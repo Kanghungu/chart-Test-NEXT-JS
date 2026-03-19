@@ -1,8 +1,14 @@
-﻿"use client";
+"use client";
+
 import { useEffect, useId } from "react";
 import "./TradingViewChart.css";
 
-export default function TradingViewChart({ symbol }: { symbol: string }) {
+interface TradingViewChartProps {
+  symbol: string;
+  interval?: string;
+}
+
+export default function TradingViewChart({ symbol, interval = "60" }: TradingViewChartProps) {
   const chartId = useId();
 
   useEffect(() => {
@@ -14,22 +20,24 @@ export default function TradingViewChart({ symbol }: { symbol: string }) {
       document.body.appendChild(script);
     }
 
-    const interval = setInterval(() => {
+    const timer = setInterval(() => {
       // @ts-ignore
       if (window.TradingView) {
         const container = document.getElementById(chartId);
 
-        if (!container || container.childElementCount > 0) {
-          clearInterval(interval);
+        if (!container) {
+          clearInterval(timer);
           return;
         }
+
+        container.innerHTML = "";
 
         // @ts-ignore
         new window.TradingView.widget({
           width: "100%",
           height: 400,
           symbol,
-          interval: "60",
+          interval,
           studies: ["BB@tv-basicstudies"],
           timezone: "Etc/UTC",
           theme: "dark",
@@ -37,13 +45,12 @@ export default function TradingViewChart({ symbol }: { symbol: string }) {
           locale: "ko",
           container_id: chartId
         });
-        clearInterval(interval);
+        clearInterval(timer);
       }
     }, 300);
 
-    return () => clearInterval(interval);
-  }, [symbol, chartId]);
+    return () => clearInterval(timer);
+  }, [symbol, interval, chartId]);
 
   return <div id={chartId} className="tv-chart-container" />;
 }
-
