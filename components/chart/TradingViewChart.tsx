@@ -17,6 +17,13 @@ export default function TradingViewChart({ symbol }: { symbol: string }) {
     const interval = setInterval(() => {
       // @ts-ignore
       if (window.TradingView) {
+        const container = document.getElementById(chartId);
+
+        if (!container || container.childElementCount > 0) {
+          clearInterval(interval);
+          return;
+        }
+
         // @ts-ignore
         new window.TradingView.widget({
           width: "100%",

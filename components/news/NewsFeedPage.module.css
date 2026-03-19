@@ -1,15 +1,15 @@
-﻿.pageSection {
-  padding: 1.5rem;
+.pageSection {
   max-width: 64rem;
   margin: 0 auto;
+  padding: 1.5rem;
   background: #d1d5db;
 }
 
 .pageTitle {
+  margin-bottom: 1.5rem;
+  color: #111827;
   font-size: 2.25rem;
   font-weight: 700;
-  color: #111827;
-  margin-bottom: 1.5rem;
 }
 
 .newsList {
@@ -23,16 +23,16 @@
 
 .rowTop {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: space-between;
   gap: 0.5rem;
 }
 
 .newsLink {
+  overflow: hidden;
   color: #2563eb;
   font-weight: 500;
   text-decoration: none;
-  overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -42,38 +42,38 @@
 }
 
 .toggleBtn {
-  font-size: 0.875rem;
-  color: #6b7280;
   border: none;
   background: transparent;
+  color: #6b7280;
+  font-size: 0.875rem;
   cursor: pointer;
 }
 
 .summary {
+  margin-top: 0.25rem;
   color: #6b7280;
   font-size: 0.875rem;
-  margin-top: 0.25rem;
 }
 
 .metaRow {
   display: flex;
   justify-content: space-between;
+  margin-top: 0.25rem;
   color: #9ca3af;
   font-size: 0.75rem;
-  margin-top: 0.25rem;
 }
 
 .expandWrap {
-  margin-top: 0.75rem;
   overflow: hidden;
+  margin-top: 0.75rem;
 }
 
 .expandCard {
   padding: 0.75rem;
-  background: #f9fafb;
   border-radius: 0.5rem;
-  font-size: 0.875rem;
+  background: #f9fafb;
   color: #374151;
+  font-size: 0.875rem;
 }
 
 .detailLinkWrap {
@@ -86,22 +86,21 @@
 }
 
 .homeBtnWrap {
-  text-align: center;
   margin-top: 1rem;
+  text-align: center;
 }
 
 .homeBtn {
-  padding: 0.75rem 1.5rem;
-  background: #3b82f6;
-  color: #fff;
   border: none;
   border-radius: 0.75rem;
+  background: #3b82f6;
   box-shadow: 0 4px 12px rgb(0 0 0 / 0.15);
+  color: #fff;
   cursor: pointer;
+  padding: 0.75rem 1.5rem;
   transition: background-color 0.2s ease;
 }
 
 .homeBtn:hover {
   background: #2563eb;
 }
-

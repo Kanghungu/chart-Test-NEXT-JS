@@ -1,39 +1,38 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
-import NewsList from "@/components/NewsList";
-import NewsTitle from "@/components/NewsTitle";
-import MarketOverview from "@/components/MarketOverview";
-import SideWatchlist from "@/components/SideWatchlist";
-import SideEvents from "@/components/SideEvents";
-import SideEconomyAI from "@/components/SideEconomyAI";
+import MarketOverview from "@/components/market/MarketOverview";
+import NewsList from "@/components/news/NewsList";
+import NewsTitle from "@/components/news/NewsTitle";
+import SideEconomyAI from "@/components/sidebar/SideEconomyAI";
+import SideEvents from "@/components/sidebar/SideEvents";
+import SideWatchlist from "@/components/sidebar/SideWatchlist";
+import styles from "./page.module.css";
 
 export default function Home() {
   return (
-    <main className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-950 to-gray-800 py-12 px-2 md:px-0">
-      <div className="max-w-7xl mx-auto grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_320px] gap-8">
-        <div className="space-y-10">
-          <section className="rounded-2xl shadow-xl bg-gray-800/80 p-6 border border-gray-700">
+    <main className={styles.page}>
+      <div className={styles.layout}>
+        <div className={styles.mainColumn}>
+          <section className={styles.panel}>
             <MarketOverview />
           </section>
 
-          <section className="rounded-2xl shadow-xl bg-gray-800/80 p-6 border border-gray-700">
+          <section className={styles.panel}>
             <NewsTitle />
-            <div className="mt-4">
+            <div className={styles.newsContent}>
               <NewsList />
             </div>
           </section>
 
-          <div className="flex justify-center">
+          <div className={styles.chartButtonWrap}>
             <Link href="/chart">
-              <button className="px-8 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-semibold rounded-full shadow-lg hover:scale-105 hover:from-blue-600 hover:to-indigo-700 transition-all duration-200">
-                차트 대시보드 열기
-              </button>
+              <button className={styles.chartButton}>차트 대시보드 열기</button>
             </Link>
           </div>
         </div>
 
-        <div className="space-y-6 xl:sticky xl:top-6 self-start">
+        <div className={styles.sidebar}>
           <SideEconomyAI />
           <SideWatchlist />
           <SideEvents />
@@ -42,4 +41,3 @@ export default function Home() {
     </main>
   );
 }
-
