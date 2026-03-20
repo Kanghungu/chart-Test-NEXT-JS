@@ -11,6 +11,10 @@ export const metadata = {
 const NAV_ITEMS = [
   { href: "/", label: "\uD648" },
   { href: "/chart", label: "\uCC28\uD2B8" },
+  { href: "/calendar", label: "\uCEA8\uB9B0\uB354" },
+  { href: "/watchlist", label: "\uC6CC\uCE58\uB9AC\uC2A4\uD2B8" },
+  { href: "/signals", label: "\uC2DC\uADF8\uB110" },
+  { href: "/briefing", label: "\uBE0C\uB9AC\uD551" },
   { href: "/stock-news", label: "\uC8FC\uC2DD\uB274\uC2A4" },
   { href: "/crypto-news", label: "\uCF54\uC778\uB274\uC2A4" }
 ];
