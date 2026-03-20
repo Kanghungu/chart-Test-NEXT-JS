@@ -8,6 +8,13 @@ export const metadata = {
     "\uC2E4\uC2DC\uAC04 \uC2DC\uC138, \uB274\uC2A4, \uC2DC\uADF8\uB110\uC744 \uD55C\uB208\uC5D0 \uBCF4\uB294 \uD22C\uC790 \uB300\uC2DC\uBCF4\uB4DC"
 };
 
+const NAV_ITEMS = [
+  { href: "/", label: "\uD648" },
+  { href: "/chart", label: "\uCC28\uD2B8" },
+  { href: "/stock-news", label: "\uC8FC\uC2DD\uB274\uC2A4" },
+  { href: "/crypto-news", label: "\uCF54\uC778\uB274\uC2A4" }
+];
+
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
@@ -24,12 +31,11 @@ export default function RootLayout({ children }) {
             </div>
 
             <div className={styles.nav}>
-              <Link href="/" className={styles.navLink}>
-                {"\uD648"}
-              </Link>
-              <Link href="/chart" className={styles.navLink}>
-                {"\uCC28\uD2B8"}
-              </Link>
+              {NAV_ITEMS.map((item) => (
+                <Link key={item.href} href={item.href} className={styles.navLink}>
+                  {item.label}
+                </Link>
+              ))}
               <span className={styles.liveBadge}>LIVE</span>
             </div>
           </div>

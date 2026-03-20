@@ -16,7 +16,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
+  gap: 1.25rem;
   padding: 1rem;
 }
 
@@ -41,6 +41,8 @@
   display: none;
   align-items: center;
   gap: 0.5rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
 .navLink {
@@ -50,11 +52,17 @@
   color: rgb(226 232 240);
   font-size: 0.75rem;
   padding: 0.25rem 0.75rem;
-  transition: background-color 0.2s ease;
+  white-space: nowrap;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease;
 }
 
 .navLink:hover {
   background: rgb(30 41 59);
+  border-color: rgb(96 165 250 / 0.45);
+  transform: translateY(-1px);
 }
 
 .liveBadge {
@@ -81,5 +89,17 @@
 @media (min-width: 768px) {
   .nav {
     display: flex;
+  }
+}
+
+@media (max-width: 960px) {
+  .headerInner {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .nav {
+    width: 100%;
+    justify-content: flex-start;
   }
 }
