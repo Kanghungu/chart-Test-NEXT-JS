@@ -6,7 +6,7 @@ export default function CryptoNewsPage() {
   return (
     <NewsFeedPage
       title="전체 코인 뉴스"
-      intro="비트코인, 이더리움, 알트 순환 흐름을 한 번에 볼 수 있도록 실시간 헤드라인과 핵심 요약을 모아놨습니다."
+      intro="비트코인, 이더리움, 규제, ETF 이슈처럼 시장 방향에 영향을 주는 코인 뉴스를 한 화면에서 정리해 보여줍니다."
       badge="CRYPTO STREAM"
       variant="crypto"
       quickFilters={["Bitcoin", "Ethereum", "ETF", "SEC", "Layer2", "Solana"]}

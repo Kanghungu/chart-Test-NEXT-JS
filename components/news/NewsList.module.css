@@ -187,7 +187,10 @@
   color: rgb(243 244 246);
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-height: 1.45;
   transition: color 0.2s ease;
 }
 

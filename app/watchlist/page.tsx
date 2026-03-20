@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import styles from "@/components/discover/DiscoverPage.module.css";
+import { formatCurrency, formatPercent } from "@/lib/formatters";
 
 type WatchItem = {
   symbol: string;
@@ -10,21 +11,6 @@ type WatchItem = {
   price: number | null;
   changePercent: number | null;
 };
-
-function formatPrice(value: number | null) {
-  if (typeof value !== "number") return "-";
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    maximumFractionDigits: value >= 1000 ? 0 : 2
-  }).format(value);
-}
-
-function formatPercent(value: number | null) {
-  if (typeof value !== "number") return "-";
-  const sign = value > 0 ? "+" : "";
-  return `${sign}${value.toFixed(2)}%`;
-}
 
 export default function WatchlistPage() {
   const [items, setItems] = useState<WatchItem[]>([]);
@@ -135,7 +121,7 @@ export default function WatchlistPage() {
                         <p className={styles.itemMeta}>{item.group === "crypto" ? "Crypto" : "US Stock"}</p>
                       </div>
                       <div className={styles.itemValue}>
-                        <p className={styles.price}>{formatPrice(item.price)}</p>
+                        <p className={styles.price}>{formatCurrency(item.price)}</p>
                         <p className={up ? styles.up : styles.down}>{formatPercent(item.changePercent)}</p>
                       </div>
                     </div>

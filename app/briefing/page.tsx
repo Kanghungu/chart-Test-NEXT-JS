@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import styles from "@/components/discover/DiscoverPage.module.css";
+import { formatPercent } from "@/lib/formatters";
 
 type SnapshotAsset = {
   symbol: string;
@@ -26,12 +27,6 @@ const QUICK_PROMPTS = [
   "지금 코인과 기술주 중 어디에 더 리스크 온 신호가 강한지 설명해줘.",
   "오늘 주목해야 할 경제 일정이 시장에 어떤 영향을 줄지 알려줘."
 ];
-
-function formatPercent(value: number | null) {
-  if (typeof value !== "number") return "-";
-  const sign = value > 0 ? "+" : "";
-  return `${sign}${value.toFixed(2)}%`;
-}
 
 export default function BriefingPage() {
   const [question, setQuestion] = useState(QUICK_PROMPTS[0]);

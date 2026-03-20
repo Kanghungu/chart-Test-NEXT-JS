@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import styles from "./HomeDashboardExtras.module.css";
+import { formatCurrency, formatPercent } from "@/lib/formatters";
 
 type WatchItem = {
   symbol: string;
@@ -53,21 +54,6 @@ const QUICK_LINKS = [
     description: "코인, 기술주, 매크로 차트를 한 화면에서 비교합니다."
   }
 ];
-
-function formatPercent(value: number | null) {
-  if (typeof value !== "number") return "-";
-  const sign = value > 0 ? "+" : "";
-  return `${sign}${value.toFixed(2)}%`;
-}
-
-function formatPrice(value: number | null) {
-  if (typeof value !== "number") return "-";
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    maximumFractionDigits: value >= 1000 ? 0 : 2
-  }).format(value);
-}
 
 function getImpactTone(impact: string) {
   if (impact.includes("높")) return styles.highImpact;
@@ -121,13 +107,12 @@ export default function HomeDashboardExtras() {
     };
   }, []);
 
-  const sortedWatchlist = useMemo(() => {
+  const topMovers = useMemo(() => {
     return [...watchlist]
       .filter((item) => typeof item.changePercent === "number")
-      .sort((a, b) => Math.abs(b.changePercent || 0) - Math.abs(a.changePercent || 0));
+      .sort((a, b) => Math.abs(b.changePercent || 0) - Math.abs(a.changePercent || 0))
+      .slice(0, 4);
   }, [watchlist]);
-
-  const topMovers = sortedWatchlist.slice(0, 4);
 
   const strongestAsset = useMemo(() => {
     return [...snapshot.assets]
@@ -146,10 +131,10 @@ export default function HomeDashboardExtras() {
       <div className={styles.sectionHeader}>
         <div>
           <p className={styles.eyebrow}>DISCOVER MORE</p>
-          <h2 className={styles.title}>홈에서 더 다양한 정보를 보도록 확장했어요</h2>
+          <h2 className={styles.title}>홈에서 더 다양한 정보를 자연스럽게 확인할 수 있어요</h2>
         </div>
         <p className={styles.description}>
-          뉴스와 차트만 넘나들지 않아도 되도록, 자산 움직임과 일정, 빠른 이동 경로를 한 번에 묶었습니다.
+          뉴스와 차트만 오가는 대신, 자산 움직임과 일정, 빠른 이동 경로를 함께 묶어서 탐색 흐름을 더 편하게 만들었습니다.
         </p>
       </div>
 
@@ -172,13 +157,9 @@ export default function HomeDashboardExtras() {
 
           <div className={styles.briefGrid}>
             <div className={styles.briefCard}>
-              <span className={styles.briefLabel}>공포·탐욕</span>
-              <strong className={styles.briefValue}>
-                {snapshot.fearGreed ? `${snapshot.fearGreed.value}` : "-"}
-              </strong>
-              <p className={styles.briefMeta}>
-                {snapshot.fearGreed?.classification || "지표 대기 중"}
-              </p>
+              <span className={styles.briefLabel}>공포·탐욕 지수</span>
+              <strong className={styles.briefValue}>{snapshot.fearGreed ? `${snapshot.fearGreed.value}` : "-"}</strong>
+              <p className={styles.briefMeta}>{snapshot.fearGreed?.classification || "지표 대기 중"}</p>
             </div>
 
             <div className={styles.briefCard}>
@@ -204,6 +185,7 @@ export default function HomeDashboardExtras() {
           <div className={styles.moverList}>
             {topMovers.map((item) => {
               const isUp = typeof item.changePercent === "number" && item.changePercent >= 0;
+
               return (
                 <div key={item.symbol} className={styles.moverRow}>
                   <div>
@@ -211,10 +193,8 @@ export default function HomeDashboardExtras() {
                     <p className={styles.assetSymbol}>{item.symbol}</p>
                   </div>
                   <div className={styles.assetMeta}>
-                    <p className={styles.assetPrice}>{formatPrice(item.price)}</p>
-                    <p className={isUp ? styles.positiveText : styles.negativeText}>
-                      {formatPercent(item.changePercent)}
-                    </p>
+                    <p className={styles.assetPrice}>{formatCurrency(item.price)}</p>
+                    <p className={isUp ? styles.positiveText : styles.negativeText}>{formatPercent(item.changePercent)}</p>
                   </div>
                 </div>
               );
@@ -260,7 +240,7 @@ export default function HomeDashboardExtras() {
               <p className={styles.promptText}>Bitcoin, Ethereum, ETF, SEC, Layer2, Solana</p>
             </div>
             <div className={styles.promptCard}>
-              <p className={styles.promptLabel}>차트에서 먼저 비교해볼 흐름</p>
+              <p className={styles.promptLabel}>차트에서 먼저 비교할 흐름</p>
               <p className={styles.promptText}>BTC vs ETH, SOL / XRP, NVDA / TSLA, DXY / XAUUSD</p>
             </div>
           </div>

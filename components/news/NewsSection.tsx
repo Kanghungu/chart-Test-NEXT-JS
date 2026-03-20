@@ -1,6 +1,6 @@
 import styles from "./NewsList.module.css";
 import { NewsItem, NewsType } from "./newsTypes";
-import { getLink, getPublishedAt, getTitle } from "./newsUtils";
+import { getLink, getPublishedLabel, getPublisher, getTitle } from "./newsUtils";
 
 interface NewsSectionProps {
   items: NewsItem[];
@@ -11,7 +11,7 @@ interface NewsSectionProps {
 const SECTION_LABEL = {
   crypto: "코인",
   stock: "주식"
-};
+} satisfies Record<NewsType, string>;
 
 export default function NewsSection({ items, isFullColumn, type }: NewsSectionProps) {
   const titleClassName = type === "crypto" ? styles.cryptoTitle : styles.stockTitle;
@@ -38,8 +38,8 @@ export default function NewsSection({ items, isFullColumn, type }: NewsSectionPr
             </a>
 
             <div className={styles.metaRow}>
-              <span className={styles.metaText}>{item.publisher || "출처 미상"}</span>
-              <span className={`${styles.metaText} ${styles.metaRight}`}>{getPublishedAt(item) || "-"}</span>
+              <span className={styles.metaText}>{getPublisher(item)}</span>
+              <span className={`${styles.metaText} ${styles.metaRight}`}>{getPublishedLabel(item)}</span>
             </div>
           </li>
         ))}

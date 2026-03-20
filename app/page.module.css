@@ -36,6 +36,9 @@
 }
 
 .chartButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   border: none;
   border-radius: 9999px;
   background: linear-gradient(to right, rgb(59 130 246), rgb(79 70 229));

@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import styles from "@/components/discover/DiscoverPage.module.css";
+import { formatCurrency, formatPercent } from "@/lib/formatters";
 
 type AssetItem = {
   symbol: string;
@@ -18,21 +19,6 @@ type SnapshotData = {
   } | null;
   cryptoVolumeUsd: number | null;
 };
-
-function formatPercent(value: number | null) {
-  if (typeof value !== "number") return "-";
-  const sign = value > 0 ? "+" : "";
-  return `${sign}${value.toFixed(2)}%`;
-}
-
-function formatMoney(value: number | null) {
-  if (typeof value !== "number") return "-";
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    maximumFractionDigits: value >= 1000 ? 0 : 2
-  }).format(value);
-}
 
 export default function SignalsPage() {
   const [snapshot, setSnapshot] = useState<SnapshotData>({
@@ -133,7 +119,7 @@ export default function SignalsPage() {
             </article>
             <article className={styles.statCard}>
               <p className={styles.statLabel}>24H 코인 거래대금</p>
-              <p className={styles.statValue}>{formatMoney(snapshot.cryptoVolumeUsd)}</p>
+              <p className={styles.statValue}>{formatCurrency(snapshot.cryptoVolumeUsd)}</p>
               <p className={styles.statHint}>유동성 강도 확인용</p>
             </article>
           </div>
@@ -180,7 +166,7 @@ export default function SignalsPage() {
                   <div className={styles.itemRow}>
                     <div>
                       <p className={styles.itemTitle}>{asset.symbol}</p>
-                      <p className={styles.itemMeta}>{formatMoney(asset.price)}</p>
+                      <p className={styles.itemMeta}>{formatCurrency(asset.price)}</p>
                     </div>
                     <span
                       className={

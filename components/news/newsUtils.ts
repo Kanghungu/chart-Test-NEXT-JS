@@ -1,3 +1,4 @@
+import { formatDateTime } from "@/lib/formatters";
 import { NewsItem, NewsType, SortType } from "./newsTypes";
 
 const IMPACT_KEYWORDS = [
@@ -16,20 +17,33 @@ const IMPACT_KEYWORDS = [
   "downgrade"
 ];
 
-export function decodeHtmlEntities(str: string) {
-  if (!str) return "";
+// Browser-only decoding keeps titles/summaries readable when providers return HTML entities.
+export function decodeHtmlEntities(value: string) {
+  if (!value || typeof document === "undefined") return value || "";
 
-  const txt = document.createElement("textarea");
-  txt.innerHTML = str;
-  return txt.value;
+  const textarea = document.createElement("textarea");
+  textarea.innerHTML = value;
+  return textarea.value;
 }
 
 export function getTitle(item: NewsItem) {
   return decodeHtmlEntities(item.title_ko || item.title || "Untitled");
 }
 
+export function getSummary(item: NewsItem) {
+  return decodeHtmlEntities(item.summary_ko || item.description || "");
+}
+
 export function getPublishedAt(item: NewsItem) {
   return item.published_at || item.created_at || "";
+}
+
+export function getPublishedLabel(item: NewsItem) {
+  return formatDateTime(getPublishedAt(item));
+}
+
+export function getPublisher(item: NewsItem) {
+  return item.publisher || "출처 미상";
 }
 
 export function getLink(item: NewsItem, type: NewsType) {
@@ -129,10 +143,8 @@ export function buildNewsSignals(cryptoItems: NewsItem[], stockItems: NewsItem[]
   candidates.sort((a, b) => b.score - a.score);
 
   if (!candidates.length) {
-    return ["현재 강한 뉴스 시그널은 없습니다. 실시간 헤드라인을 추적 중입니다."];
+    return ["현재 강한 뉴스 시그널은 없습니다. 실시간 헤드라인을 계속 추적하고 있습니다."];
   }
 
-  return candidates
-    .slice(0, 3)
-    .map((item) => `${item.type === "crypto" ? "코인" : "주식"} 시그널: ${item.title}`);
+  return candidates.slice(0, 3).map((item) => `${item.type === "crypto" ? "코인" : "주식"} 시그널: ${item.title}`);
 }

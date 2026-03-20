@@ -1,11 +1,15 @@
 .body {
   background: rgb(3 7 18);
   color: rgb(243 244 246);
+  min-height: 100vh;
 }
 
 .header {
   border-bottom: 1px solid rgb(30 41 59);
-  background: rgb(0 0 0 / 0.95);
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  background: rgb(0 0 0 / 0.88);
   backdrop-filter: blur(12px);
 }
 
@@ -38,11 +42,11 @@
 }
 
 .nav {
-  display: none;
   align-items: center;
   gap: 0.5rem;
   flex-wrap: wrap;
   justify-content: flex-end;
+  display: flex;
 }
 
 .navLink {
@@ -76,7 +80,7 @@
 }
 
 .main {
-  min-height: calc(100vh - 132px);
+  min-height: calc(100vh - 148px);
 }
 
 .footer {
@@ -84,12 +88,7 @@
   background: #000;
   color: rgb(209 213 219);
   text-align: center;
-}
-
-@media (min-width: 768px) {
-  .nav {
-    display: flex;
-  }
+  font-size: 0.8rem;
 }
 
 @media (max-width: 960px) {
@@ -101,5 +100,7 @@
   .nav {
     width: 100%;
     justify-content: flex-start;
+    overflow-x: auto;
+    padding-bottom: 0.25rem;
   }
 }

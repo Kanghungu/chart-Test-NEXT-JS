@@ -5,6 +5,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
 import styles from "./NewsFeedPage.module.css";
 import { decodeHtmlEntities } from "./newsUtils";
+import { formatDateTime } from "@/lib/formatters";
 
 type FeedItem = {
   id?: string | number;
@@ -47,30 +48,33 @@ const COPY = {
   searchPlaceholder: "키워드 검색 (ETF, 금리, 비트코인, NVIDIA...)",
   favoritesOnly: "즐겨찾기만 보기",
   spotlight: "스포트라이트",
-  signalBoard: "한눈에 보는 흐름",
-  recentCount: "표시 뉴스",
+  signalBoard: "지금 보는 흐름",
+  recentCount: "표시 중인 뉴스",
   sourceCount: "출처 수",
-  latestUpdate: "최신 시각",
-  emptyDate: "날짜 없음",
+  latestUpdate: "최신 업데이트",
+  emptyDate: "날짜 정보 없음",
   unknownSource: "출처 미상",
-  open: "원문",
-  expand: "더보기",
+  open: "원문 보기",
+  expand: "자세히",
   collapse: "접기",
   share: "링크 복사",
-  copied: "복사됨",
+  copied: "복사 완료",
   home: "홈으로",
   loading: "뉴스를 불러오는 중입니다.",
   error: "뉴스를 불러오지 못했습니다.",
   noResults: "조건에 맞는 뉴스가 없습니다.",
-  favoriteOn: "즐겨찾기 저장",
-  favoriteOff: "즐겨찾기 해제",
+  favoriteOn: "즐겨찾기에 추가",
+  favoriteOff: "즐겨찾기에서 제거",
   summary: "요약",
   sourceLabel: "출처",
-  reset: "전체"
+  reset: "전체",
+  filterLabel: "필터",
+  sortLabel: "정렬",
+  favoriteCount: "즐겨찾기"
 } as const;
 
 function formatDate(value?: string) {
-  return value ? new Date(value).toLocaleString() : COPY.emptyDate;
+  return value ? formatDateTime(value) : COPY.emptyDate;
 }
 
 function getLatestTime(items: PreparedItem[]) {
@@ -135,7 +139,7 @@ export default function NewsFeedPage(props: NewsFeedPageProps) {
         setFavoriteIds(JSON.parse(saved));
       }
     } catch {
-      // ignore localStorage read failures
+      // Ignore localStorage read failures.
     }
   }, [storageKey]);
 
@@ -143,19 +147,21 @@ export default function NewsFeedPage(props: NewsFeedPageProps) {
     try {
       window.localStorage.setItem(storageKey, JSON.stringify(favoriteIds));
     } catch {
-      // ignore localStorage write failures
+      // Ignore localStorage write failures.
     }
   }, [favoriteIds, storageKey]);
 
   useEffect(() => {
     let mounted = true;
 
-    setLoading(true);
-    setError("");
+    const loadItems = async () => {
+      setLoading(true);
+      setError("");
 
-    fetch(fetchUrl)
-      .then((res) => res.json())
-      .then((json) => {
+      try {
+        const res = await fetch(fetchUrl, { cache: "no-store" });
+        const json = await res.json();
+
         if (!mounted) return;
 
         const prepared = (getItems(json) || []).map((item: FeedItem, index: number) =>
@@ -163,17 +169,18 @@ export default function NewsFeedPage(props: NewsFeedPageProps) {
         );
 
         setItems(prepared);
-      })
-      .catch(() => {
+      } catch {
         if (mounted) {
           setError(COPY.error);
         }
-      })
-      .finally(() => {
+      } finally {
         if (mounted) {
           setLoading(false);
         }
-      });
+      }
+    };
+
+    loadItems();
 
     return () => {
       mounted = false;
@@ -234,7 +241,7 @@ export default function NewsFeedPage(props: NewsFeedPageProps) {
       await navigator.clipboard.writeText(item.link);
       setCopiedId(item.id);
     } catch {
-      // ignore clipboard failure
+      // Ignore clipboard failure.
     }
   };
 
@@ -321,9 +328,9 @@ export default function NewsFeedPage(props: NewsFeedPageProps) {
           <h2 className={styles.infoTitle}>{COPY.signalBoard}</h2>
           <ul className={styles.signalList}>
             <li className={styles.signalItem}>{title}</li>
-            <li className={styles.signalItem}>{`필터: ${activeFilter || COPY.reset}`}</li>
-            <li className={styles.signalItem}>{`정렬: ${sortType === "latest" ? COPY.latest : COPY.oldest}`}</li>
-            <li className={styles.signalItem}>{`즐겨찾기: ${favoriteIds.length}`}</li>
+            <li className={styles.signalItem}>{`${COPY.filterLabel}: ${activeFilter || COPY.reset}`}</li>
+            <li className={styles.signalItem}>{`${COPY.sortLabel}: ${sortType === "latest" ? COPY.latest : COPY.oldest}`}</li>
+            <li className={styles.signalItem}>{`${COPY.favoriteCount}: ${favoriteIds.length}`}</li>
           </ul>
         </article>
       </div>
@@ -346,7 +353,7 @@ export default function NewsFeedPage(props: NewsFeedPageProps) {
                   className={favoriteIds.includes(item.id) ? styles.favoriteButtonActive : styles.favoriteButton}
                   aria-label={favoriteIds.includes(item.id) ? COPY.favoriteOff : COPY.favoriteOn}
                 >
-                  {favoriteIds.includes(item.id) ? "★" : "☆"}
+                  {favoriteIds.includes(item.id) ? "저장됨" : "저장"}
                 </button>
 
                 <button onClick={() => handleCopy(item)} className={styles.utilityButton}>
@@ -359,7 +366,7 @@ export default function NewsFeedPage(props: NewsFeedPageProps) {
               </div>
             </div>
 
-            {!openItems[item.id] && <div className={styles.summary}>{item.summary.slice(0, 140)}...</div>}
+            {!openItems[item.id] && <div className={styles.summary}>{item.summary.slice(0, 140) || "요약 정보가 없습니다."}</div>}
 
             <div className={styles.metaRow}>
               <span>{formatDate(item.publishedAt)}</span>
@@ -377,7 +384,7 @@ export default function NewsFeedPage(props: NewsFeedPageProps) {
                 >
                   <div className={styles.expandCard}>
                     <p className={styles.expandLabel}>{COPY.summary}</p>
-                    <p className={styles.expandText}>{item.summary}</p>
+                    <p className={styles.expandText}>{item.summary || "요약 정보가 없습니다."}</p>
                     <div className={styles.linkRow}>
                       <a href={item.detailLink} target="_blank" rel="noopener noreferrer" className={styles.detailLink}>
                         {COPY.open}
@@ -392,8 +399,8 @@ export default function NewsFeedPage(props: NewsFeedPageProps) {
       </ul>
 
       <div className={styles.homeBtnWrap}>
-        <Link href="/">
-          <button className={styles.homeBtn}>{COPY.home}</button>
+        <Link href="/" className={styles.homeBtn}>
+          {COPY.home}
         </Link>
       </div>
     </section>

@@ -6,7 +6,7 @@ export default function StockNewsPage() {
   return (
     <NewsFeedPage
       title="전체 주식 뉴스"
-      intro="미국 주식 흐름을 크게 바꿀 수 있는 핵심 헤드라인을 정렬하고, 즐겨찾기와 필터로 매일 보기 좋게 정리했습니다."
+      intro="미국 주식 시장에서 지금 많이 언급되는 헤드라인을 모아서 보고, 핵심 뉴스만 빠르게 훑을 수 있게 정리했습니다."
       badge="US STOCK FLOW"
       variant="stock"
       quickFilters={["ETF", "Fed", "AI", "Tesla", "NVIDIA", "Earnings"]}

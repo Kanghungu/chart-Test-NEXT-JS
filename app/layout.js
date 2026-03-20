@@ -21,7 +21,7 @@ const NAV_ITEMS = [
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
+    <html lang="ko">
       <body className={styles.body}>
         <header className={styles.header}>
           <div className={styles.headerInner}>
@@ -34,20 +34,20 @@ export default function RootLayout({ children }) {
               </p>
             </div>
 
-            <div className={styles.nav}>
+            <nav className={styles.nav} aria-label="주요 메뉴">
               {NAV_ITEMS.map((item) => (
                 <Link key={item.href} href={item.href} className={styles.navLink}>
                   {item.label}
                 </Link>
               ))}
               <span className={styles.liveBadge}>LIVE</span>
-            </div>
+            </nav>
           </div>
         </header>
 
         <main className={styles.main}>{children}</main>
 
-        <footer className={styles.footer}>2025.09.01 ~ 2025.10.15 Hungu Blog</footer>
+        <footer className={styles.footer}>Market Pulse Korea · 실시간 가격, 뉴스, 시그널을 한 화면에서</footer>
       </body>
     </html>
   );

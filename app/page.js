@@ -31,17 +31,17 @@ export default function Home() {
           </section>
 
           <div className={styles.chartButtonWrap}>
-            <Link href="/chart">
-              <button className={styles.chartButton}>차트 대시보드 열기</button>
+            <Link href="/chart" className={styles.chartButton}>
+              차트 대시보드 열기
             </Link>
           </div>
         </div>
 
-        <div className={styles.sidebar}>
+        <aside className={styles.sidebar}>
           <SideEconomyAI />
           <SideWatchlist />
           <SideEvents />
-        </div>
+        </aside>
       </div>
     </main>
   );

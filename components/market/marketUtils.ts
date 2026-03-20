@@ -1,4 +1,5 @@
 import { AssetItem, SnapshotData, TickerItem } from "./marketTypes";
+import { formatCurrency, formatPercent } from "@/lib/formatters";
 
 export const COPY = {
   unstableSource: "\uC77C\uBD80 \uB370\uC774\uD130 \uC18C\uC2A4\uAC00 \uC77C\uC2DC\uC801\uC73C\uB85C \uBD88\uC548\uC815\uD569\uB2C8\uB2E4.",
@@ -39,22 +40,8 @@ export const INITIAL_SNAPSHOT: SnapshotData = {
   updatedAt: null
 };
 
-export function formatMoney(value: number | null, currency = "USD") {
-  if (typeof value !== "number") return "-";
-
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency,
-    maximumFractionDigits: value >= 1000 ? 0 : 2
-  }).format(value);
-}
-
-export function formatPercent(value: number | null) {
-  if (typeof value !== "number") return "-";
-
-  const sign = value > 0 ? "+" : "";
-  return `${sign}${value.toFixed(2)}%`;
-}
+export const formatMoney = formatCurrency;
+export { formatPercent };
 
 export function buildSignals(snapshot: SnapshotData) {
   const list: string[] = [];

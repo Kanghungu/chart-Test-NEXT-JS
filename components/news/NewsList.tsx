@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import styles from "./NewsList.module.css";
 import NewsSection from "./NewsSection";
 import { FilterType, NewsItem, SortType } from "./newsTypes";
@@ -20,13 +20,32 @@ export default function NewsList() {
   const [keyword, setKeyword] = useState("");
 
   useEffect(() => {
-    fetch("/api/news/crypto")
-      .then((res) => res.json())
-      .then((data) => setCryptoNews(data.results || []));
+    let mounted = true;
 
-    fetch("/api/news/stock")
-      .then((res) => res.json())
-      .then((json) => setStockNews(json.data || []));
+    const loadNews = async () => {
+      try {
+        const [cryptoRes, stockRes] = await Promise.all([
+          fetch("/api/news/crypto", { cache: "no-store" }),
+          fetch("/api/news/stock", { cache: "no-store" })
+        ]);
+        const [cryptoJson, stockJson] = await Promise.all([cryptoRes.json(), stockRes.json()]);
+
+        if (!mounted) return;
+
+        setCryptoNews(cryptoJson.results || []);
+        setStockNews(stockJson.data || []);
+      } catch {
+        if (!mounted) return;
+        setCryptoNews([]);
+        setStockNews([]);
+      }
+    };
+
+    loadNews();
+
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   const preparedCryptoNews = useMemo(() => {
@@ -35,7 +54,7 @@ export default function NewsList() {
 
   const preparedStockNews = useMemo(() => {
     return filterAndSortNews(stockNews, "stock", keyword, (item) => item.summary_ko || "", sortType);
-  }, [stockNews, keyword, sortType]);
+  }, [keyword, sortType, stockNews]);
 
   const newsSignals = useMemo(() => {
     return buildNewsSignals(preparedCryptoNews, preparedStockNews);
@@ -63,15 +82,11 @@ export default function NewsList() {
           <input
             value={keyword}
             onChange={(e) => setKeyword(e.target.value)}
-            placeholder="키워드 검색 (ETF, 금리, 테슬라...)"
+            placeholder="키워드 검색 (ETF, 금리, 테슬라, 비트코인...)"
             className={styles.keywordInput}
           />
 
-          <select
-            value={sortType}
-            onChange={(e) => setSortType(e.target.value as SortType)}
-            className={styles.sortSelect}
-          >
+          <select value={sortType} onChange={(e) => setSortType(e.target.value as SortType)} className={styles.sortSelect}>
             <option value="latest">최신순</option>
             <option value="impact">영향도순</option>
           </select>
