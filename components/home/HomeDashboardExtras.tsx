@@ -34,6 +34,20 @@ type SnapshotData = {
   } | null;
 };
 
+type DashboardSignal = {
+  id: string;
+  title: string;
+  summary: string;
+  tone: "UP" | "DOWN" | "NEUTRAL";
+};
+
+type DashboardBriefing = {
+  id: string;
+  title: string;
+  summary: string;
+  marketView: string | null;
+};
+
 const QUICK_LINKS = [
   {
     href: "/stock-news",
@@ -65,22 +79,26 @@ export default function HomeDashboardExtras() {
   const [watchlist, setWatchlist] = useState<WatchItem[]>([]);
   const [events, setEvents] = useState<EventItem[]>([]);
   const [snapshot, setSnapshot] = useState<SnapshotData>({ assets: [], fearGreed: null });
+  const [signals, setSignals] = useState<DashboardSignal[]>([]);
+  const [briefings, setBriefings] = useState<DashboardBriefing[]>([]);
 
   useEffect(() => {
     let mounted = true;
 
     const load = async () => {
       try {
-        const [watchRes, eventRes, snapshotRes] = await Promise.all([
+        const [watchRes, eventRes, snapshotRes, dashboardRes] = await Promise.all([
           fetch("/api/market/watchlist", { cache: "no-store" }),
           fetch("/api/market/events", { cache: "no-store" }),
-          fetch("/api/market/snapshot", { cache: "no-store" })
+          fetch("/api/market/snapshot", { cache: "no-store" }),
+          fetch("/api/db/dashboard", { cache: "no-store" })
         ]);
 
-        const [watchJson, eventJson, snapshotJson] = await Promise.all([
+        const [watchJson, eventJson, snapshotJson, dashboardJson] = await Promise.all([
           watchRes.json(),
           eventRes.json(),
-          snapshotRes.json()
+          snapshotRes.json(),
+          dashboardRes.json()
         ]);
 
         if (!mounted) return;
@@ -91,10 +109,14 @@ export default function HomeDashboardExtras() {
           assets: Array.isArray(snapshotJson?.assets) ? snapshotJson.assets : [],
           fearGreed: snapshotJson?.fearGreed ?? null
         });
+        setSignals(Array.isArray(dashboardJson?.signals) ? dashboardJson.signals.slice(0, 3) : []);
+        setBriefings(Array.isArray(dashboardJson?.briefings) ? dashboardJson.briefings.slice(0, 2) : []);
       } catch {
         if (!mounted) return;
         setWatchlist([]);
         setEvents([]);
+        setSignals([]);
+        setBriefings([]);
       }
     };
 
@@ -126,6 +148,20 @@ export default function HomeDashboardExtras() {
       .sort((a, b) => (a.changePercent || 0) - (b.changePercent || 0))[0];
   }, [snapshot.assets]);
 
+  const marketBreadth = useMemo(() => {
+    const rising = snapshot.assets.filter((asset) => typeof asset.changePercent === "number" && asset.changePercent > 0).length;
+    const falling = snapshot.assets.filter((asset) => typeof asset.changePercent === "number" && asset.changePercent < 0).length;
+    return { rising, falling };
+  }, [snapshot.assets]);
+
+  const featuredBriefing = briefings[0] ?? null;
+
+  const toneClassName = (tone: DashboardSignal["tone"]) => {
+    if (tone === "UP") return styles.toneUp;
+    if (tone === "DOWN") return styles.toneDown;
+    return styles.toneNeutral;
+  };
+
   return (
     <section className={styles.root}>
       <div className={styles.sectionHeader}>
@@ -147,6 +183,80 @@ export default function HomeDashboardExtras() {
           </Link>
         ))}
       </div>
+
+      <section className={styles.spotlightGrid}>
+        <article className={`${styles.panel} ${styles.spotlightPanel}`}>
+          <div className={styles.panelHeader}>
+            <div>
+              <p className={styles.spotlightEyebrow}>TODAY'S PLAYBOOK</p>
+              <h3 className={styles.panelTitle}>한 번에 읽는 시장 컨텍스트</h3>
+            </div>
+            <span className={styles.panelBadge}>DB LIVE</span>
+          </div>
+
+          <div className={styles.spotlightSummary}>
+            <div className={styles.spotlightCard}>
+              <p className={styles.spotlightLabel}>Latest briefing</p>
+              <strong className={styles.spotlightTitle}>{featuredBriefing?.title || "Preparing market summary..."}</strong>
+              <p className={styles.spotlightText}>
+                {featuredBriefing?.summary || "Seeded briefing and dashboard commentary will appear here."}
+              </p>
+            </div>
+
+            <div className={styles.spotlightMiniGrid}>
+              <div className={styles.spotlightMiniCard}>
+                <span className={styles.briefLabel}>Rising assets</span>
+                <strong className={styles.briefValue}>{marketBreadth.rising}</strong>
+                <p className={styles.briefMeta}>Positive movers in the latest snapshot</p>
+              </div>
+              <div className={styles.spotlightMiniCard}>
+                <span className={styles.briefLabel}>Falling assets</span>
+                <strong className={styles.briefValue}>{marketBreadth.falling}</strong>
+                <p className={styles.briefMeta}>Names still trading on the back foot</p>
+              </div>
+            </div>
+          </div>
+
+          <div className={styles.signalRail}>
+            {signals.map((signal) => (
+              <div key={signal.id} className={styles.signalCard}>
+                <div className={styles.signalCardTop}>
+                  <strong className={styles.signalCardTitle}>{signal.title}</strong>
+                  <span className={`${styles.signalTone} ${toneClassName(signal.tone)}`}>{signal.tone}</span>
+                </div>
+                <p className={styles.signalCardText}>{signal.summary}</p>
+              </div>
+            ))}
+            {!signals.length ? <p className={styles.empty}>Signal data is loading from the database...</p> : null}
+          </div>
+        </article>
+
+        <article className={`${styles.panel} ${styles.snapshotSidePanel}`}>
+          <div className={styles.panelHeader}>
+            <h3 className={styles.panelTitle}>Quick pulse</h3>
+            <span className={styles.panelSubtle}>overview</span>
+          </div>
+
+          <div className={styles.stackStats}>
+            <div className={styles.stackStatCard}>
+              <span className={styles.briefLabel}>Strongest asset</span>
+              <strong className={styles.briefValue}>{strongestAsset?.symbol || "-"}</strong>
+              <p className={styles.positiveText}>{formatPercent(strongestAsset?.changePercent ?? null)}</p>
+            </div>
+            <div className={styles.stackStatCard}>
+              <span className={styles.briefLabel}>Weakest asset</span>
+              <strong className={styles.briefValue}>{weakestAsset?.symbol || "-"}</strong>
+              <p className={styles.negativeText}>{formatPercent(weakestAsset?.changePercent ?? null)}</p>
+            </div>
+            <div className={styles.stackStatCard}>
+              <span className={styles.briefLabel}>Market view</span>
+              <p className={styles.briefMeta}>
+                {featuredBriefing?.marketView || "Risk appetite and event flow summary will appear here."}
+              </p>
+            </div>
+          </div>
+        </article>
+      </section>
 
       <div className={styles.grid}>
         <article className={styles.panel}>
