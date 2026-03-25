@@ -1,17 +1,160 @@
-// generator client {
-//   provider = "prisma-client-js"
-//   output   = "../app/generated/prisma"
-// }
-//
-// datasource db {
-//   provider = "postgresql"
-//   url      = env("DATABASE_URL")
-// }
 datasource db {
-  provider = "postgresql"
-  url      = "postgresql://neondb_owner:npg_xOpERFc49qyL@ep-still-block-a1kjm0gk-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 generator client {
   provider = "prisma-client-js"
+}
+
+enum AssetType {
+  CRYPTO
+  STOCK
+  INDEX
+  ETF
+  FOREX
+  COMMODITY
+}
+
+enum NewsCategory {
+  CRYPTO
+  STOCK
+  MACRO
+}
+
+enum EventImpact {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum SignalTone {
+  UP
+  DOWN
+  NEUTRAL
+}
+
+model Asset {
+  id              String                @id @default(cuid())
+  symbol          String                @unique
+  name            String
+  type            AssetType
+  market          String?
+  currency        String                @default("USD")
+  isActive        Boolean               @default(true)
+  createdAt       DateTime              @default(now())
+  updatedAt       DateTime              @updatedAt
+  watchlistEntries WatchlistEntry[]
+  snapshotItems   MarketSnapshotAsset[]
+
+  @@index([type, isActive])
+}
+
+model WatchlistEntry {
+  id         String   @id @default(cuid())
+  assetId     String
+  groupLabel String
+  sortOrder  Int      @default(0)
+  isPinned   Boolean  @default(false)
+  note       String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  asset      Asset    @relation(fields: [assetId], references: [id], onDelete: Cascade)
+
+  @@unique([assetId, groupLabel])
+  @@index([groupLabel, sortOrder])
+}
+
+model MarketSnapshot {
+  id                    String                @id @default(cuid())
+  label                 String                @default("global")
+  capturedAt            DateTime              @default(now())
+  fearGreedValue        Int?
+  fearGreedClassification String?
+  cryptoVolumeUsd       Decimal?              @db.Decimal(20, 2)
+  warnings              Json?
+  createdAt             DateTime              @default(now())
+  items                 MarketSnapshotAsset[]
+
+  @@index([capturedAt])
+  @@index([label, capturedAt])
+}
+
+model MarketSnapshotAsset {
+  id            String         @id @default(cuid())
+  snapshotId    String
+  assetId       String
+  price         Decimal?       @db.Decimal(20, 8)
+  changePercent Decimal?       @db.Decimal(10, 4)
+  volume        Decimal?       @db.Decimal(20, 2)
+  createdAt     DateTime       @default(now())
+  snapshot      MarketSnapshot @relation(fields: [snapshotId], references: [id], onDelete: Cascade)
+  asset         Asset          @relation(fields: [assetId], references: [id], onDelete: Cascade)
+
+  @@unique([snapshotId, assetId])
+  @@index([assetId, createdAt])
+}
+
+model NewsArticle {
+  id          String       @id @default(cuid())
+  externalId  String?      @unique
+  source      String
+  category    NewsCategory
+  title       String
+  summary     String?
+  url         String       @unique
+  imageUrl    String?
+  language    String?
+  publishedAt DateTime
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  @@index([category, publishedAt])
+  @@index([source, publishedAt])
+}
+
+model EconomicEvent {
+  id           String      @id @default(cuid())
+  externalId   String?     @unique
+  title        String
+  country      String
+  countryCode  String?
+  impact       EventImpact
+  startsAt     DateTime?
+  displayTime  String?
+  source       String
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  @@index([startsAt, impact])
+  @@index([country, startsAt])
+}
+
+model MarketSignal {
+  id          String     @id @default(cuid())
+  externalId  String?    @unique
+  title       String
+  summary     String
+  tone        SignalTone
+  source      String
+  signalDate  DateTime   @default(now())
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@index([signalDate, tone])
+}
+
+model Briefing {
+  id             String   @id @default(cuid())
+  externalId     String?  @unique
+  title          String
+  prompt         String?
+  summary        String
+  marketView     String?
+  publishedAt    DateTime @default(now())
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([publishedAt])
 }
