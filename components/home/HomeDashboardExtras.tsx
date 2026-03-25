@@ -24,6 +24,7 @@ type SnapshotAsset = {
   symbol: string;
   price: number | null;
   changePercent: number | null;
+  currency?: string;
 };
 
 type SnapshotData = {
@@ -155,6 +156,45 @@ export default function HomeDashboardExtras() {
   }, [snapshot.assets]);
 
   const featuredBriefing = briefings[0] ?? null;
+  const nextEvent = events[0] ?? null;
+
+  const heatmapAssets = useMemo(() => {
+    return [...snapshot.assets]
+      .filter((asset) => typeof asset.changePercent === "number")
+      .sort((a, b) => Math.abs(b.changePercent || 0) - Math.abs(a.changePercent || 0))
+      .slice(0, 6);
+  }, [snapshot.assets]);
+
+  const todayScenario = useMemo(() => {
+    if (snapshot.fearGreed && snapshot.fearGreed.value <= 30) {
+      return {
+        title: "Defensive open",
+        tone: "DOWN" as const,
+        summary: "Fear is elevated, so a cautious first hour and sharp headline reactions are more likely.",
+        focus: nextEvent?.title || "Watch for sudden risk-off moves in high-beta assets."
+      };
+    }
+
+    if (marketBreadth.rising >= marketBreadth.falling + 2) {
+      return {
+        title: "Risk-on continuation",
+        tone: "UP" as const,
+        summary: "More assets are participating on the upside, which supports continuation in leaders.",
+        focus: strongestAsset?.symbol
+          ? `Momentum focus remains on ${strongestAsset.symbol} and other relative-strength names.`
+          : "Lean on leaders with the cleanest upside structure."
+      };
+    }
+
+    return {
+      title: "Range and catalyst watch",
+      tone: "NEUTRAL" as const,
+      summary: "The tape looks balanced, so macro headlines and scheduled events may decide the next move.",
+      focus: nextEvent?.title
+        ? `Primary catalyst: ${nextEvent.title}`
+        : "Monitor the next scheduled macro event for direction."
+    };
+  }, [snapshot.fearGreed, marketBreadth, nextEvent, strongestAsset]);
 
   const toneClassName = (tone: DashboardSignal["tone"]) => {
     if (tone === "UP") return styles.toneUp;
@@ -228,6 +268,52 @@ export default function HomeDashboardExtras() {
               </div>
             ))}
             {!signals.length ? <p className={styles.empty}>Signal data is loading from the database...</p> : null}
+          </div>
+
+          <div className={styles.visualGrid}>
+            <div className={styles.heatmapCard}>
+              <div className={styles.panelHeader}>
+                <h4 className={styles.visualTitle}>Mini heatmap</h4>
+                <span className={styles.panelSubtle}>leaders</span>
+              </div>
+
+              <div className={styles.heatmapGrid}>
+                {heatmapAssets.map((asset) => {
+                  const change = asset.changePercent ?? 0;
+                  const toneClass =
+                    change >= 2
+                      ? styles.heatStrongUp
+                      : change > 0
+                        ? styles.heatUp
+                        : change <= -2
+                          ? styles.heatStrongDown
+                          : styles.heatDown;
+
+                  return (
+                    <div key={asset.symbol} className={`${styles.heatTile} ${toneClass}`}>
+                      <span className={styles.heatSymbol}>{asset.symbol}</span>
+                      <strong className={styles.heatPrice}>{formatCurrency(asset.price)}</strong>
+                      <span className={styles.heatChange}>{formatPercent(asset.changePercent)}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className={styles.scenarioCard}>
+              <div className={styles.panelHeader}>
+                <h4 className={styles.visualTitle}>Today scenario</h4>
+                <span className={`${styles.signalTone} ${toneClassName(todayScenario.tone)}`}>{todayScenario.tone}</span>
+              </div>
+
+              <strong className={styles.scenarioTitle}>{todayScenario.title}</strong>
+              <p className={styles.scenarioText}>{todayScenario.summary}</p>
+
+              <div className={styles.scenarioFocus}>
+                <span className={styles.scenarioLabel}>What to watch</span>
+                <p className={styles.scenarioFocusText}>{todayScenario.focus}</p>
+              </div>
+            </div>
           </div>
         </article>
 
