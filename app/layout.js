@@ -8,6 +8,12 @@ export const metadata = {
   description: "실시간 시세, 뉴스, 시그널을 한눈에 보는 투자 대시보드"
 };
 
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1
+};
+
 export default function RootLayout({ children }) {
   return (
     <html lang="ko">
