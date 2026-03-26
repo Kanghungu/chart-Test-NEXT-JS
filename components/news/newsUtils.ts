@@ -1,5 +1,6 @@
 import { formatDateTime } from "@/lib/formatters";
 import { NewsItem, NewsType, SortType } from "./newsTypes";
+import { Language } from "@/components/i18n/LanguageProvider";
 
 const IMPACT_KEYWORDS = [
   "etf",
@@ -17,7 +18,6 @@ const IMPACT_KEYWORDS = [
   "downgrade"
 ];
 
-// Browser-only decoding keeps titles/summaries readable when providers return HTML entities.
 export function decodeHtmlEntities(value: string) {
   if (!value || typeof document === "undefined") return value || "";
 
@@ -38,12 +38,12 @@ export function getPublishedAt(item: NewsItem) {
   return item.published_at || item.created_at || "";
 }
 
-export function getPublishedLabel(item: NewsItem) {
-  return formatDateTime(getPublishedAt(item));
+export function getPublishedLabel(item: NewsItem, language: Language = "ko") {
+  return formatDateTime(getPublishedAt(item), language === "ko" ? "ko-KR" : "en-US");
 }
 
-export function getPublisher(item: NewsItem) {
-  return item.publisher || "출처 미상";
+export function getPublisher(item: NewsItem, language: Language = "ko") {
+  return item.publisher || (language === "ko" ? "출처 미상" : "Unknown source");
 }
 
 export function getLink(item: NewsItem, type: NewsType) {
@@ -60,24 +60,18 @@ export function getImpactScore(item: NewsItem, type: NewsType) {
   let score = 0;
 
   for (const keyword of IMPACT_KEYWORDS) {
-    if (sourceText.includes(keyword)) {
-      score += 2;
-    }
+    if (sourceText.includes(keyword)) score += 2;
   }
 
   if (type === "crypto" && item.votes) {
     const positive = Number(item.votes.positive || 0);
     const negative = Number(item.votes.negative || 0);
-
-    if (Math.abs(positive - negative) >= 5) {
-      score += 2;
-    }
+    if (Math.abs(positive - negative) >= 5) score += 2;
   }
 
   const published = getPublishedAt(item);
   if (published) {
     const ageHours = (Date.now() - new Date(published).getTime()) / 1000 / 60 / 60;
-
     if (ageHours <= 6) score += 2;
     else if (ageHours <= 24) score += 1;
   }
@@ -92,7 +86,6 @@ export function sortItems(items: NewsItem[], type: NewsType, sort: SortType) {
     copied.sort((a, b) => {
       const scoreDiff = getImpactScore(b, type) - getImpactScore(a, type);
       if (scoreDiff !== 0) return scoreDiff;
-
       return new Date(getPublishedAt(b)).getTime() - new Date(getPublishedAt(a)).getTime();
     });
 
@@ -114,7 +107,6 @@ export function filterAndSortNews(
 
   const filtered = items.filter((item) => {
     if (!query) return true;
-
     const title = getTitle(item).toLowerCase();
     const body = decodeHtmlEntities(bodySelector(item)).toLowerCase();
     return title.includes(query) || body.includes(query);
@@ -123,28 +115,32 @@ export function filterAndSortNews(
   return sortItems(filtered, type, sort);
 }
 
-export function buildNewsSignals(cryptoItems: NewsItem[], stockItems: NewsItem[]) {
+export function buildNewsSignals(cryptoItems: NewsItem[], stockItems: NewsItem[], language: Language) {
   const candidates: { title: string; score: number; type: NewsType }[] = [];
 
   cryptoItems.slice(0, 20).forEach((item) => {
     const score = getImpactScore(item, "crypto");
-    if (score >= 5) {
-      candidates.push({ title: getTitle(item), score, type: "crypto" });
-    }
+    if (score >= 5) candidates.push({ title: getTitle(item), score, type: "crypto" });
   });
 
   stockItems.slice(0, 20).forEach((item) => {
     const score = getImpactScore(item, "stock");
-    if (score >= 5) {
-      candidates.push({ title: getTitle(item), score, type: "stock" });
-    }
+    if (score >= 5) candidates.push({ title: getTitle(item), score, type: "stock" });
   });
 
   candidates.sort((a, b) => b.score - a.score);
 
   if (!candidates.length) {
-    return ["현재 강한 뉴스 시그널은 없습니다. 실시간 헤드라인을 계속 추적하고 있습니다."];
+    return [
+      language === "ko"
+        ? "현재 강한 뉴스 시그널은 없습니다. 헤드라인 흐름을 계속 추적하고 있습니다."
+        : "No strong news signal yet. We are still tracking the headline flow."
+    ];
   }
 
-  return candidates.slice(0, 3).map((item) => `${item.type === "crypto" ? "코인" : "주식"} 시그널: ${item.title}`);
+  return candidates.slice(0, 3).map((item) =>
+    language === "ko"
+      ? `${item.type === "crypto" ? "코인" : "주식"} 시그널 · ${item.title}`
+      : `${item.type === "crypto" ? "Crypto" : "Stock"} signal · ${item.title}`
+  );
 }

@@ -8,9 +8,12 @@ import NewsTitle from "@/components/news/NewsTitle";
 import SideEconomyAI from "@/components/sidebar/SideEconomyAI";
 import SideEvents from "@/components/sidebar/SideEvents";
 import SideWatchlist from "@/components/sidebar/SideWatchlist";
+import { useLanguage } from "@/components/i18n/LanguageProvider";
 import styles from "./page.module.css";
 
 export default function Home() {
+  const { language } = useLanguage();
+
   return (
     <main className={styles.page}>
       <div className={styles.layout}>
@@ -32,7 +35,7 @@ export default function Home() {
 
           <div className={styles.chartButtonWrap}>
             <Link href="/chart" className={styles.chartButton}>
-              차트 대시보드 열기
+              {language === "ko" ? "차트 대시보드 열기" : "Open Chart Dashboard"}
             </Link>
           </div>
         </div>

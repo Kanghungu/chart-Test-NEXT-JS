@@ -1,13 +1,20 @@
 "use client";
 
 import NewsFeedPage from "@/components/news/NewsFeedPage";
+import { useLanguage } from "@/components/i18n/LanguageProvider";
 
 export default function StockNewsPage() {
+  const { language } = useLanguage();
+
   return (
     <NewsFeedPage
-      title="전체 주식 뉴스"
-      intro="미국 주식 시장에서 지금 많이 언급되는 헤드라인을 모아서 보고, 핵심 뉴스만 빠르게 훑을 수 있게 정리했습니다."
-      badge="US STOCK FLOW"
+      title={language === "ko" ? "전체 주식 뉴스" : "All stock news"}
+      intro={
+        language === "ko"
+          ? "미국 주식 시장에서 지금 주목받는 헤드라인과 요약을 한 번에 확인해 보세요."
+          : "See the stock headlines and summaries drawing the most attention right now."
+      }
+      badge={language === "ko" ? "주식 흐름" : "US STOCK FLOW"}
       variant="stock"
       quickFilters={["ETF", "Fed", "AI", "Tesla", "NVIDIA", "Earnings"]}
       fetchUrl="/api/news/stock"

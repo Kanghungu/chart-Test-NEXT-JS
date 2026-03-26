@@ -1,12 +1,15 @@
 import styles from "./MarketOverview.module.css";
 import { AssetItem, SnapshotData } from "./marketTypes";
-import { COPY, DEFAULT_ASSETS, formatMoney, formatPercent } from "./marketUtils";
+import { DEFAULT_ASSETS, formatMoney, formatPercent, getMarketCopy } from "./marketUtils";
+import { useLanguage } from "@/components/i18n/LanguageProvider";
 
 interface MarketSummaryCardsProps {
   snapshot: SnapshotData;
 }
 
 export default function MarketSummaryCards({ snapshot }: MarketSummaryCardsProps) {
+  const { language } = useLanguage();
+  const copy = getMarketCopy(language);
   const assets = snapshot.assets || DEFAULT_ASSETS;
 
   return (
@@ -30,14 +33,14 @@ export default function MarketSummaryCards({ snapshot }: MarketSummaryCardsProps
 
       <div className={styles.metricsGrid}>
         <div className={styles.metricCard}>
-          <p className={styles.metricLabel}>{COPY.fearGreed}</p>
+          <p className={styles.metricLabel}>{copy.fearGreed}</p>
           <p className={styles.metricValue}>
             {snapshot.fearGreed ? `${snapshot.fearGreed.value} (${snapshot.fearGreed.classification})` : "-"}
           </p>
         </div>
 
         <div className={styles.metricCard}>
-          <p className={styles.metricLabel}>{COPY.volume}</p>
+          <p className={styles.metricLabel}>{copy.volume}</p>
           <p className={styles.metricValue}>{formatMoney(snapshot.cryptoVolumeUsd, "USD")}</p>
         </div>
       </div>

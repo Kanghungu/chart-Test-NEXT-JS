@@ -5,14 +5,40 @@ import styles from "./NewsList.module.css";
 import NewsSection from "./NewsSection";
 import { FilterType, NewsItem, SortType } from "./newsTypes";
 import { buildNewsSignals, filterAndSortNews } from "./newsUtils";
+import { useLanguage } from "@/components/i18n/LanguageProvider";
 
-const FILTER_OPTIONS = [
-  { value: "all", label: "전체" },
-  { value: "crypto", label: "코인" },
-  { value: "stock", label: "주식" }
-] as const;
+const COPY = {
+  ko: {
+    filterOptions: [
+      { value: "all", label: "전체" },
+      { value: "crypto", label: "코인" },
+      { value: "stock", label: "주식" }
+    ],
+    placeholder: "키워드 검색 (ETF, 금리, 테슬라, 비트코인...)",
+    latest: "최신순",
+    impact: "영향순",
+    count: "코인",
+    countStock: "주식",
+    signalTitle: "뉴스 시그널"
+  },
+  en: {
+    filterOptions: [
+      { value: "all", label: "All" },
+      { value: "crypto", label: "Crypto" },
+      { value: "stock", label: "Stocks" }
+    ],
+    placeholder: "Search keyword (ETF, rates, Tesla, Bitcoin...)",
+    latest: "Latest",
+    impact: "Impact",
+    count: "Crypto",
+    countStock: "Stocks",
+    signalTitle: "News signals"
+  }
+} as const;
 
 export default function NewsList() {
+  const { language } = useLanguage();
+  const copy = COPY[language];
   const [cryptoNews, setCryptoNews] = useState<NewsItem[]>([]);
   const [stockNews, setStockNews] = useState<NewsItem[]>([]);
   const [filterType, setFilterType] = useState<FilterType>("all");
@@ -31,7 +57,6 @@ export default function NewsList() {
         const [cryptoJson, stockJson] = await Promise.all([cryptoRes.json(), stockRes.json()]);
 
         if (!mounted) return;
-
         setCryptoNews(cryptoJson.results || []);
         setStockNews(stockJson.data || []);
       } catch {
@@ -57,8 +82,8 @@ export default function NewsList() {
   }, [keyword, sortType, stockNews]);
 
   const newsSignals = useMemo(() => {
-    return buildNewsSignals(preparedCryptoNews, preparedStockNews);
-  }, [preparedCryptoNews, preparedStockNews]);
+    return buildNewsSignals(preparedCryptoNews, preparedStockNews, language);
+  }, [language, preparedCryptoNews, preparedStockNews]);
 
   const showCrypto = filterType === "all" || filterType === "crypto";
   const showStock = filterType === "all" || filterType === "stock";
@@ -67,7 +92,7 @@ export default function NewsList() {
     <div className={styles.root}>
       <div className={styles.controlPanel}>
         <div className={styles.filterButtons}>
-          {FILTER_OPTIONS.map((option) => (
+          {copy.filterOptions.map((option) => (
             <button
               key={option.value}
               onClick={() => setFilterType(option.value)}
@@ -82,21 +107,23 @@ export default function NewsList() {
           <input
             value={keyword}
             onChange={(e) => setKeyword(e.target.value)}
-            placeholder="키워드 검색 (ETF, 금리, 테슬라, 비트코인...)"
+            placeholder={copy.placeholder}
             className={styles.keywordInput}
           />
 
           <select value={sortType} onChange={(e) => setSortType(e.target.value as SortType)} className={styles.sortSelect}>
-            <option value="latest">최신순</option>
-            <option value="impact">영향도순</option>
+            <option value="latest">{copy.latest}</option>
+            <option value="impact">{copy.impact}</option>
           </select>
 
-          <div className={styles.countInfo}>코인 {preparedCryptoNews.length} | 주식 {preparedStockNews.length}</div>
+          <div className={styles.countInfo}>
+            {copy.count} {preparedCryptoNews.length} | {copy.countStock} {preparedStockNews.length}
+          </div>
         </div>
       </div>
 
       <div className={styles.signalPanel}>
-        <p className={styles.signalTitle}>뉴스 시그널</p>
+        <p className={styles.signalTitle}>{copy.signalTitle}</p>
         <ul className={styles.signalList}>
           {newsSignals.map((signal, idx) => (
             <li key={`${signal}-${idx}`} className={styles.signalItem}>

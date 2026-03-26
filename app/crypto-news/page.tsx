@@ -1,13 +1,20 @@
 "use client";
 
 import NewsFeedPage from "@/components/news/NewsFeedPage";
+import { useLanguage } from "@/components/i18n/LanguageProvider";
 
 export default function CryptoNewsPage() {
+  const { language } = useLanguage();
+
   return (
     <NewsFeedPage
-      title="전체 코인 뉴스"
-      intro="비트코인, 이더리움, 규제, ETF 이슈처럼 시장 방향에 영향을 주는 코인 뉴스를 한 화면에서 정리해 보여줍니다."
-      badge="CRYPTO STREAM"
+      title={language === "ko" ? "전체 코인 뉴스" : "All crypto news"}
+      intro={
+        language === "ko"
+          ? "비트코인, 이더리움, ETF, 규제 이슈까지 주요 코인 뉴스를 한 화면에서 정리해 봅니다."
+          : "Review Bitcoin, Ethereum, ETF, and regulation headlines in one stream."
+      }
+      badge={language === "ko" ? "코인 스트림" : "CRYPTO STREAM"}
       variant="crypto"
       quickFilters={["Bitcoin", "Ethereum", "ETF", "SEC", "Layer2", "Solana"]}
       fetchUrl="/api/news/crypto"

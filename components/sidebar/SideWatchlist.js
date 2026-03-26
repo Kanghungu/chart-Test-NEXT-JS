@@ -1,7 +1,8 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useState } from "react";
 import styles from "./SideWatchlist.module.css";
+import { useLanguage } from "@/components/i18n/LanguageProvider";
 
 function formatPrice(v) {
   if (typeof v !== "number") return "-";
@@ -18,6 +19,7 @@ function formatChange(v) {
 }
 
 export default function SideWatchlist() {
+  const { language } = useLanguage();
   const [items, setItems] = useState([]);
 
   useEffect(() => {
@@ -49,10 +51,10 @@ export default function SideWatchlist() {
 
   return (
     <section className={styles.panel}>
-      <h3 className={styles.title}>관심 자산</h3>
+      <h3 className={styles.title}>{language === "ko" ? "관심 자산" : "Watchlist"}</h3>
 
       <div className={styles.group}>
-        <p className={styles.groupLabel}>CRYPTO</p>
+        <p className={styles.groupLabel}>{language === "ko" ? "코인" : "CRYPTO"}</p>
         <div className={styles.list}>
           {crypto.map((item) => {
             const up = typeof item.changePercent === "number" && item.changePercent >= 0;
@@ -64,7 +66,9 @@ export default function SideWatchlist() {
                 </div>
                 <div className={styles.valueBox}>
                   <p className={styles.price}>${formatPrice(item.price)}</p>
-                  <p className={`${styles.change} ${up ? styles.up : styles.down}`}>{formatChange(item.changePercent)}</p>
+                  <p className={`${styles.change} ${up ? styles.up : styles.down}`}>
+                    {formatChange(item.changePercent)}
+                  </p>
                 </div>
               </div>
             );
@@ -73,7 +77,7 @@ export default function SideWatchlist() {
       </div>
 
       <div className={styles.group}>
-        <p className={styles.groupLabel}>US STOCKS</p>
+        <p className={styles.groupLabel}>{language === "ko" ? "미국 주식" : "US STOCKS"}</p>
         <div className={styles.list}>
           {stocks.map((item) => {
             const up = typeof item.changePercent === "number" && item.changePercent >= 0;
@@ -85,7 +89,9 @@ export default function SideWatchlist() {
                 </div>
                 <div className={styles.valueBox}>
                   <p className={styles.price}>${formatPrice(item.price)}</p>
-                  <p className={`${styles.change} ${up ? styles.up : styles.down}`}>{formatChange(item.changePercent)}</p>
+                  <p className={`${styles.change} ${up ? styles.up : styles.down}`}>
+                    {formatChange(item.changePercent)}
+                  </p>
                 </div>
               </div>
             );
@@ -95,4 +101,3 @@ export default function SideWatchlist() {
     </section>
   );
 }
-

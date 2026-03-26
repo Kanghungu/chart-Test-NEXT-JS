@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import styles from "@/components/discover/DiscoverPage.module.css";
 import { formatCurrency, formatPercent } from "@/lib/formatters";
+import { useLanguage } from "@/components/i18n/LanguageProvider";
 
 type AssetItem = {
   symbol: string;
@@ -20,7 +21,44 @@ type SnapshotData = {
   cryptoVolumeUsd: number | null;
 };
 
+const COPY = {
+  ko: {
+    eyebrow: "시그널 보드",
+    title: "시장 시그널 센터",
+    description: "가격 변화, 공포탐욕, 거래대금을 한 번에 묶어서 오늘 해석할 만한 시그널을 보여줍니다.",
+    signalCount: "시그널 수",
+    fearGreed: "공포탐욕",
+    volume: "24H 코인 거래대금",
+    generatedSignals: "생성된 시그널",
+    autoSummary: "자동 요약",
+    assetCheck: "자산 체크",
+    snapshot: "스냅샷",
+    positive: "긍정",
+    caution: "주의",
+    neutral: "중립",
+    noSignal: "아직 강한 시그널이 없습니다."
+  },
+  en: {
+    eyebrow: "SIGNAL BOARD",
+    title: "Market signal center",
+    description: "Combine price moves, fear and greed, and volume into actionable market signals.",
+    signalCount: "Signal count",
+    fearGreed: "Fear & Greed",
+    volume: "24H Crypto Volume",
+    generatedSignals: "Generated signals",
+    autoSummary: "Auto summary",
+    assetCheck: "Asset check",
+    snapshot: "snapshot",
+    positive: "Positive",
+    caution: "Caution",
+    neutral: "Neutral",
+    noSignal: "No strong signal yet."
+  }
+} as const;
+
 export default function SignalsPage() {
+  const { language } = useLanguage();
+  const copy = COPY[language];
   const [snapshot, setSnapshot] = useState<SnapshotData>({
     assets: [],
     fearGreed: null,
@@ -62,14 +100,20 @@ export default function SignalsPage() {
       if (typeof asset.changePercent !== "number") return;
       if (asset.changePercent >= 2) {
         list.push({
-          title: `${asset.symbol} 상승 모멘텀`,
-          summary: `${formatPercent(asset.changePercent)} 흐름으로 단기 강세 신호가 보입니다.`,
+          title: language === "ko" ? `${asset.symbol} 상승 모멘텀` : `${asset.symbol} upside momentum`,
+          summary:
+            language === "ko"
+              ? `${formatPercent(asset.changePercent)} 상승으로 단기 강세 신호가 보입니다.`
+              : `${formatPercent(asset.changePercent)} suggests a short-term upside signal.`,
           tone: "up"
         });
       } else if (asset.changePercent <= -2) {
         list.push({
-          title: `${asset.symbol} 하락 압력`,
-          summary: `${formatPercent(asset.changePercent)} 흐름으로 변동성 확대를 주의할 구간입니다.`,
+          title: language === "ko" ? `${asset.symbol} 하락 압력` : `${asset.symbol} downside pressure`,
+          summary:
+            language === "ko"
+              ? `${formatPercent(asset.changePercent)} 움직임으로 변동성 주의 구간입니다.`
+              : `${formatPercent(asset.changePercent)} signals a more fragile, volatile setup.`,
           tone: "down"
         });
       }
@@ -77,50 +121,54 @@ export default function SignalsPage() {
 
     if (snapshot.fearGreed?.value >= 70) {
       list.push({
-        title: "탐욕 구간 진입",
-        summary: `공포·탐욕 지수 ${snapshot.fearGreed.value}로 단기 과열 가능성을 체크할 필요가 있습니다.`,
+        title: language === "ko" ? "탐욕 구간 진입" : "Greed zone",
+        summary:
+          language === "ko"
+            ? `지수 ${snapshot.fearGreed.value}로 단기 과열 여부를 점검할 필요가 있습니다.`
+            : `At ${snapshot.fearGreed.value}, the market may be nearing a short-term overheat zone.`,
         tone: "neutral"
       });
     }
 
     if (snapshot.fearGreed?.value <= 30) {
       list.push({
-        title: "공포 구간 확대",
-        summary: `공포·탐욕 지수 ${snapshot.fearGreed.value}로 방어적 해석이 필요한 구간입니다.`,
+        title: language === "ko" ? "공포 구간 확인" : "Fear zone check",
+        summary:
+          language === "ko"
+            ? `지수 ${snapshot.fearGreed.value}로 방어적 해석이 필요한 구간입니다.`
+            : `At ${snapshot.fearGreed.value}, a defensive read may be more appropriate.`,
         tone: "down"
       });
     }
 
     return list.slice(0, 8);
-  }, [snapshot]);
+  }, [language, snapshot]);
 
   return (
     <main className={styles.page}>
       <div className={styles.shell}>
         <section className={styles.hero}>
           <div className={styles.heroCopy}>
-            <p className={styles.eyebrow}>SIGNAL BOARD</p>
-            <h1 className={styles.title}>시장 시그널 센터</h1>
-            <p className={styles.description}>
-              가격 변화, 공포·탐욕, 거래대금 흐름을 묶어서 오늘 시장에서 바로 해석할 만한 시그널을 카드로 정리했습니다.
-            </p>
+            <p className={styles.eyebrow}>{copy.eyebrow}</p>
+            <h1 className={styles.title}>{copy.title}</h1>
+            <p className={styles.description}>{copy.description}</p>
           </div>
 
           <div className={styles.heroStats}>
             <article className={styles.statCard}>
-              <p className={styles.statLabel}>시그널 수</p>
+              <p className={styles.statLabel}>{copy.signalCount}</p>
               <p className={styles.statValue}>{signals.length}</p>
-              <p className={styles.statHint}>현재 생성된 핵심 신호</p>
+              <p className={styles.statHint}>{copy.generatedSignals}</p>
             </article>
             <article className={styles.statCard}>
-              <p className={styles.statLabel}>공포·탐욕</p>
+              <p className={styles.statLabel}>{copy.fearGreed}</p>
               <p className={styles.statValue}>{snapshot.fearGreed?.value ?? "-"}</p>
-              <p className={styles.statHint}>{snapshot.fearGreed?.classification || "데이터 대기 중"}</p>
+              <p className={styles.statHint}>{snapshot.fearGreed?.classification || "-"}</p>
             </article>
             <article className={styles.statCard}>
-              <p className={styles.statLabel}>24H 코인 거래대금</p>
+              <p className={styles.statLabel}>{copy.volume}</p>
               <p className={styles.statValue}>{formatCurrency(snapshot.cryptoVolumeUsd)}</p>
-              <p className={styles.statHint}>유동성 강도 확인용</p>
+              <p className={styles.statHint}>{copy.snapshot}</p>
             </article>
           </div>
         </section>
@@ -128,8 +176,8 @@ export default function SignalsPage() {
         <section className={styles.masonry}>
           <article className={styles.panel}>
             <div className={styles.panelHeader}>
-              <h2 className={styles.panelTitle}>핵심 시그널</h2>
-              <span className={styles.panelCaption}>Auto summary</span>
+              <h2 className={styles.panelTitle}>{copy.generatedSignals}</h2>
+              <span className={styles.panelCaption}>{copy.autoSummary}</span>
             </div>
             <div className={styles.stack}>
               {signals.map((signal) => (
@@ -145,20 +193,24 @@ export default function SignalsPage() {
                             : styles.neutralBadge
                       }
                     >
-                      {signal.tone === "up" ? "긍정" : signal.tone === "down" ? "주의" : "중립"}
+                      {signal.tone === "up"
+                        ? copy.positive
+                        : signal.tone === "down"
+                          ? copy.caution
+                          : copy.neutral}
                     </span>
                   </div>
                   <p className={styles.itemMeta}>{signal.summary}</p>
                 </div>
               ))}
-              {!signals.length ? <p className={styles.emptyState}>강한 시그널이 아직 없습니다.</p> : null}
+              {!signals.length ? <p className={styles.emptyState}>{copy.noSignal}</p> : null}
             </div>
           </article>
 
           <article className={styles.panel}>
             <div className={styles.panelHeader}>
-              <h2 className={styles.panelTitle}>자산 체크</h2>
-              <span className={styles.pill}>snapshot</span>
+              <h2 className={styles.panelTitle}>{copy.assetCheck}</h2>
+              <span className={styles.pill}>{copy.snapshot}</span>
             </div>
             <div className={styles.stack}>
               {snapshot.assets.map((asset) => (

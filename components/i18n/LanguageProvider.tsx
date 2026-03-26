@@ -9,7 +9,7 @@ import {
   useState
 } from "react";
 
-type Language = "ko" | "en";
+export type Language = "ko" | "en";
 
 type LanguageContextValue = {
   language: Language;

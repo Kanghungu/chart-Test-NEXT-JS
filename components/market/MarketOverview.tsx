@@ -6,9 +6,18 @@ import MarketSignals from "./MarketSignals";
 import MarketSummaryCards from "./MarketSummaryCards";
 import MarketTicker from "./MarketTicker";
 import { SnapshotData, TickerItem } from "./marketTypes";
-import { buildSignals, buildTickerSeed, COPY, INITIAL_SNAPSHOT, mergeTickerItems } from "./marketUtils";
+import {
+  buildSignalsByLanguage,
+  buildTickerSeed,
+  getMarketCopy,
+  INITIAL_SNAPSHOT,
+  mergeTickerItems
+} from "./marketUtils";
+import { useLanguage } from "@/components/i18n/LanguageProvider";
 
 export default function MarketOverview() {
+  const { language } = useLanguage();
+  const copy = getMarketCopy(language);
   const [snapshot, setSnapshot] = useState<SnapshotData>(INITIAL_SNAPSHOT);
   const [tickerItems, setTickerItems] = useState<TickerItem[]>([]);
   const [fetchError, setFetchError] = useState("");
@@ -23,7 +32,7 @@ export default function MarketOverview() {
 
         if (!mounted) return;
 
-        setFetchError(json.error ? COPY.unstableSource : "");
+        setFetchError(json.error ? copy.unstableSource : "");
         setSnapshot((prev) => ({
           assets: json.assets?.length ? json.assets : prev.assets,
           fearGreed: json.fearGreed ?? null,
@@ -37,7 +46,7 @@ export default function MarketOverview() {
         }
       } catch {
         if (mounted) {
-          setFetchError(COPY.networkError);
+          setFetchError(copy.networkError);
         }
       }
     };
@@ -77,7 +86,7 @@ export default function MarketOverview() {
     };
   }, []);
 
-  const signals = useMemo(() => buildSignals(snapshot), [snapshot]);
+  const signals = useMemo(() => buildSignalsByLanguage(snapshot, language), [language, snapshot]);
 
   return (
     <section className={styles.root}>
@@ -86,18 +95,21 @@ export default function MarketOverview() {
 
       <div className={styles.content}>
         <div className={styles.header}>
-          <h2 className={styles.title}>{COPY.title}</h2>
-          <p className={styles.description}>{COPY.description}</p>
+          <h2 className={styles.title}>{copy.title}</h2>
+          <p className={styles.description}>{copy.description}</p>
         </div>
 
         {fetchError ? <div className={styles.errorBox}>{fetchError}</div> : null}
 
         <MarketSummaryCards snapshot={snapshot} />
-        <MarketSignals signals={signals} title={COPY.signalTitle} />
-        <MarketTicker items={tickerItems} label={COPY.liveLabel} />
+        <MarketSignals signals={signals} title={copy.signalTitle} />
+        <MarketTicker items={tickerItems} label={copy.liveLabel} />
 
         <p className={styles.updatedAt}>
-          {COPY.updatedAt}: {snapshot.updatedAt ? new Date(snapshot.updatedAt).toLocaleTimeString() : "-"}
+          {copy.updatedAt}:{" "}
+          {snapshot.updatedAt
+            ? new Date(snapshot.updatedAt).toLocaleTimeString(language === "ko" ? "ko-KR" : "en-US")
+            : "-"}
         </p>
       </div>
     </section>

@@ -6,6 +6,7 @@ import Link from "next/link";
 import styles from "./NewsFeedPage.module.css";
 import { decodeHtmlEntities } from "./newsUtils";
 import { formatDateTime } from "@/lib/formatters";
+import { useLanguage } from "@/components/i18n/LanguageProvider";
 
 type FeedItem = {
   id?: string | number;
@@ -43,61 +44,97 @@ interface PreparedItem {
 }
 
 const COPY = {
-  latest: "최신순",
-  oldest: "오래된순",
-  searchPlaceholder: "키워드 검색 (ETF, 금리, 비트코인, NVIDIA...)",
-  favoritesOnly: "즐겨찾기만 보기",
-  spotlight: "스포트라이트",
-  signalBoard: "지금 보는 흐름",
-  recentCount: "표시 중인 뉴스",
-  sourceCount: "출처 수",
-  latestUpdate: "최신 업데이트",
-  emptyDate: "날짜 정보 없음",
-  unknownSource: "출처 미상",
-  open: "원문 보기",
-  expand: "자세히",
-  collapse: "접기",
-  share: "링크 복사",
-  copied: "복사 완료",
-  home: "홈으로",
-  loading: "뉴스를 불러오는 중입니다.",
-  error: "뉴스를 불러오지 못했습니다.",
-  noResults: "조건에 맞는 뉴스가 없습니다.",
-  favoriteOn: "즐겨찾기에 추가",
-  favoriteOff: "즐겨찾기에서 제거",
-  summary: "요약",
-  sourceLabel: "출처",
-  reset: "전체",
-  filterLabel: "필터",
-  sortLabel: "정렬",
-  favoriteCount: "즐겨찾기"
+  ko: {
+    latest: "최신순",
+    oldest: "오래된순",
+    searchPlaceholder: "키워드 검색 (ETF, 금리, 비트코인, NVIDIA...)",
+    favoritesOnly: "즐겨찾기만 보기",
+    spotlight: "스포트라이트",
+    signalBoard: "지금 보는 흐름",
+    recentCount: "표시 중인 뉴스",
+    sourceCount: "출처 수",
+    latestUpdate: "최신 업데이트",
+    emptyDate: "날짜 정보 없음",
+    unknownSource: "출처 미상",
+    open: "원문 보기",
+    expand: "자세히",
+    collapse: "접기",
+    share: "링크 복사",
+    copied: "복사 완료",
+    home: "홈으로",
+    loading: "뉴스를 불러오는 중입니다.",
+    error: "뉴스를 불러오지 못했습니다.",
+    noResults: "조건에 맞는 뉴스가 없습니다.",
+    favoriteOn: "즐겨찾기 추가",
+    favoriteOff: "즐겨찾기에서 제거",
+    summary: "요약",
+    sourceLabel: "출처",
+    reset: "전체",
+    filterLabel: "필터",
+    sortLabel: "정렬",
+    favoriteCount: "즐겨찾기",
+    noSummary: "요약 정보가 없습니다."
+  },
+  en: {
+    latest: "Latest",
+    oldest: "Oldest",
+    searchPlaceholder: "Search keyword (ETF, rates, Bitcoin, NVIDIA...)",
+    favoritesOnly: "Favorites only",
+    spotlight: "Spotlight",
+    signalBoard: "Current view",
+    recentCount: "Visible news",
+    sourceCount: "Sources",
+    latestUpdate: "Latest update",
+    emptyDate: "No date",
+    unknownSource: "Unknown source",
+    open: "Open article",
+    expand: "Expand",
+    collapse: "Collapse",
+    share: "Copy link",
+    copied: "Copied",
+    home: "Back home",
+    loading: "Loading news...",
+    error: "Failed to load news.",
+    noResults: "No news matched the current filters.",
+    favoriteOn: "Add to favorites",
+    favoriteOff: "Remove from favorites",
+    summary: "Summary",
+    sourceLabel: "Source",
+    reset: "All",
+    filterLabel: "Filter",
+    sortLabel: "Sort",
+    favoriteCount: "Favorites",
+    noSummary: "No summary available."
+  }
 } as const;
 
-function formatDate(value?: string) {
-  return value ? formatDateTime(value) : COPY.emptyDate;
-}
-
-function getLatestTime(items: PreparedItem[]) {
+function getLatestTime(items: PreparedItem[], emptyDate: string, language: "ko" | "en") {
   if (!items.length) return "-";
 
   const latest = [...items]
     .filter((item) => item.publishedAt)
     .sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime())[0];
 
-  return latest ? formatDate(latest.publishedAt) : "-";
+  return latest
+    ? formatDateTime(latest.publishedAt, language === "ko" ? "ko-KR" : "en-US")
+    : emptyDate;
 }
 
 function normalizeItem(
   item: FeedItem,
   index: number,
-  helpers: Omit<NewsFeedPageProps, "title" | "intro" | "badge" | "variant" | "quickFilters" | "fetchUrl" | "getItems">
+  helpers: Omit<
+    NewsFeedPageProps,
+    "title" | "intro" | "badge" | "variant" | "quickFilters" | "fetchUrl" | "getItems"
+  >,
+  unknownSource: string
 ): PreparedItem {
   return {
     id: String(item.id ?? helpers.getItemKey(item, index)),
     key: helpers.getItemKey(item, index),
     title: decodeHtmlEntities(helpers.getItemTitle(item)),
     summary: decodeHtmlEntities(helpers.getItemSummary(item)),
-    publisher: item.publisher || COPY.unknownSource,
+    publisher: item.publisher || unknownSource,
     publishedAt: item.published_at || "",
     link: helpers.getItemLink(item),
     detailLink: helpers.getDetailLink(item)
@@ -105,6 +142,8 @@ function normalizeItem(
 }
 
 export default function NewsFeedPage(props: NewsFeedPageProps) {
+  const { language } = useLanguage();
+  const copy = COPY[language];
   const {
     title,
     intro,
@@ -135,20 +174,14 @@ export default function NewsFeedPage(props: NewsFeedPageProps) {
   useEffect(() => {
     try {
       const saved = window.localStorage.getItem(storageKey);
-      if (saved) {
-        setFavoriteIds(JSON.parse(saved));
-      }
-    } catch {
-      // Ignore localStorage read failures.
-    }
+      if (saved) setFavoriteIds(JSON.parse(saved));
+    } catch {}
   }, [storageKey]);
 
   useEffect(() => {
     try {
       window.localStorage.setItem(storageKey, JSON.stringify(favoriteIds));
-    } catch {
-      // Ignore localStorage write failures.
-    }
+    } catch {}
   }, [favoriteIds, storageKey]);
 
   useEffect(() => {
@@ -165,18 +198,19 @@ export default function NewsFeedPage(props: NewsFeedPageProps) {
         if (!mounted) return;
 
         const prepared = (getItems(json) || []).map((item: FeedItem, index: number) =>
-          normalizeItem(item, index, { getItemKey, getItemLink, getItemTitle, getItemSummary, getDetailLink })
+          normalizeItem(
+            item,
+            index,
+            { getItemKey, getItemLink, getItemTitle, getItemSummary, getDetailLink },
+            copy.unknownSource
+          )
         );
 
         setItems(prepared);
       } catch {
-        if (mounted) {
-          setError(COPY.error);
-        }
+        if (mounted) setError(copy.error);
       } finally {
-        if (mounted) {
-          setLoading(false);
-        }
+        if (mounted) setLoading(false);
       }
     };
 
@@ -185,11 +219,20 @@ export default function NewsFeedPage(props: NewsFeedPageProps) {
     return () => {
       mounted = false;
     };
-  }, [fetchUrl, getItems, getItemKey, getItemLink, getItemTitle, getItemSummary, getDetailLink]);
+  }, [
+    copy.error,
+    copy.unknownSource,
+    fetchUrl,
+    getDetailLink,
+    getItemKey,
+    getItemLink,
+    getItemSummary,
+    getItemTitle,
+    getItems
+  ]);
 
   useEffect(() => {
     if (!copiedId) return;
-
     const timer = setTimeout(() => setCopiedId(""), 1200);
     return () => clearTimeout(timer);
   }, [copiedId]);
@@ -212,7 +255,6 @@ export default function NewsFeedPage(props: NewsFeedPageProps) {
         item.publisher.toLowerCase().includes(normalizedFilter);
 
       const matchesFavorite = !favoritesOnly || favoriteIds.includes(item.id);
-
       return matchesKeyword && matchesFilter && matchesFavorite;
     });
 
@@ -240,9 +282,7 @@ export default function NewsFeedPage(props: NewsFeedPageProps) {
     try {
       await navigator.clipboard.writeText(item.link);
       setCopiedId(item.id);
-    } catch {
-      // Ignore clipboard failure.
-    }
+    } catch {}
   };
 
   return (
@@ -256,16 +296,16 @@ export default function NewsFeedPage(props: NewsFeedPageProps) {
 
         <div className={styles.statGrid}>
           <article className={styles.statCard}>
-            <p className={styles.statLabel}>{COPY.recentCount}</p>
+            <p className={styles.statLabel}>{copy.recentCount}</p>
             <p className={styles.statValue}>{visibleItems.length}</p>
           </article>
           <article className={styles.statCard}>
-            <p className={styles.statLabel}>{COPY.sourceCount}</p>
+            <p className={styles.statLabel}>{copy.sourceCount}</p>
             <p className={styles.statValue}>{publisherCount}</p>
           </article>
           <article className={styles.statCard}>
-            <p className={styles.statLabel}>{COPY.latestUpdate}</p>
-            <p className={styles.statValueSmall}>{getLatestTime(items)}</p>
+            <p className={styles.statLabel}>{copy.latestUpdate}</p>
+            <p className={styles.statValueSmall}>{getLatestTime(items, copy.emptyDate, language)}</p>
           </article>
         </div>
       </div>
@@ -275,19 +315,19 @@ export default function NewsFeedPage(props: NewsFeedPageProps) {
           <input
             value={keyword}
             onChange={(e) => setKeyword(e.target.value)}
-            placeholder={COPY.searchPlaceholder}
+            placeholder={copy.searchPlaceholder}
             className={styles.searchInput}
           />
 
           <select value={sortType} onChange={(e) => setSortType(e.target.value as SortType)} className={styles.sortSelect}>
-            <option value="latest">{COPY.latest}</option>
-            <option value="oldest">{COPY.oldest}</option>
+            <option value="latest">{copy.latest}</option>
+            <option value="oldest">{copy.oldest}</option>
           </select>
         </div>
 
         <div className={styles.filterRow}>
           <button onClick={() => setActiveFilter("")} className={!activeFilter ? styles.activeChip : styles.filterChip}>
-            {COPY.reset}
+            {copy.reset}
           </button>
 
           {quickFilters.map((filter) => (
@@ -304,20 +344,20 @@ export default function NewsFeedPage(props: NewsFeedPageProps) {
             onClick={() => setFavoritesOnly((prev) => !prev)}
             className={favoritesOnly ? styles.activeChip : styles.filterChip}
           >
-            {COPY.favoritesOnly}
+            {copy.favoritesOnly}
           </button>
         </div>
       </div>
 
       <div className={styles.infoGrid}>
         <article className={styles.infoCard}>
-          <h2 className={styles.infoTitle}>{COPY.spotlight}</h2>
+          <h2 className={styles.infoTitle}>{copy.spotlight}</h2>
           <div className={styles.spotlightList}>
             {spotlightItems.map((item) => (
               <a key={item.id} href={item.link} target="_blank" rel="noopener noreferrer" className={styles.spotlightItem}>
                 <p className={styles.spotlightTitle}>{item.title}</p>
                 <p className={styles.spotlightMeta}>
-                  {item.publisher} · {formatDate(item.publishedAt)}
+                  {item.publisher} · {formatDateTime(item.publishedAt, language === "ko" ? "ko-KR" : "en-US")}
                 </p>
               </a>
             ))}
@@ -325,19 +365,19 @@ export default function NewsFeedPage(props: NewsFeedPageProps) {
         </article>
 
         <article className={styles.infoCard}>
-          <h2 className={styles.infoTitle}>{COPY.signalBoard}</h2>
+          <h2 className={styles.infoTitle}>{copy.signalBoard}</h2>
           <ul className={styles.signalList}>
             <li className={styles.signalItem}>{title}</li>
-            <li className={styles.signalItem}>{`${COPY.filterLabel}: ${activeFilter || COPY.reset}`}</li>
-            <li className={styles.signalItem}>{`${COPY.sortLabel}: ${sortType === "latest" ? COPY.latest : COPY.oldest}`}</li>
-            <li className={styles.signalItem}>{`${COPY.favoriteCount}: ${favoriteIds.length}`}</li>
+            <li className={styles.signalItem}>{`${copy.filterLabel}: ${activeFilter || copy.reset}`}</li>
+            <li className={styles.signalItem}>{`${copy.sortLabel}: ${sortType === "latest" ? copy.latest : copy.oldest}`}</li>
+            <li className={styles.signalItem}>{`${copy.favoriteCount}: ${favoriteIds.length}`}</li>
           </ul>
         </article>
       </div>
 
-      {loading ? <p className={styles.statusText}>{COPY.loading}</p> : null}
+      {loading ? <p className={styles.statusText}>{copy.loading}</p> : null}
       {error ? <p className={styles.statusError}>{error}</p> : null}
-      {!loading && !error && !visibleItems.length ? <p className={styles.statusText}>{COPY.noResults}</p> : null}
+      {!loading && !error && !visibleItems.length ? <p className={styles.statusText}>{copy.noResults}</p> : null}
 
       <ul className={styles.newsList}>
         {visibleItems.map((item) => (
@@ -351,26 +391,28 @@ export default function NewsFeedPage(props: NewsFeedPageProps) {
                 <button
                   onClick={() => toggleFavorite(item.id)}
                   className={favoriteIds.includes(item.id) ? styles.favoriteButtonActive : styles.favoriteButton}
-                  aria-label={favoriteIds.includes(item.id) ? COPY.favoriteOff : COPY.favoriteOn}
+                  aria-label={favoriteIds.includes(item.id) ? copy.favoriteOff : copy.favoriteOn}
                 >
-                  {favoriteIds.includes(item.id) ? "저장됨" : "저장"}
+                  {favoriteIds.includes(item.id) ? "★" : "☆"}
                 </button>
 
                 <button onClick={() => handleCopy(item)} className={styles.utilityButton}>
-                  {copiedId === item.id ? COPY.copied : COPY.share}
+                  {copiedId === item.id ? copy.copied : copy.share}
                 </button>
 
                 <button onClick={() => toggleItem(item.id)} className={styles.toggleBtn}>
-                  {openItems[item.id] ? COPY.collapse : COPY.expand}
+                  {openItems[item.id] ? copy.collapse : copy.expand}
                 </button>
               </div>
             </div>
 
-            {!openItems[item.id] && <div className={styles.summary}>{item.summary.slice(0, 140) || "요약 정보가 없습니다."}</div>}
+            {!openItems[item.id] && (
+              <div className={styles.summary}>{item.summary.slice(0, 140) || copy.noSummary}</div>
+            )}
 
             <div className={styles.metaRow}>
-              <span>{formatDate(item.publishedAt)}</span>
-              <span>{`${COPY.sourceLabel}: ${item.publisher}`}</span>
+              <span>{formatDateTime(item.publishedAt, language === "ko" ? "ko-KR" : "en-US")}</span>
+              <span>{`${copy.sourceLabel}: ${item.publisher}`}</span>
             </div>
 
             <AnimatePresence>
@@ -383,11 +425,11 @@ export default function NewsFeedPage(props: NewsFeedPageProps) {
                   className={styles.expandWrap}
                 >
                   <div className={styles.expandCard}>
-                    <p className={styles.expandLabel}>{COPY.summary}</p>
-                    <p className={styles.expandText}>{item.summary || "요약 정보가 없습니다."}</p>
+                    <p className={styles.expandLabel}>{copy.summary}</p>
+                    <p className={styles.expandText}>{item.summary || copy.noSummary}</p>
                     <div className={styles.linkRow}>
                       <a href={item.detailLink} target="_blank" rel="noopener noreferrer" className={styles.detailLink}>
-                        {COPY.open}
+                        {copy.open}
                       </a>
                     </div>
                   </div>
@@ -400,7 +442,7 @@ export default function NewsFeedPage(props: NewsFeedPageProps) {
 
       <div className={styles.homeBtnWrap}>
         <Link href="/" className={styles.homeBtn}>
-          {COPY.home}
+          {copy.home}
         </Link>
       </div>
     </section>
