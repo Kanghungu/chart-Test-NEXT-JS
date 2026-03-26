@@ -1,6 +1,7 @@
 import styles from "./MarketOverview.module.css";
 import { TickerItem } from "./marketTypes";
 import { formatMoney, formatPercent } from "./marketUtils";
+import { useLanguage } from "@/components/i18n/LanguageProvider";
 
 interface MarketTickerProps {
   items: TickerItem[];
@@ -8,6 +9,7 @@ interface MarketTickerProps {
 }
 
 export default function MarketTicker({ items, label }: MarketTickerProps) {
+  const { language } = useLanguage();
   const tape = items.length ? [...items, ...items] : [];
 
   return (
@@ -21,7 +23,7 @@ export default function MarketTicker({ items, label }: MarketTickerProps) {
           <p className={styles.liveLabel}>{label}</p>
         </div>
 
-        <span className={styles.liveBadge}>LIVE</span>
+        <span className={styles.liveBadge}>{language === "ko" ? "실시간" : "LIVE"}</span>
       </div>
 
       <div className={styles.tickerFrame}>
