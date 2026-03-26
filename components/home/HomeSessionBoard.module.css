@@ -1,0 +1,223 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.header {
+  display: grid;
+  gap: 0.7rem;
+}
+
+.eyebrow {
+  color: #7dd3fc;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+}
+
+.title {
+  color: #f8fafc;
+  font-size: clamp(1.2rem, 2vw, 1.7rem);
+  font-weight: 800;
+  line-height: 1.15;
+}
+
+.description {
+  color: var(--muted-strong);
+  line-height: 1.6;
+  max-width: 58rem;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1.15fr 1fr 0.95fr;
+  gap: 1rem;
+}
+
+.panel {
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius-lg);
+  background:
+    radial-gradient(circle at top right, rgb(14 165 233 / 0.12), transparent 30%),
+    var(--panel-bg);
+  box-shadow: var(--panel-shadow);
+  padding: 1rem;
+}
+
+.panelHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.9rem;
+}
+
+.panelTitle {
+  color: #f8fafc;
+  font-size: 0.98rem;
+  font-weight: 700;
+}
+
+.badge {
+  border-radius: 999px;
+  border: 1px solid rgb(56 189 248 / 0.25);
+  background: rgb(14 165 233 / 0.12);
+  color: #7dd3fc;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  padding: 0.24rem 0.52rem;
+}
+
+.sessionList,
+.eventList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.sessionCard,
+.metricCard,
+.eventCard {
+  border: 1px solid rgb(51 65 85 / 0.9);
+  border-radius: 0.9rem;
+  background: rgb(15 23 42 / 0.74);
+  padding: 0.85rem;
+}
+
+.sessionCard {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.sessionCity,
+.eventTitle {
+  color: #f8fafc;
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+
+.sessionHours,
+.eventTime {
+  margin-top: 0.18rem;
+  color: var(--muted);
+  font-size: 0.76rem;
+}
+
+.sessionStatus {
+  flex: 0 0 auto;
+  border-radius: 999px;
+  padding: 0.28rem 0.6rem;
+  font-size: 0.7rem;
+  font-weight: 800;
+}
+
+.sessionLive {
+  background: rgb(74 222 128 / 0.14);
+  color: #86efac;
+}
+
+.sessionNext {
+  background: rgb(125 211 252 / 0.14);
+  color: #bae6fd;
+}
+
+.sessionClosed {
+  background: rgb(71 85 105 / 0.4);
+  color: #cbd5e1;
+}
+
+.metricGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+}
+
+.metricLabel {
+  color: var(--muted);
+  font-size: 0.73rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+
+.metricValue {
+  display: block;
+  margin-top: 0.25rem;
+  color: #f8fafc;
+  font-size: 1.02rem;
+  font-weight: 800;
+}
+
+.toneUp,
+.toneDown,
+.toneNeutral {
+  display: inline-flex;
+  margin-top: 0.35rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.toneUp {
+  color: #4ade80;
+}
+
+.toneDown {
+  color: #f87171;
+}
+
+.toneNeutral {
+  color: #93c5fd;
+}
+
+.eventTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.eventCountry {
+  color: #93c5fd;
+  font-size: 0.74rem;
+  font-weight: 700;
+}
+
+.eventImpact {
+  color: #fcd34d;
+  font-size: 0.7rem;
+  font-weight: 800;
+}
+
+.empty {
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+@media (max-width: 1024px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .root {
+    gap: 0.85rem;
+  }
+
+  .description {
+    font-size: 0.88rem;
+    line-height: 1.55;
+  }
+
+  .panel {
+    padding: 0.85rem;
+  }
+
+  .sessionCard {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

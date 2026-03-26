@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import HomeDashboardExtras from "@/components/home/HomeDashboardExtras";
+import HomeSessionBoard from "@/components/home/HomeSessionBoard";
 import MarketOverview from "@/components/market/MarketOverview";
 import NewsList from "@/components/news/NewsList";
 import NewsTitle from "@/components/news/NewsTitle";
@@ -20,6 +21,10 @@ export default function Home() {
         <div className={styles.mainColumn}>
           <section className={styles.panel}>
             <MarketOverview />
+          </section>
+
+          <section className={styles.panel}>
+            <HomeSessionBoard />
           </section>
 
           <section className={styles.panel}>
