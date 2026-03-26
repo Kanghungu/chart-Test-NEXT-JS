@@ -1,9 +1,9 @@
-﻿.panel {
-  border-radius: 1rem;
-  border: 1px solid rgb(51 65 85);
-  background: linear-gradient(160deg, rgb(2 6 23 / 0.95), rgb(15 23 42 / 0.92));
+.panel {
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--panel-border);
+  background: var(--panel-bg-soft);
   padding: 0.85rem;
-  box-shadow: 0 10px 18px rgb(0 0 0 / 0.35);
+  box-shadow: var(--panel-shadow);
   display: flex;
   flex-direction: column;
   gap: 0.85rem;
@@ -23,7 +23,7 @@
 
 .groupLabel {
   font-size: 0.7rem;
-  color: #94a3b8;
+  color: var(--muted);
   font-weight: 700;
   letter-spacing: 0.08em;
 }
@@ -39,8 +39,8 @@
   justify-content: space-between;
   align-items: center;
   border: 1px solid rgb(51 65 85 / 0.8);
-  background: rgb(15 23 42 / 0.75);
-  border-radius: 0.65rem;
+  background: var(--surface-raised);
+  border-radius: var(--radius-sm);
   padding: 0.55rem 0.6rem;
 }
 
@@ -51,7 +51,7 @@
 }
 
 .symbol {
-  color: #94a3b8;
+  color: var(--muted);
   font-size: 0.68rem;
   margin-top: 0.1rem;
 }
@@ -78,4 +78,3 @@
 .down {
   color: #f87171;
 }
-

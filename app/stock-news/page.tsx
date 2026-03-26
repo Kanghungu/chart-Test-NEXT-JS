@@ -2,21 +2,19 @@
 
 import NewsFeedPage from "@/components/news/NewsFeedPage";
 import { useLanguage } from "@/components/i18n/LanguageProvider";
+import { getNewsPageConfig } from "@/components/news/newsPageConfig";
 
 export default function StockNewsPage() {
   const { language } = useLanguage();
+  const config = getNewsPageConfig("stock", language);
 
   return (
     <NewsFeedPage
-      title={language === "ko" ? "전체 주식 뉴스" : "All stock news"}
-      intro={
-        language === "ko"
-          ? "미국 주식 시장에서 지금 주목받는 헤드라인과 요약을 한 번에 확인해보세요."
-          : "See the stock headlines and summaries drawing the most attention right now."
-      }
-      badge={language === "ko" ? "주식 흐름" : "US STOCK FLOW"}
+      title={config.title}
+      intro={config.intro}
+      badge={config.badge}
       variant="stock"
-      quickFilters={["ETF", "Fed", "AI", "Tesla", "NVIDIA", "Earnings"]}
+      quickFilters={config.quickFilters}
       fetchUrl="/api/news/stock"
       getItems={(json) => json.data || []}
       getItemKey={(item, index) => item.id || `${item.content_url}-${index}`}

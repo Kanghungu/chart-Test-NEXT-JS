@@ -1,9 +1,9 @@
 .panel {
-  border-radius: 1rem;
+  border-radius: var(--radius-lg);
   border: 1px solid rgb(59 130 246 / 0.3);
   background: linear-gradient(135deg, rgb(15 23 42 / 0.9), rgb(30 41 59 / 0.9));
   padding: 0.875rem;
-  box-shadow: 0 10px 20px rgb(0 0 0 / 0.3);
+  box-shadow: var(--panel-shadow);
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
@@ -17,7 +17,7 @@
 
 .desc {
   font-size: 0.75rem;
-  color: #cbd5e1;
+  color: var(--muted-strong);
 }
 
 .quickWrap {
@@ -95,7 +95,6 @@
 }
 
 .placeholder {
-  color: #94a3b8;
+  color: var(--muted);
   font-size: 0.78rem;
 }
-

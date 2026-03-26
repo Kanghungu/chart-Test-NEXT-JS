@@ -358,11 +358,11 @@
 }
 
 .panel {
-  border-radius: 1rem;
-  border: 1px solid rgb(51 65 85);
-  background: linear-gradient(180deg, rgb(15 23 42 / 0.9), rgb(2 6 23 / 0.94));
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--panel-border);
+  background: var(--panel-bg);
   padding: 1rem;
-  box-shadow: 0 20px 28px rgb(0 0 0 / 0.22);
+  box-shadow: var(--panel-shadow);
 }
 
 .panelHeader {

@@ -21,10 +21,10 @@
 }
 
 .panel {
-  border: 1px solid rgb(55 65 81);
-  border-radius: 1rem;
-  background: rgb(31 41 55 / 0.8);
-  box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.3);
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius-lg);
+  background: var(--panel-bg);
+  box-shadow: var(--panel-shadow);
   padding: 1.5rem;
   min-width: 0;
   overflow: hidden;

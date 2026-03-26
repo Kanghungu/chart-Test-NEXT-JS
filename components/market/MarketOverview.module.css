@@ -2,10 +2,10 @@
   position: relative;
   overflow: hidden;
   border: 1px solid rgb(59 130 246 / 0.2);
-  border-radius: 1rem;
+  border-radius: var(--radius-lg);
   background: linear-gradient(to bottom right, rgb(15 23 42), rgb(15 23 42), rgb(30 41 59));
   padding: 1.25rem;
-  box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.55);
+  box-shadow: var(--panel-shadow-strong);
   min-width: 0;
   width: 100%;
 }
@@ -76,9 +76,9 @@
 
 .assetCard,
 .metricCard {
-  border: 1px solid rgb(51 65 85);
-  border-radius: 0.75rem;
-  background: rgb(15 23 42 / 0.8);
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius-md);
+  background: var(--surface-raised);
   padding: 0.75rem;
 }
 

@@ -26,7 +26,7 @@
 .infoCard,
 .newsItem {
   border: 1px solid rgb(51 65 85 / 0.75);
-  border-radius: 1.5rem;
+  border-radius: calc(var(--radius-lg) + 0.5rem);
   background: rgb(15 23 42 / 0.72);
   backdrop-filter: blur(10px);
   min-width: 0;
@@ -182,6 +182,7 @@
 .infoCard {
   padding: 1.2rem;
   min-width: 0;
+  box-shadow: var(--panel-shadow);
 }
 
 .infoTitle {
