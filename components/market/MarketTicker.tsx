@@ -2,6 +2,7 @@ import styles from "./MarketOverview.module.css";
 import { TickerItem } from "./marketTypes";
 import { formatMoney, formatPercent } from "./marketUtils";
 import { useLanguage } from "@/components/i18n/LanguageProvider";
+import { getLocalizedAssetName } from "@/lib/marketLocalization";
 
 interface MarketTickerProps {
   items: TickerItem[];
@@ -35,7 +36,7 @@ export default function MarketTicker({ items, label }: MarketTickerProps) {
 
               return (
                 <article key={`${item.symbol}-${idx}`} className={styles.tapeCard}>
-                  <p className={styles.tapeName}>{item.name || item.symbol}</p>
+                  <p className={styles.tapeName}>{getLocalizedAssetName(item, language) || item.symbol}</p>
                   <p className={styles.tapePrice}>{formatMoney(item.price, "USD")}</p>
                   <p className={`${styles.tapeChange} ${hasChange ? (up ? styles.positive : styles.negative) : ""}`}>
                     {formatPercent(item.changePercent)}

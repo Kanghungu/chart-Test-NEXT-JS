@@ -3,6 +3,11 @@
 import { useEffect, useState } from "react";
 import styles from "./SideEvents.module.css";
 import { useLanguage } from "@/components/i18n/LanguageProvider";
+import {
+  getLocalizedEventCountry,
+  getLocalizedEventTitle,
+  getLocalizedImpact
+} from "@/lib/marketLocalization";
 
 export default function SideEvents() {
   const { language } = useLanguage();
@@ -41,10 +46,10 @@ export default function SideEvents() {
         {items.map((item, idx) => (
           <div key={`${item.time}-${item.title}-${idx}`} className={styles.card}>
             <div className={styles.topRow}>
-              <span className={styles.country}>{item.country}</span>
-              <span className={styles.impact}>{item.impact}</span>
+              <span className={styles.country}>{getLocalizedEventCountry(item, language)}</span>
+              <span className={styles.impact}>{getLocalizedImpact(item, language)}</span>
             </div>
-            <p className={styles.eventTitle}>{item.title}</p>
+            <p className={styles.eventTitle}>{getLocalizedEventTitle(item, language)}</p>
             <p className={styles.time}>{item.time}</p>
           </div>
         ))}

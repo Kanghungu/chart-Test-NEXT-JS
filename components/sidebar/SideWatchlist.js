@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import styles from "./SideWatchlist.module.css";
 import { useLanguage } from "@/components/i18n/LanguageProvider";
+import { getLocalizedAssetName } from "@/lib/marketLocalization";
 
 function formatPrice(v) {
   if (typeof v !== "number") return "-";
@@ -61,7 +62,7 @@ export default function SideWatchlist() {
             return (
               <div key={item.symbol} className={styles.row}>
                 <div>
-                  <p className={styles.name}>{item.name}</p>
+                  <p className={styles.name}>{getLocalizedAssetName(item, language)}</p>
                   <p className={styles.symbol}>{item.symbol}</p>
                 </div>
                 <div className={styles.valueBox}>
@@ -84,7 +85,7 @@ export default function SideWatchlist() {
             return (
               <div key={item.symbol} className={styles.row}>
                 <div>
-                  <p className={styles.name}>{item.name}</p>
+                  <p className={styles.name}>{getLocalizedAssetName(item, language)}</p>
                   <p className={styles.symbol}>{item.symbol}</p>
                 </div>
                 <div className={styles.valueBox}>

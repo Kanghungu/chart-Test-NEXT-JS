@@ -1,8 +1,10 @@
-﻿import { NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 
 type WatchItem = {
   symbol: string;
   name: string;
+  nameKo: string;
+  nameEn: string;
   group: "crypto" | "stock";
   price: number | null;
   changePercent: number | null;
@@ -20,9 +22,11 @@ async function fetchCrypto() {
 
   const json = await res.json();
 
-  const row = (id: string, symbol: string, name: string): WatchItem => ({
+  const row = (id: string, symbol: string, nameKo: string, nameEn: string): WatchItem => ({
     symbol,
-    name,
+    name: nameKo,
+    nameKo,
+    nameEn,
     group: "crypto",
     price: typeof json?.[id]?.usd === "number" ? json[id].usd : null,
     changePercent:
@@ -30,10 +34,10 @@ async function fetchCrypto() {
   });
 
   return [
-    row("bitcoin", "BTC", "비트코인"),
-    row("ethereum", "ETH", "이더리움"),
-    row("solana", "SOL", "솔라나"),
-    row("dogecoin", "DOGE", "도지코인")
+    row("bitcoin", "BTC", "비트코인", "Bitcoin"),
+    row("ethereum", "ETH", "이더리움", "Ethereum"),
+    row("solana", "SOL", "솔라나", "Solana"),
+    row("dogecoin", "DOGE", "도지코인", "Dogecoin")
   ];
 }
 
@@ -55,10 +59,10 @@ async function fetchStocks() {
     if (cols[0]) parsed.set(cols[0].toUpperCase(), cols);
   });
 
-  const build = (ticker: string, symbol: string, name: string): WatchItem => {
+  const build = (ticker: string, symbol: string, nameKo: string, nameEn: string): WatchItem => {
     const cols = parsed.get(ticker.toUpperCase());
     if (!cols || cols.length < 7) {
-      return { symbol, name, group: "stock", price: null, changePercent: null };
+      return { symbol, name: nameKo, nameKo, nameEn, group: "stock", price: null, changePercent: null };
     }
 
     const open = Number(cols[3]);
@@ -67,14 +71,14 @@ async function fetchStocks() {
     const changePercent =
       price !== null && Number.isFinite(open) && open > 0 ? ((close - open) / open) * 100 : null;
 
-    return { symbol, name, group: "stock", price, changePercent };
+    return { symbol, name: nameKo, nameKo, nameEn, group: "stock", price, changePercent };
   };
 
   return [
-    build("NVDA.US", "NVDA", "엔비디아"),
-    build("AAPL.US", "AAPL", "애플"),
-    build("TSLA.US", "TSLA", "테슬라"),
-    build("MSFT.US", "MSFT", "마이크로소프트")
+    build("NVDA.US", "NVDA", "엔비디아", "NVIDIA"),
+    build("AAPL.US", "AAPL", "애플", "Apple"),
+    build("TSLA.US", "TSLA", "테슬라", "Tesla"),
+    build("MSFT.US", "MSFT", "마이크로소프트", "Microsoft")
   ];
 }
 
@@ -96,4 +100,3 @@ export async function GET() {
     updatedAt: new Date().toISOString()
   });
 }
-

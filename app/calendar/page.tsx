@@ -3,12 +3,23 @@
 import { useEffect, useMemo, useState } from "react";
 import styles from "@/components/discover/DiscoverPage.module.css";
 import { useLanguage } from "@/components/i18n/LanguageProvider";
+import {
+  getLocalizedEventCountry,
+  getLocalizedEventTitle,
+  getLocalizedImpact
+} from "@/lib/marketLocalization";
 
 type EventItem = {
   time: string;
   country: string;
+  countryKo?: string;
+  countryEn?: string;
   title: string;
+  titleKo?: string;
+  titleEn?: string;
   impact: string;
+  impactKo?: string;
+  impactEn?: string;
 };
 
 const COPY = {
@@ -20,21 +31,21 @@ const COPY = {
     highImpact: "높은 중요도",
     countryFilter: "국가 필터",
     currentEvents: "현재 로드된 이벤트 수",
-    priorityHint: "우선 체크가 필요한 일정",
+    priorityHint: "우선 체크할 이벤트",
     scopeHint: "시장 관찰 범위",
     all: "전체",
     byCountry: "국가별 보기",
     filterCaption: "캘린더 필터",
     weeklyEvents: "이번 주 핵심 일정",
     checkPoints: "체크 포인트",
-    guide: "활용 가이드",
+    guide: "가이드",
     empty: "표시할 일정이 없습니다.",
     items: "개",
     tips: [
-      "높은 중요도 일정은 발표 시간 전후로 차트 탭과 함께 확인하면 좋습니다.",
-      "미국 일정이 몰려 있으면 기술주와 코인 변동성이 같이 커질 수 있습니다.",
-      "한국, 일본, 유럽 일정은 아시아장과 선물 흐름 해석에 유용합니다.",
-      "캘린더 화면은 장 시작 전 브리핑 용도로 가장 잘 맞습니다."
+      "높은 중요도 일정은 발표 전후로 차트와 뉴스 흐름을 함께 보는 편이 좋습니다.",
+      "미국 이벤트가 몰리면 기술주와 코인 변동성이 같이 커질 수 있습니다.",
+      "한국, 일본, 유럽 일정은 아시아 세션과 선물 흐름을 읽는 데 유용합니다.",
+      "캘린더 화면은 장 시작 전 브리핑 용도로 특히 잘 맞습니다."
     ]
   },
   en: {
@@ -66,8 +77,8 @@ const COPY = {
 
 function getImpactClass(impact: string) {
   const upper = impact.toUpperCase();
-  if (impact.includes("높") || upper.includes("HIGH")) return styles.impactHigh;
-  if (impact.includes("중") || upper.includes("MEDIUM")) return styles.impactMedium;
+  if (upper.includes("HIGH") || impact.includes("높")) return styles.impactHigh;
+  if (upper.includes("MEDIUM") || impact.includes("중")) return styles.impactMedium;
   return styles.impactLow;
 }
 
@@ -99,15 +110,20 @@ export default function CalendarPage() {
     };
   }, []);
 
-  const countries = useMemo(() => ["all", ...new Set(events.map((item) => item.country))], [events]);
+  const countries = useMemo(
+    () => ["all", ...new Set(events.map((item) => getLocalizedEventCountry(item, language)))],
+    [events, language]
+  );
+
   const visibleEvents = useMemo(() => {
     if (country === "all") return events;
-    return events.filter((item) => item.country === country);
-  }, [country, events]);
+    return events.filter((item) => getLocalizedEventCountry(item, language) === country);
+  }, [country, events, language]);
 
   const highImpactCount = visibleEvents.filter((item) => {
-    const upper = item.impact.toUpperCase();
-    return item.impact.includes("높") || upper.includes("HIGH");
+    const localizedImpact = getLocalizedImpact(item, language);
+    const upper = localizedImpact.toUpperCase();
+    return upper.includes("HIGH") || localizedImpact.includes("높");
   }).length;
 
   return (
@@ -168,11 +184,13 @@ export default function CalendarPage() {
                 <div key={`${item.time}-${item.title}-${index}`} className={styles.listCard}>
                   <div className={styles.itemRow}>
                     <div>
-                      <p className={styles.itemTitle}>{item.title}</p>
-                      <p className={styles.itemSub}>{item.country}</p>
+                      <p className={styles.itemTitle}>{getLocalizedEventTitle(item, language)}</p>
+                      <p className={styles.itemSub}>{getLocalizedEventCountry(item, language)}</p>
                       <p className={styles.itemMeta}>{item.time}</p>
                     </div>
-                    <span className={getImpactClass(item.impact)}>{item.impact}</span>
+                    <span className={getImpactClass(getLocalizedImpact(item, language))}>
+                      {getLocalizedImpact(item, language)}
+                    </span>
                   </div>
                 </div>
               ))}

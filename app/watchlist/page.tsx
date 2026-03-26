@@ -4,10 +4,13 @@ import { useEffect, useMemo, useState } from "react";
 import styles from "@/components/discover/DiscoverPage.module.css";
 import { formatCurrency, formatPercent } from "@/lib/formatters";
 import { useLanguage } from "@/components/i18n/LanguageProvider";
+import { getLocalizedAssetName } from "@/lib/marketLocalization";
 
 type WatchItem = {
   symbol: string;
   name: string;
+  nameKo?: string;
+  nameEn?: string;
   group: "crypto" | "stock";
   price: number | null;
   changePercent: number | null;
@@ -180,7 +183,7 @@ export default function WatchlistPage() {
                   <div key={item.symbol} className={styles.listCard}>
                     <div className={styles.itemRow}>
                       <div>
-                        <p className={styles.itemTitle}>{item.name}</p>
+                        <p className={styles.itemTitle}>{getLocalizedAssetName(item, language)}</p>
                         <p className={styles.itemSub}>{item.symbol}</p>
                         <p className={styles.itemMeta}>
                           {item.group === "crypto" ? copy.cryptoType : copy.stockType}

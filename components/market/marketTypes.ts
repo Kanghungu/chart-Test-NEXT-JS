@@ -21,6 +21,8 @@ export interface SnapshotData {
 export interface TickerItem {
   symbol: string;
   name?: string;
+  nameKo?: string;
+  nameEn?: string;
   price: number | null;
   changePercent: number | null;
 }

@@ -136,6 +136,8 @@ export function mergeTickerItems(prev: TickerItem[], next: TickerItem[]) {
     map.set(item.symbol, {
       symbol: item.symbol,
       name: item.name || item.symbol,
+      nameKo: item.nameKo,
+      nameEn: item.nameEn,
       price: item.price,
       changePercent: item.changePercent
     });

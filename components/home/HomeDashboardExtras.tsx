@@ -5,10 +5,18 @@ import { useEffect, useMemo, useState } from "react";
 import styles from "./HomeDashboardExtras.module.css";
 import { formatCurrency, formatPercent } from "@/lib/formatters";
 import { useLanguage } from "@/components/i18n/LanguageProvider";
+import {
+  getLocalizedAssetName,
+  getLocalizedEventCountry,
+  getLocalizedEventTitle,
+  getLocalizedImpact
+} from "@/lib/marketLocalization";
 
 type WatchItem = {
   symbol: string;
   name: string;
+  nameKo?: string;
+  nameEn?: string;
   group: "crypto" | "stock";
   price: number | null;
   changePercent: number | null;
@@ -17,8 +25,14 @@ type WatchItem = {
 type EventItem = {
   time: string;
   country: string;
+  countryKo?: string;
+  countryEn?: string;
   title: string;
+  titleKo?: string;
+  titleEn?: string;
   impact: string;
+  impactKo?: string;
+  impactEn?: string;
 };
 
 type SnapshotAsset = {
@@ -324,7 +338,7 @@ export default function HomeDashboardExtras() {
             ? "공포 구간에 가까워서 장 초반에는 변동성 확대와 보수적인 대응이 더 중요합니다."
             : "Fear is elevated, so a cautious first hour and sharper reactions are more likely.",
         focus:
-          nextEvent?.title ||
+          (nextEvent ? getLocalizedEventTitle(nextEvent, language) : "") ||
           (language === "ko"
             ? "고베타 자산의 급격한 흔들림을 우선 체크하세요."
             : "Watch for sudden risk-off moves in high-beta assets.")
@@ -356,10 +370,10 @@ export default function HomeDashboardExtras() {
         language === "ko"
           ? "시장 균형이 맞는 구간이라 다음 거시 이벤트가 방향을 정할 가능성이 큽니다."
           : "The tape looks balanced, so macro headlines and scheduled events may decide the next move.",
-      focus: nextEvent?.title
+      focus: nextEvent
         ? language === "ko"
-          ? `가장 중요한 촉매: ${nextEvent.title}`
-          : `Primary catalyst: ${nextEvent.title}`
+          ? `가장 중요한 촉매: ${getLocalizedEventTitle(nextEvent, language)}`
+          : `Primary catalyst: ${getLocalizedEventTitle(nextEvent, language)}`
         : language === "ko"
           ? "다음 예정된 거시 이벤트를 확인해 보세요."
           : "Monitor the next scheduled macro event for direction."
@@ -585,7 +599,7 @@ export default function HomeDashboardExtras() {
               return (
                 <div key={item.symbol} className={styles.moverRow}>
                   <div>
-                    <p className={styles.assetName}>{item.name}</p>
+                    <p className={styles.assetName}>{getLocalizedAssetName(item, language)}</p>
                     <p className={styles.assetSymbol}>{item.symbol}</p>
                   </div>
                   <div className={styles.assetMeta}>
@@ -611,12 +625,12 @@ export default function HomeDashboardExtras() {
             {events.map((item, index) => (
               <div key={`${item.time}-${item.title}-${index}`} className={styles.eventCard}>
                 <div className={styles.eventTop}>
-                  <span className={styles.eventCountry}>{item.country}</span>
-                  <span className={`${styles.impactBadge} ${getImpactTone(item.impact)}`}>
-                    {item.impact}
+                  <span className={styles.eventCountry}>{getLocalizedEventCountry(item, language)}</span>
+                  <span className={`${styles.impactBadge} ${getImpactTone(getLocalizedImpact(item, language))}`}>
+                    {getLocalizedImpact(item, language)}
                   </span>
                 </div>
-                <p className={styles.eventTitle}>{item.title}</p>
+                <p className={styles.eventTitle}>{getLocalizedEventTitle(item, language)}</p>
                 <p className={styles.eventTime}>{item.time}</p>
               </div>
             ))}

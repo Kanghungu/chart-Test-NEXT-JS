@@ -4,6 +4,11 @@ import { useEffect, useMemo, useState } from "react";
 import styles from "./HomeSessionBoard.module.css";
 import { formatPercent } from "@/lib/formatters";
 import { useLanguage } from "@/components/i18n/LanguageProvider";
+import {
+  getLocalizedEventCountry,
+  getLocalizedEventTitle,
+  getLocalizedImpact
+} from "@/lib/marketLocalization";
 
 type SnapshotAsset = {
   symbol: string;
@@ -22,8 +27,14 @@ type SnapshotResponse = {
 type EventItem = {
   time: string;
   country: string;
+  countryKo?: string;
+  countryEn?: string;
   title: string;
+  titleKo?: string;
+  titleEn?: string;
   impact: string;
+  impactKo?: string;
+  impactEn?: string;
 };
 
 type SessionStatus = "live" | "next" | "closed";
@@ -295,10 +306,10 @@ export default function HomeSessionBoard() {
             {events.map((event, index) => (
               <div key={`${event.title}-${index}`} className={styles.eventCard}>
                 <div className={styles.eventTop}>
-                  <span className={styles.eventCountry}>{event.country}</span>
-                  <span className={styles.eventImpact}>{event.impact}</span>
+                  <span className={styles.eventCountry}>{getLocalizedEventCountry(event, language)}</span>
+                  <span className={styles.eventImpact}>{getLocalizedImpact(event, language)}</span>
                 </div>
-                <strong className={styles.eventTitle}>{event.title}</strong>
+                <strong className={styles.eventTitle}>{getLocalizedEventTitle(event, language)}</strong>
                 <p className={styles.eventTime}>{event.time}</p>
               </div>
             ))}
