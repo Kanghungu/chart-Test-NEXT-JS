@@ -36,6 +36,8 @@ export default function MarketOverview() {
         setSnapshot((prev) => ({
           assets: json.assets?.length ? json.assets : prev.assets,
           fearGreed: json.fearGreed ?? null,
+          cryptoFearGreed: json.cryptoFearGreed ?? json.fearGreed ?? null,
+          stockFearGreed: json.stockFearGreed ?? null,
           cryptoVolumeUsd: json.cryptoVolumeUsd ?? null,
           warnings: json.warnings || [],
           updatedAt: json.updatedAt || prev.updatedAt

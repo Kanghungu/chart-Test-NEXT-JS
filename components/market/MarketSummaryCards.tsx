@@ -1,6 +1,12 @@
 import styles from "./MarketOverview.module.css";
 import { AssetItem, SnapshotData } from "./marketTypes";
-import { DEFAULT_ASSETS, formatMoney, formatPercent, getMarketCopy } from "./marketUtils";
+import {
+  DEFAULT_ASSETS,
+  formatMoney,
+  formatPercent,
+  getLocalizedSentimentLabel,
+  getMarketCopy
+} from "./marketUtils";
 import { useLanguage } from "@/components/i18n/LanguageProvider";
 
 interface MarketSummaryCardsProps {
@@ -11,6 +17,8 @@ export default function MarketSummaryCards({ snapshot }: MarketSummaryCardsProps
   const { language } = useLanguage();
   const copy = getMarketCopy(language);
   const assets = snapshot.assets || DEFAULT_ASSETS;
+  const cryptoFearGreed = snapshot.cryptoFearGreed ?? snapshot.fearGreed ?? null;
+  const stockFearGreed = snapshot.stockFearGreed ?? null;
 
   return (
     <>
@@ -33,9 +41,20 @@ export default function MarketSummaryCards({ snapshot }: MarketSummaryCardsProps
 
       <div className={styles.metricsGrid}>
         <div className={styles.metricCard}>
-          <p className={styles.metricLabel}>{copy.fearGreed}</p>
+          <p className={styles.metricLabel}>{copy.cryptoFearGreed || copy.fearGreed}</p>
           <p className={styles.metricValue}>
-            {snapshot.fearGreed ? `${snapshot.fearGreed.value} (${snapshot.fearGreed.classification})` : "-"}
+            {cryptoFearGreed
+              ? `${cryptoFearGreed.value} (${getLocalizedSentimentLabel(cryptoFearGreed.classification, language)})`
+              : "-"}
+          </p>
+        </div>
+
+        <div className={styles.metricCard}>
+          <p className={styles.metricLabel}>{copy.stockFearGreed}</p>
+          <p className={styles.metricValue}>
+            {stockFearGreed
+              ? `${stockFearGreed.value} (${getLocalizedSentimentLabel(stockFearGreed.classification, language)})`
+              : "-"}
           </p>
         </div>
 

@@ -13,6 +13,8 @@ export interface FearGreedData {
 export interface SnapshotData {
   assets: AssetItem[];
   fearGreed: FearGreedData | null;
+  cryptoFearGreed?: FearGreedData | null;
+  stockFearGreed?: FearGreedData | null;
   cryptoVolumeUsd: number | null;
   warnings: string[];
   updatedAt: string | null;
