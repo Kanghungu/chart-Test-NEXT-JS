@@ -119,6 +119,11 @@
   margin-top: 0.85rem;
 }
 
+.heatmapStack {
+  display: grid;
+  gap: 0.85rem;
+}
+
 .heatmapCard,
 .scenarioCard {
   border-radius: 1rem;
@@ -548,6 +553,7 @@
   .spotlightSummary,
   .signalRail,
   .visualGrid,
+  .heatmapStack,
   .grid {
     gap: 0.75rem;
   }

@@ -43,6 +43,14 @@ type SnapshotAsset = {
   currency?: string;
 };
 
+type HeatmapAsset = {
+  symbol: string;
+  name?: string;
+  price: number | null;
+  changePercent: number | null;
+  currency?: string;
+};
+
 type SnapshotData = {
   assets: SnapshotAsset[];
   fearGreed: {
@@ -232,6 +240,20 @@ function formatHeatPrice(value: number | null, currency = "USD") {
   }).format(value);
 }
 
+function getHeatmapToneClass(change: number) {
+  if (change >= 2) return styles.heatStrongUp;
+  if (change > 0) return styles.heatUp;
+  if (change <= -2) return styles.heatStrongDown;
+  return styles.heatDown;
+}
+
+function getHeatmapSizeClass(index: number) {
+  if (index === 0) return styles.heatTileHero;
+  if (index <= 2) return styles.heatTileLarge;
+  if (index <= 6) return styles.heatTileMedium;
+  return styles.heatTileSmall;
+}
+
 export default function HomeDashboardExtras() {
   const { language } = useLanguage();
   const copy = COPY[language];
@@ -321,12 +343,44 @@ export default function HomeDashboardExtras() {
   const featuredBriefing = briefings[0] ?? null;
   const nextEvent = events[0] ?? null;
 
-  const heatmapAssets = useMemo(() => {
-    return [...snapshot.assets]
-      .filter((asset) => typeof asset.changePercent === "number")
+  const cryptoHeatmapAssets = useMemo<HeatmapAsset[]>(() => {
+    return watchlist
+      .filter((item) => item.group === "crypto" && typeof item.changePercent === "number")
       .sort((a, b) => Math.abs(b.changePercent || 0) - Math.abs(a.changePercent || 0))
-      .slice(0, 12);
-  }, [snapshot.assets]);
+      .slice(0, 8)
+      .map((item) => ({
+        symbol: item.symbol,
+        name: getLocalizedAssetName(item, language),
+        price: item.price,
+        changePercent: item.changePercent,
+        currency: "USD"
+      }));
+  }, [language, watchlist]);
+
+  const stockHeatmapAssets = useMemo<HeatmapAsset[]>(() => {
+    const benchmarkAssets = snapshot.assets
+      .filter((asset) => asset.symbol === "S&P 500" || asset.symbol === "NASDAQ")
+      .map((asset) => ({
+        symbol: asset.symbol,
+        name: asset.symbol === "S&P 500" ? "S&P 500" : "NASDAQ",
+        price: asset.price,
+        changePercent: asset.changePercent,
+        currency: asset.currency || "USD"
+      }));
+
+    const stockItems = watchlist
+      .filter((item) => item.group === "stock" && typeof item.changePercent === "number")
+      .sort((a, b) => Math.abs(b.changePercent || 0) - Math.abs(a.changePercent || 0))
+      .map((item) => ({
+        symbol: item.symbol,
+        name: getLocalizedAssetName(item, language),
+        price: item.price,
+        changePercent: item.changePercent,
+        currency: "USD"
+      }));
+
+    return [...benchmarkAssets, ...stockItems].slice(0, 8);
+  }, [language, snapshot.assets, watchlist]);
 
   const todayScenario = useMemo(() => {
     if (snapshot.fearGreed && snapshot.fearGreed.value <= 30) {
@@ -457,35 +511,21 @@ export default function HomeDashboardExtras() {
           </div>
 
           <div className={styles.visualGrid}>
-            <div className={styles.heatmapCard}>
-              <div className={styles.panelHeader}>
-                <h4 className={styles.visualTitle}>{copy.heatmap}</h4>
-                <span className={styles.panelSubtle}>{copy.leaders}</span>
-              </div>
+            <div className={styles.heatmapStack}>
+              <div className={styles.heatmapCard}>
+                <div className={styles.panelHeader}>
+                  <h4 className={styles.visualTitle}>
+                    {language === "ko" ? "크립토 히트맵" : "Crypto heatmap"}
+                  </h4>
+                  <span className={styles.panelSubtle}>{copy.leaders}</span>
+                </div>
 
-              <div className={styles.heatmapGrid}>
-                {heatmapAssets.map((asset) => {
-                  const change = asset.changePercent ?? 0;
-                  const toneClass =
-                    change >= 2
-                      ? styles.heatStrongUp
-                      : change > 0
-                        ? styles.heatUp
-                        : change <= -2
-                          ? styles.heatStrongDown
-                          : styles.heatDown;
-                  const index = heatmapAssets.findIndex((item) => item.symbol === asset.symbol);
-                  const sizeClass =
-                    index === 0
-                      ? styles.heatTileHero
-                      : index <= 2
-                        ? styles.heatTileLarge
-                        : index <= 6
-                          ? styles.heatTileMedium
-                          : styles.heatTileSmall;
-
-                  return (
-                    <div key={asset.symbol} className={`${styles.heatTile} ${sizeClass} ${toneClass}`}>
+                <div className={styles.heatmapGrid}>
+                  {cryptoHeatmapAssets.map((asset, index) => (
+                    <div
+                      key={asset.symbol}
+                      className={`${styles.heatTile} ${getHeatmapSizeClass(index)} ${getHeatmapToneClass(asset.changePercent ?? 0)}`}
+                    >
                       <div className={styles.heatTop}>
                         <span className={styles.heatSymbol}>{asset.symbol}</span>
                         {asset.name ? <span className={styles.heatName}>{asset.name}</span> : null}
@@ -495,8 +535,37 @@ export default function HomeDashboardExtras() {
                         <span className={styles.heatChange}>{formatPercent(asset.changePercent)}</span>
                       </div>
                     </div>
-                  );
-                })}
+                  ))}
+                </div>
+              </div>
+
+              <div className={styles.heatmapCard}>
+                <div className={styles.panelHeader}>
+                  <h4 className={styles.visualTitle}>
+                    {language === "ko" ? "미국 주식 히트맵" : "US stock heatmap"}
+                  </h4>
+                  <span className={styles.panelSubtle}>
+                    {language === "ko" ? "대형주와 지수" : "mega caps and indexes"}
+                  </span>
+                </div>
+
+                <div className={styles.heatmapGrid}>
+                  {stockHeatmapAssets.map((asset, index) => (
+                    <div
+                      key={asset.symbol}
+                      className={`${styles.heatTile} ${getHeatmapSizeClass(index)} ${getHeatmapToneClass(asset.changePercent ?? 0)}`}
+                    >
+                      <div className={styles.heatTop}>
+                        <span className={styles.heatSymbol}>{asset.symbol}</span>
+                        {asset.name ? <span className={styles.heatName}>{asset.name}</span> : null}
+                      </div>
+                      <div className={styles.heatBottom}>
+                        <strong className={styles.heatPrice}>{formatHeatPrice(asset.price, asset.currency)}</strong>
+                        <span className={styles.heatChange}>{formatPercent(asset.changePercent)}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
 
