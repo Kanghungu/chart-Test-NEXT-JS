@@ -23,6 +23,7 @@ type EventItem = {
 
 type SnapshotAsset = {
   symbol: string;
+  name?: string;
   price: number | null;
   changePercent: number | null;
   currency?: string;
@@ -206,6 +207,17 @@ function getImpactTone(impact: string) {
   return styles.lowImpact;
 }
 
+function formatHeatPrice(value: number | null, currency = "USD") {
+  if (typeof value !== "number") return "-";
+
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency,
+    notation: value >= 1000 ? "compact" : "standard",
+    maximumFractionDigits: value >= 1000 ? 2 : 2
+  }).format(value);
+}
+
 export default function HomeDashboardExtras() {
   const { language } = useLanguage();
   const copy = COPY[language];
@@ -299,7 +311,7 @@ export default function HomeDashboardExtras() {
     return [...snapshot.assets]
       .filter((asset) => typeof asset.changePercent === "number")
       .sort((a, b) => Math.abs(b.changePercent || 0) - Math.abs(a.changePercent || 0))
-      .slice(0, 6);
+      .slice(0, 12);
   }, [snapshot.assets]);
 
   const todayScenario = useMemo(() => {
@@ -448,12 +460,26 @@ export default function HomeDashboardExtras() {
                         : change <= -2
                           ? styles.heatStrongDown
                           : styles.heatDown;
+                  const index = heatmapAssets.findIndex((item) => item.symbol === asset.symbol);
+                  const sizeClass =
+                    index === 0
+                      ? styles.heatTileHero
+                      : index <= 2
+                        ? styles.heatTileLarge
+                        : index <= 6
+                          ? styles.heatTileMedium
+                          : styles.heatTileSmall;
 
                   return (
-                    <div key={asset.symbol} className={`${styles.heatTile} ${toneClass}`}>
-                      <span className={styles.heatSymbol}>{asset.symbol}</span>
-                      <strong className={styles.heatPrice}>{formatCurrency(asset.price)}</strong>
-                      <span className={styles.heatChange}>{formatPercent(asset.changePercent)}</span>
+                    <div key={asset.symbol} className={`${styles.heatTile} ${sizeClass} ${toneClass}`}>
+                      <div className={styles.heatTop}>
+                        <span className={styles.heatSymbol}>{asset.symbol}</span>
+                        {asset.name ? <span className={styles.heatName}>{asset.name}</span> : null}
+                      </div>
+                      <div className={styles.heatBottom}>
+                        <strong className={styles.heatPrice}>{formatHeatPrice(asset.price, asset.currency)}</strong>
+                        <span className={styles.heatChange}>{formatPercent(asset.changePercent)}</span>
+                      </div>
                     </div>
                   );
                 })}
