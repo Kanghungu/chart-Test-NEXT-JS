@@ -91,12 +91,20 @@
   color: #f8fafc;
   font-size: 1.2rem;
   line-height: 1.3;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
 }
 
 .spotlightText {
   margin-top: 0.6rem;
   color: #cbd5e1;
   line-height: 1.6;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
 }
 
 .spotlightMiniGrid,
@@ -141,9 +149,9 @@
 .heatmapGrid {
   display: grid;
   grid-template-columns: repeat(12, minmax(0, 1fr));
-  grid-auto-rows: minmax(32px, 1fr);
+  grid-auto-rows: minmax(28px, 1fr);
   gap: 0.45rem;
-  min-height: 280px;
+  min-height: 232px;
 }
 
 .heatTile {
@@ -160,12 +168,12 @@
 
 .heatTileHero {
   grid-column: span 5;
-  grid-row: span 4;
+  grid-row: span 3;
 }
 
 .heatTileLarge {
   grid-column: span 3;
-  grid-row: span 3;
+  grid-row: span 2;
 }
 
 .heatTileMedium {
@@ -292,6 +300,10 @@
   color: #cbd5e1;
   font-size: 0.84rem;
   line-height: 1.55;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
 }
 
 .signalTone {
@@ -453,6 +465,21 @@
   line-height: 1.5;
 }
 
+.briefMeta,
+.eventTitle {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+
+.promptText {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
+}
+
 .moverRow {
   display: flex;
   align-items: center;
@@ -561,7 +588,7 @@
   .heatmapGrid {
     grid-template-columns: repeat(6, minmax(0, 1fr));
     grid-auto-rows: minmax(28px, 1fr);
-    min-height: 220px;
+    min-height: 200px;
   }
 
   .heatTile {
