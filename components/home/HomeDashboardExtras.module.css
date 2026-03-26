@@ -464,6 +464,84 @@
   font-size: 0.82rem;
 }
 
+@media (max-width: 640px) {
+  .root {
+    gap: 1rem;
+  }
+
+  .title {
+    font-size: 1.22rem;
+  }
+
+  .description,
+  .spotlightText,
+  .scenarioText,
+  .scenarioFocusText,
+  .quickDescription {
+    font-size: 0.84rem;
+    line-height: 1.55;
+  }
+
+  .quickLinkGrid {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+
+  .quickLinkCard,
+  .panel,
+  .spotlightCard,
+  .spotlightMiniCard,
+  .signalCard,
+  .stackStatCard,
+  .heatmapCard,
+  .scenarioCard {
+    border-radius: 0.9rem;
+    padding: 0.8rem;
+  }
+
+  .spotlightSummary,
+  .signalRail,
+  .visualGrid,
+  .grid {
+    gap: 0.75rem;
+  }
+
+  .heatmapGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .heatTile {
+    min-height: 92px;
+    padding: 0.65rem;
+  }
+
+  .heatPrice {
+    font-size: 0.92rem;
+  }
+
+  .panelHeader {
+    align-items: flex-start;
+    gap: 0.6rem;
+    margin-bottom: 0.7rem;
+  }
+
+  .panelTitle,
+  .visualTitle,
+  .signalCardTitle {
+    font-size: 0.9rem;
+  }
+
+  .moverRow {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .assetMeta {
+    width: 100%;
+    text-align: left;
+  }
+}
+
 @media (max-width: 900px) {
   .spotlightGrid,
   .spotlightSummary,

@@ -130,6 +130,55 @@
   font-size: 0.8rem;
 }
 
+@media (max-width: 640px) {
+  .headerInner {
+    gap: 0.75rem;
+    padding: 0.75rem;
+  }
+
+  .brandLink {
+    font-size: 1.2rem;
+  }
+
+  .brandDescription {
+    font-size: 0.68rem;
+  }
+
+  .nav {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+    padding-bottom: 0.15rem;
+  }
+
+  .nav::-webkit-scrollbar {
+    display: none;
+  }
+
+  .navLink {
+    font-size: 0.72rem;
+    padding: 0.35rem 0.7rem;
+  }
+
+  .languageToggle {
+    flex: 0 0 auto;
+  }
+
+  .liveBadge {
+    display: none;
+  }
+
+  .main {
+    min-height: calc(100vh - 122px);
+  }
+
+  .footer {
+    padding: 0.85rem 0.75rem;
+    font-size: 0.72rem;
+  }
+}
+
 @media (max-width: 960px) {
   .headerInner {
     flex-direction: column;

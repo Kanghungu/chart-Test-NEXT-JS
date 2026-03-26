@@ -349,6 +349,83 @@
   font-size: 0.85rem;
 }
 
+@media (max-width: 640px) {
+  .page {
+    padding: 1.1rem 0.75rem 1.75rem;
+  }
+
+  .shell {
+    gap: 1rem;
+  }
+
+  .hero,
+  .statCard,
+  .panel,
+  .metricCard,
+  .listCard,
+  .inputCard,
+  .answerBox {
+    border-radius: 1rem;
+  }
+
+  .hero,
+  .panel,
+  .inputCard,
+  .statCard,
+  .metricCard,
+  .listCard,
+  .answerBox {
+    padding: 0.9rem;
+  }
+
+  .title {
+    font-size: 1.55rem;
+    line-height: 1.08;
+  }
+
+  .description,
+  .itemMeta,
+  .metricSub,
+  .answerBox {
+    font-size: 0.88rem;
+    line-height: 1.55;
+  }
+
+  .heroStats,
+  .metricGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .itemRow,
+  .panelHeader,
+  .buttonRow {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .itemValue {
+    width: 100%;
+    text-align: left;
+  }
+
+  .chipRow {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 0.15rem;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .chipRow::-webkit-scrollbar {
+    display: none;
+  }
+
+  .chip,
+  .chipActive {
+    flex: 0 0 auto;
+  }
+}
+
 @media (max-width: 980px) {
   .grid2,
   .grid3,

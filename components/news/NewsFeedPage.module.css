@@ -351,6 +351,74 @@
   padding: 0.85rem 1.5rem;
 }
 
+@media (max-width: 640px) {
+  .pageSection {
+    padding: 1rem 0.75rem 1.5rem;
+    gap: 1rem;
+  }
+
+  .hero,
+  .controlPanel,
+  .infoCard,
+  .newsItem {
+    border-radius: 1rem;
+  }
+
+  .hero,
+  .controlPanel,
+  .infoCard,
+  .newsItem,
+  .expandCard {
+    padding: 0.9rem;
+  }
+
+  .pageTitle {
+    font-size: 1.55rem;
+    line-height: 1.05;
+  }
+
+  .pageIntro {
+    font-size: 0.9rem;
+    line-height: 1.55;
+  }
+
+  .statValue {
+    font-size: 1.15rem;
+  }
+
+  .searchInput,
+  .sortSelect {
+    font-size: 0.88rem;
+    padding: 0.72rem 0.9rem;
+  }
+
+  .filterRow,
+  .actionRow {
+    gap: 0.45rem;
+  }
+
+  .filterChip,
+  .activeChip,
+  .toggleBtn,
+  .utilityButton,
+  .favoriteButton,
+  .favoriteButtonActive {
+    font-size: 0.76rem;
+    padding: 0.42rem 0.72rem;
+  }
+
+  .newsLink {
+    font-size: 0.96rem;
+    line-height: 1.45;
+  }
+
+  .summary,
+  .expandText {
+    font-size: 0.88rem;
+    line-height: 1.6;
+  }
+}
+
 @media (min-width: 768px) {
   .pageSection {
     padding: 2.25rem;

@@ -318,6 +318,95 @@
   white-space: nowrap;
 }
 
+@media (max-width: 640px) {
+  .page {
+    padding: 1rem 0.75rem 1.5rem;
+    gap: 1rem;
+  }
+
+  .hero {
+    border-radius: 1rem;
+    padding: 1rem;
+    gap: 1rem;
+  }
+
+  .heroBadge {
+    font-size: 0.68rem;
+    padding: 0.3rem 0.6rem;
+  }
+
+  .heroDescription {
+    font-size: 0.88rem;
+    line-height: 1.55;
+  }
+
+  .statCard,
+  .controlGroup,
+  .infoPanel,
+  .section,
+  .chartCard,
+  .chartCardActive,
+  .watchCard,
+  .presetCard,
+  .compareCard,
+  .compareCardActive {
+    border-radius: 0.95rem;
+  }
+
+  .statCard,
+  .controlGroup,
+  .infoPanel,
+  .section,
+  .chartCard,
+  .chartCardActive {
+    padding: 0.85rem;
+  }
+
+  .tabRow {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 0.15rem;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .tabRow::-webkit-scrollbar {
+    display: none;
+  }
+
+  .controlButton,
+  .activeControlButton {
+    flex: 0 0 auto;
+    font-size: 0.8rem;
+    padding: 0.5rem 0.82rem;
+  }
+
+  .sectionTitle {
+    font-size: 1.2rem;
+  }
+
+  .sectionDescription,
+  .focusSummary,
+  .focusHint,
+  .noteItem,
+  .watchValue,
+  .presetDescription {
+    font-size: 0.88rem;
+    line-height: 1.55;
+  }
+
+  .chartCardHeader,
+  .focusHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.55rem;
+  }
+
+  .symbolBadge {
+    align-self: flex-start;
+  }
+}
+
 @media (min-width: 768px) {
   .page {
     padding: 2.25rem;
