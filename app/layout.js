@@ -1,6 +1,7 @@
 import "./globals.css";
 import styles from "./layout.module.css";
 import HeaderBar from "@/components/layout/HeaderBar";
+import FooterBar from "@/components/layout/FooterBar";
 import { LanguageProvider } from "@/components/i18n/LanguageProvider";
 
 export const metadata = {
@@ -19,8 +20,11 @@ export default function RootLayout({ children }) {
     <html lang="ko">
       <body className={styles.body}>
         <LanguageProvider>
-          <HeaderBar />
-          <main className={styles.main}>{children}</main>
+          <div className={styles.appShell}>
+            <HeaderBar />
+            <main className={styles.main}>{children}</main>
+            <FooterBar />
+          </div>
         </LanguageProvider>
       </body>
     </html>

@@ -1,8 +1,9 @@
-﻿.root {
+.root {
   width: 100%;
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  min-width: 0;
 }
 
 .controlPanel {
@@ -13,6 +14,7 @@
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
+  min-width: 0;
 }
 
 .filterButtons {
@@ -116,6 +118,7 @@
   display: grid;
   grid-template-columns: 1fr;
   gap: 1.5rem;
+  min-width: 0;
 }
 
 @media (min-width: 768px) {
@@ -139,7 +142,7 @@
 }
 
 .fullColumn {
-  grid-column: span 2;
+  grid-column: 1 / -1;
 }
 
 .sectionTitle {
@@ -174,6 +177,7 @@
   padding: 1rem;
   border: 1px solid rgb(55 65 81);
   transition: box-shadow 0.2s ease;
+  min-width: 0;
 }
 
 .newsItem:hover {
@@ -192,6 +196,7 @@
   -webkit-line-clamp: 2;
   line-height: 1.45;
   transition: color 0.2s ease;
+  overflow-wrap: anywhere;
 }
 
 .cryptoLink:hover {
@@ -275,4 +280,3 @@
     overflow: visible;
   }
 }
-

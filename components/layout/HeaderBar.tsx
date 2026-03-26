@@ -17,8 +17,7 @@ const COPY = {
       { href: "/crypto-news", label: "코인뉴스" }
     ],
     description: "실시간 가격 · 뉴스 · 시그널 대시보드",
-    live: "실시간",
-    footer: "Market Pulse Korea · 실시간 가격, 뉴스, 시그널을 한 화면에서"
+    live: "실시간"
   },
   en: {
     nav: [
@@ -32,8 +31,7 @@ const COPY = {
       { href: "/crypto-news", label: "Crypto News" }
     ],
     description: "Real-time prices, news, and market signals",
-    live: "LIVE",
-    footer: "Market Pulse Korea · Real-time prices, news, and signals in one view"
+    live: "LIVE"
   }
 } as const;
 
@@ -81,7 +79,6 @@ export default function HeaderBar() {
         </div>
       </header>
 
-      <footer className={styles.footer}>{copy.footer}</footer>
     </>
   );
 }

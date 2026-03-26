@@ -26,12 +26,18 @@ export function decodeHtmlEntities(value: string) {
   return textarea.value;
 }
 
-export function getTitle(item: NewsItem) {
-  return decodeHtmlEntities(item.title_ko || item.title || "Untitled");
+export function getTitle(item: NewsItem, language: Language = "ko") {
+  const preferred = language === "ko" ? item.title_ko || item.title : item.title || item.title_ko;
+  return decodeHtmlEntities(preferred || "Untitled");
 }
 
-export function getSummary(item: NewsItem) {
-  return decodeHtmlEntities(item.summary_ko || item.description || "");
+export function getSummary(item: NewsItem, language: Language = "ko") {
+  const preferred =
+    language === "ko"
+      ? item.summary_ko || item.summary || item.description
+      : item.summary || item.description || item.summary_ko;
+
+  return decodeHtmlEntities(preferred || "");
 }
 
 export function getPublishedAt(item: NewsItem) {
@@ -55,7 +61,7 @@ export function getLink(item: NewsItem, type: NewsType) {
 }
 
 export function getImpactScore(item: NewsItem, type: NewsType) {
-  const sourceText = `${item.title_ko || ""} ${item.title || ""} ${item.summary_ko || ""} ${item.description || ""}`.toLowerCase();
+  const sourceText = `${item.title_ko || ""} ${item.title || ""} ${item.summary_ko || ""} ${item.summary || ""} ${item.description || ""}`.toLowerCase();
 
   let score = 0;
 
@@ -100,16 +106,19 @@ export function filterAndSortNews(
   items: NewsItem[],
   type: NewsType,
   keyword: string,
-  bodySelector: (item: NewsItem) => string,
-  sort: SortType
+  sort: SortType,
+  language: Language
 ) {
   const query = keyword.trim().toLowerCase();
 
   const filtered = items.filter((item) => {
     if (!query) return true;
-    const title = getTitle(item).toLowerCase();
-    const body = decodeHtmlEntities(bodySelector(item)).toLowerCase();
-    return title.includes(query) || body.includes(query);
+
+    const title = getTitle(item, language).toLowerCase();
+    const summary = getSummary(item, language).toLowerCase();
+    const publisher = getPublisher(item, language).toLowerCase();
+
+    return title.includes(query) || summary.includes(query) || publisher.includes(query);
   });
 
   return sortItems(filtered, type, sort);
@@ -120,12 +129,12 @@ export function buildNewsSignals(cryptoItems: NewsItem[], stockItems: NewsItem[]
 
   cryptoItems.slice(0, 20).forEach((item) => {
     const score = getImpactScore(item, "crypto");
-    if (score >= 5) candidates.push({ title: getTitle(item), score, type: "crypto" });
+    if (score >= 5) candidates.push({ title: getTitle(item, language), score, type: "crypto" });
   });
 
   stockItems.slice(0, 20).forEach((item) => {
     const score = getImpactScore(item, "stock");
-    if (score >= 5) candidates.push({ title: getTitle(item), score, type: "stock" });
+    if (score >= 5) candidates.push({ title: getTitle(item, language), score, type: "stock" });
   });
 
   candidates.sort((a, b) => b.score - a.score);
@@ -133,7 +142,7 @@ export function buildNewsSignals(cryptoItems: NewsItem[], stockItems: NewsItem[]
   if (!candidates.length) {
     return [
       language === "ko"
-        ? "현재 강한 뉴스 시그널은 없습니다. 헤드라인 흐름을 계속 추적하고 있습니다."
+        ? "아직 강한 뉴스 시그널은 없습니다. 헤드라인 흐름을 계속 추적하고 있습니다."
         : "No strong news signal yet. We are still tracking the headline flow."
     ];
   }

@@ -8,6 +8,7 @@ export interface NewsItem {
   title?: string;
   title_ko?: string;
   description?: string;
+  summary?: string;
   summary_ko?: string;
   publisher?: string;
   published_at?: string;

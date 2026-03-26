@@ -16,7 +16,7 @@ const COPY = {
     ],
     placeholder: "키워드 검색 (ETF, 금리, 테슬라, 비트코인...)",
     latest: "최신순",
-    impact: "영향순",
+    impact: "영향도순",
     count: "코인",
     countStock: "주식",
     signalTitle: "뉴스 시그널"
@@ -57,8 +57,8 @@ export default function NewsList() {
         const [cryptoJson, stockJson] = await Promise.all([cryptoRes.json(), stockRes.json()]);
 
         if (!mounted) return;
-        setCryptoNews(cryptoJson.results || []);
-        setStockNews(stockJson.data || []);
+        setCryptoNews(Array.isArray(cryptoJson?.results) ? cryptoJson.results : []);
+        setStockNews(Array.isArray(stockJson?.data) ? stockJson.data : []);
       } catch {
         if (!mounted) return;
         setCryptoNews([]);
@@ -74,12 +74,12 @@ export default function NewsList() {
   }, []);
 
   const preparedCryptoNews = useMemo(() => {
-    return filterAndSortNews(cryptoNews, "crypto", keyword, (item) => item.description || "", sortType);
-  }, [cryptoNews, keyword, sortType]);
+    return filterAndSortNews(cryptoNews, "crypto", keyword, sortType, language);
+  }, [cryptoNews, keyword, language, sortType]);
 
   const preparedStockNews = useMemo(() => {
-    return filterAndSortNews(stockNews, "stock", keyword, (item) => item.summary_ko || "", sortType);
-  }, [keyword, sortType, stockNews]);
+    return filterAndSortNews(stockNews, "stock", keyword, sortType, language);
+  }, [keyword, language, sortType, stockNews]);
 
   const newsSignals = useMemo(() => {
     return buildNewsSignals(preparedCryptoNews, preparedStockNews, language);
@@ -111,7 +111,11 @@ export default function NewsList() {
             className={styles.keywordInput}
           />
 
-          <select value={sortType} onChange={(e) => setSortType(e.target.value as SortType)} className={styles.sortSelect}>
+          <select
+            value={sortType}
+            onChange={(e) => setSortType(e.target.value as SortType)}
+            className={styles.sortSelect}
+          >
             <option value="latest">{copy.latest}</option>
             <option value="impact">{copy.impact}</option>
           </select>

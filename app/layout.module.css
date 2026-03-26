@@ -4,6 +4,12 @@
   min-height: 100vh;
 }
 
+.appShell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
 .header {
   border-bottom: 1px solid rgb(30 41 59);
   position: sticky;
@@ -22,11 +28,13 @@
   justify-content: space-between;
   gap: 1.25rem;
   padding: 1rem;
+  min-width: 0;
 }
 
 .brand {
   display: flex;
   flex-direction: column;
+  min-width: 0;
 }
 
 .brandLink {
@@ -47,6 +55,7 @@
   flex-wrap: wrap;
   justify-content: flex-end;
   display: flex;
+  min-width: 0;
 }
 
 .languageToggle {
@@ -120,6 +129,8 @@
 
 .main {
   min-height: calc(100vh - 148px);
+  flex: 1;
+  min-width: 0;
 }
 
 .footer {

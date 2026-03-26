@@ -6,7 +6,7 @@ import Link from "next/link";
 import styles from "./NewsFeedPage.module.css";
 import { decodeHtmlEntities } from "./newsUtils";
 import { formatDateTime } from "@/lib/formatters";
-import { useLanguage } from "@/components/i18n/LanguageProvider";
+import { Language, useLanguage } from "@/components/i18n/LanguageProvider";
 
 type FeedItem = {
   id?: string | number;
@@ -27,8 +27,8 @@ interface NewsFeedPageProps {
   getItems: (json: any) => FeedItem[];
   getItemKey: (item: FeedItem, index: number) => string | number;
   getItemLink: (item: FeedItem) => string;
-  getItemTitle: (item: FeedItem) => string;
-  getItemSummary: (item: FeedItem) => string;
+  getItemTitle: (item: FeedItem, language: Language) => string;
+  getItemSummary: (item: FeedItem, language: Language) => string;
   getDetailLink: (item: FeedItem) => string;
 }
 
@@ -108,16 +108,14 @@ const COPY = {
   }
 } as const;
 
-function getLatestTime(items: PreparedItem[], emptyDate: string, language: "ko" | "en") {
+function getLatestTime(items: PreparedItem[], emptyDate: string, language: Language) {
   if (!items.length) return "-";
 
   const latest = [...items]
     .filter((item) => item.publishedAt)
     .sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime())[0];
 
-  return latest
-    ? formatDateTime(latest.publishedAt, language === "ko" ? "ko-KR" : "en-US")
-    : emptyDate;
+  return latest ? formatDateTime(latest.publishedAt, language === "ko" ? "ko-KR" : "en-US") : emptyDate;
 }
 
 function normalizeItem(
@@ -127,13 +125,14 @@ function normalizeItem(
     NewsFeedPageProps,
     "title" | "intro" | "badge" | "variant" | "quickFilters" | "fetchUrl" | "getItems"
   >,
+  language: Language,
   unknownSource: string
 ): PreparedItem {
   return {
     id: String(item.id ?? helpers.getItemKey(item, index)),
     key: helpers.getItemKey(item, index),
-    title: decodeHtmlEntities(helpers.getItemTitle(item)),
-    summary: decodeHtmlEntities(helpers.getItemSummary(item)),
+    title: decodeHtmlEntities(helpers.getItemTitle(item, language)),
+    summary: decodeHtmlEntities(helpers.getItemSummary(item, language)),
     publisher: item.publisher || unknownSource,
     publishedAt: item.published_at || "",
     link: helpers.getItemLink(item),
@@ -202,6 +201,7 @@ export default function NewsFeedPage(props: NewsFeedPageProps) {
             item,
             index,
             { getItemKey, getItemLink, getItemTitle, getItemSummary, getDetailLink },
+            language,
             copy.unknownSource
           )
         );
@@ -228,7 +228,8 @@ export default function NewsFeedPage(props: NewsFeedPageProps) {
     getItemLink,
     getItemSummary,
     getItemTitle,
-    getItems
+    getItems,
+    language
   ]);
 
   useEffect(() => {
@@ -406,9 +407,7 @@ export default function NewsFeedPage(props: NewsFeedPageProps) {
               </div>
             </div>
 
-            {!openItems[item.id] && (
-              <div className={styles.summary}>{item.summary.slice(0, 140) || copy.noSummary}</div>
-            )}
+            {!openItems[item.id] && <div className={styles.summary}>{item.summary.slice(0, 140) || copy.noSummary}</div>}
 
             <div className={styles.metaRow}>
               <span>{formatDateTime(item.publishedAt, language === "ko" ? "ko-KR" : "en-US")}</span>
