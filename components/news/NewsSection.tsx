@@ -15,15 +15,15 @@ export default function NewsSection({ items, isFullColumn, type }: NewsSectionPr
   const { language } = useLanguage();
   const titleClassName = type === "crypto" ? styles.cryptoTitle : styles.stockTitle;
   const linkClassName = type === "crypto" ? styles.cryptoLink : styles.stockLink;
-  const keyField = type === "crypto" ? "slug" : "content_url";
+  const keyField = type === "crypto" ? "content_url" : "content_url";
   const sectionLabel =
     type === "crypto"
       ? language === "ko"
-        ? "코인 뉴스"
-        : "Crypto News"
+        ? "한국주식 뉴스"
+        : "Korean Stock News"
       : language === "ko"
-        ? "주식 뉴스"
-        : "Stock News";
+        ? "미국주식 뉴스"
+        : "US Stock News";
 
   return (
     <section className={`${styles.newsSection} ${isFullColumn ? styles.fullColumn : ""}`}>

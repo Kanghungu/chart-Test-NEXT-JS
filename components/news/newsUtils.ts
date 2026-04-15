@@ -4,18 +4,19 @@ import { Language } from "@/components/i18n/LanguageProvider";
 
 const IMPACT_KEYWORDS = [
   "etf",
-  "sec",
   "fed",
   "fomc",
-  "lawsuit",
-  "regulation",
-  "bankruptcy",
-  "hack",
-  "liquidation",
-  "upgrade",
   "earnings",
   "guidance",
-  "downgrade"
+  "downgrade",
+  "upgrade",
+  "반도체",
+  "코스피",
+  "코스닥",
+  "삼성전자",
+  "하이닉스",
+  "foreign",
+  "외국인"
 ];
 
 export function decodeHtmlEntities(value: string) {
@@ -53,6 +54,10 @@ export function getPublisher(item: NewsItem, language: Language = "ko") {
 }
 
 export function getLink(item: NewsItem, type: NewsType) {
+  if (type === "crypto" && item.content_url) {
+    return item.content_url;
+  }
+
   if (type === "crypto" && item.slug) {
     return `https://cryptopanic.com/news/${item.slug}`;
   }
@@ -69,11 +74,8 @@ export function getImpactScore(item: NewsItem, type: NewsType) {
     if (sourceText.includes(keyword)) score += 2;
   }
 
-  if (type === "crypto" && item.votes) {
-    const positive = Number(item.votes.positive || 0);
-    const negative = Number(item.votes.negative || 0);
-    if (Math.abs(positive - negative) >= 5) score += 2;
-  }
+  if (type === "stock" && sourceText.includes("nvidia")) score += 1;
+  if (type === "crypto" && (sourceText.includes("코스피") || sourceText.includes("삼성전자"))) score += 1;
 
   const published = getPublishedAt(item);
   if (published) {
@@ -142,14 +144,14 @@ export function buildNewsSignals(cryptoItems: NewsItem[], stockItems: NewsItem[]
   if (!candidates.length) {
     return [
       language === "ko"
-        ? "아직 강한 뉴스 시그널은 없습니다. 헤드라인 흐름을 계속 추적하고 있습니다."
+        ? "아직 강한 뉴스 시그널이 없습니다. 헤드라인 흐름을 계속 추적하고 있습니다."
         : "No strong news signal yet. We are still tracking the headline flow."
     ];
   }
 
   return candidates.slice(0, 3).map((item) =>
     language === "ko"
-      ? `${item.type === "crypto" ? "코인" : "주식"} 시그널 · ${item.title}`
-      : `${item.type === "crypto" ? "Crypto" : "Stock"} signal · ${item.title}`
+      ? `${item.type === "crypto" ? "한국주식" : "미국주식"} 시그널 · ${item.title}`
+      : `${item.type === "crypto" ? "Korean stock" : "US stock"} signal · ${item.title}`
   );
 }

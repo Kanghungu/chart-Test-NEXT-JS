@@ -11,27 +11,27 @@ const COPY = {
   ko: {
     filterOptions: [
       { value: "all", label: "전체" },
-      { value: "crypto", label: "코인" },
-      { value: "stock", label: "주식" }
+      { value: "crypto", label: "한국주식" },
+      { value: "stock", label: "미국주식" }
     ],
-    placeholder: "키워드 검색 (ETF, 금리, 테슬라, 비트코인...)",
+    placeholder: "키워드 검색 (코스피, 삼성전자, Fed, NVIDIA...)",
     latest: "최신순",
     impact: "영향도순",
-    count: "코인",
-    countStock: "주식",
+    count: "한국주식",
+    countStock: "미국주식",
     signalTitle: "뉴스 시그널"
   },
   en: {
     filterOptions: [
       { value: "all", label: "All" },
-      { value: "crypto", label: "Crypto" },
-      { value: "stock", label: "Stocks" }
+      { value: "crypto", label: "Korean Stocks" },
+      { value: "stock", label: "US Stocks" }
     ],
-    placeholder: "Search keyword (ETF, rates, Tesla, Bitcoin...)",
+    placeholder: "Search keyword (KOSPI, Samsung, Fed, NVIDIA...)",
     latest: "Latest",
     impact: "Impact",
-    count: "Crypto",
-    countStock: "Stocks",
+    count: "Korean",
+    countStock: "US",
     signalTitle: "News signals"
   }
 } as const;

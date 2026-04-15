@@ -19,6 +19,7 @@ export default function MarketSummaryCards({ snapshot }: MarketSummaryCardsProps
   const assets = snapshot.assets || DEFAULT_ASSETS;
   const cryptoFearGreed = snapshot.cryptoFearGreed ?? snapshot.fearGreed ?? null;
   const stockFearGreed = snapshot.stockFearGreed ?? null;
+  const koreaTradingValue = snapshot.cryptoVolumeUsd ?? null;
 
   return (
     <>
@@ -60,7 +61,7 @@ export default function MarketSummaryCards({ snapshot }: MarketSummaryCardsProps
 
         <div className={styles.metricCard}>
           <p className={styles.metricLabel}>{copy.volume}</p>
-          <p className={styles.metricValue}>{formatMoney(snapshot.cryptoVolumeUsd, "USD")}</p>
+          <p className={styles.metricValue}>{formatMoney(koreaTradingValue, "KRW")}</p>
         </div>
       </div>
     </>

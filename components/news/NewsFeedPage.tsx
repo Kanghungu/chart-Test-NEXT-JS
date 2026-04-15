@@ -47,7 +47,7 @@ const COPY = {
   ko: {
     latest: "최신순",
     oldest: "오래된순",
-    searchPlaceholder: "키워드 검색 (ETF, 금리, 비트코인, NVIDIA...)",
+    searchPlaceholder: "키워드 검색 (코스피, 삼성전자, Fed, NVIDIA...)",
     favoritesOnly: "즐겨찾기만 보기",
     spotlight: "스포트라이트",
     signalBoard: "지금 보는 흐름",
@@ -78,7 +78,7 @@ const COPY = {
   en: {
     latest: "Latest",
     oldest: "Oldest",
-    searchPlaceholder: "Search keyword (ETF, rates, Bitcoin, NVIDIA...)",
+    searchPlaceholder: "Search keyword (KOSPI, Samsung, Fed, NVIDIA...)",
     favoritesOnly: "Favorites only",
     spotlight: "Spotlight",
     signalBoard: "Current view",

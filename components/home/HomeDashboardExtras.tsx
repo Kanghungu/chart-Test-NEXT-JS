@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
@@ -83,7 +83,7 @@ const QUICK_LINKS: Array<{
 }> = [
   {
     href: "/stock-news",
-    eyebrow: "STOCKS",
+    eyebrow: "US STOCKS",
     title: { ko: "주식 뉴스 전체보기", en: "Browse all stock news" },
     description: {
       ko: "미국 주식 헤드라인과 요약을 한 번에 확인해 보세요.",
@@ -92,11 +92,11 @@ const QUICK_LINKS: Array<{
   },
   {
     href: "/crypto-news",
-    eyebrow: "CRYPTO",
-    title: { ko: "코인 뉴스 전체보기", en: "Browse all crypto news" },
+    eyebrow: "KOREA",
+    title: { ko: "한국주식 뉴스 전체보기", en: "Browse all Korean stock news" },
     description: {
-      ko: "비트코인, 이더리움, ETF, 규제 이슈를 한 번에 살펴보세요.",
-      en: "Track Bitcoin, Ethereum, ETF, and regulation headlines together."
+      ko: "코스피, 코스닥, 반도체, 대형주 이슈를 한 번에 살펴보세요.",
+      en: "Track KOSPI, KOSDAQ, semiconductors, and local market headlines together."
     }
   },
   {
@@ -104,8 +104,8 @@ const QUICK_LINKS: Array<{
     eyebrow: "CHART",
     title: { ko: "차트 대시보드 열기", en: "Open chart dashboard" },
     description: {
-      ko: "코인과 기술주 차트를 나란히 비교해 보세요.",
-      en: "Compare crypto and tech charts side by side."
+      ko: "한국주식과 미국주식 차트를 나란히 비교해 보세요.",
+      en: "Compare Korean and US stock charts side by side."
     }
   }
 ];
@@ -515,7 +515,7 @@ export default function HomeDashboardExtras() {
               <div className={styles.heatmapCard}>
                 <div className={styles.panelHeader}>
                   <h4 className={styles.visualTitle}>
-                    {language === "ko" ? "크립토 히트맵" : "Crypto heatmap"}
+                    {language === "ko" ? "한국주식 히트맵" : "Korean stock heatmap"}
                   </h4>
                   <span className={styles.panelSubtle}>{copy.leaders}</span>
                 </div>
@@ -716,21 +716,21 @@ export default function HomeDashboardExtras() {
           <div className={styles.promptList}>
             <div className={styles.promptCard}>
               <p className={styles.promptLabel}>
-                {language === "ko" ? "주식 뉴스에서 보기 좋은 키워드" : "Stock news filters"}
+                {language === "ko" ? "미국주식 뉴스에서 보기 좋은 키워드" : "US stock news filters"}
               </p>
               <p className={styles.promptText}>ETF, Fed, AI, Tesla, NVIDIA, Earnings</p>
             </div>
             <div className={styles.promptCard}>
               <p className={styles.promptLabel}>
-                {language === "ko" ? "코인 뉴스에서 보기 좋은 키워드" : "Crypto news filters"}
+                {language === "ko" ? "한국주식 뉴스에서 보기 좋은 키워드" : "Korean stock news filters"}
               </p>
-              <p className={styles.promptText}>Bitcoin, Ethereum, ETF, SEC, Layer2, Solana</p>
+              <p className={styles.promptText}>코스피, 코스닥, 삼성전자, SK하이닉스, 반도체, 외국인</p>
             </div>
             <div className={styles.promptCard}>
               <p className={styles.promptLabel}>
                 {language === "ko" ? "차트에서 바로 비교할 조합" : "Useful chart pairs"}
               </p>
-              <p className={styles.promptText}>BTC vs ETH, SOL / XRP, NVDA / TSLA, DXY / XAUUSD</p>
+              <p className={styles.promptText}>삼성전자 / SK하이닉스, NAVER / 현대차, NVDA / TSLA, DXY / USDKRW</p>
             </div>
           </div>
         </article>
@@ -738,3 +738,4 @@ export default function HomeDashboardExtras() {
     </section>
   );
 }
+

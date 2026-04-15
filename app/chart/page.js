@@ -5,39 +5,39 @@ import TradingViewChart from "@/components/chart/TradingViewChart";
 import styles from "./page.module.css";
 
 const COPY = {
-  title: "\uCC28\uD2B8 \uCEE8\uD2B8\uB864 \uB370\uC2A4\uD06C",
+  title: "차트 컨트롤 데스크",
   description:
-    "\uBA54\uC774\uC800 \uCF54\uC778, \uBBF8\uAD6D \uC8FC\uC2DD, \uB9AC\uC2A4\uD06C \uC628 \uC2DC\uADF8\uB110\uC744 \uD55C \uD654\uBA74\uC5D0 \uBAA8\uC544\uC11C \uBE60\uB974\uAC8C \uD750\uB984\uC744 \uBCF4\uB294 \uC6A9\uB3C4\uC758 \uCC28\uD2B8 \uB300\uC2DC\uBCF4\uB4DC\uC785\uB2C8\uB2E4.",
+    "한국주식, 미국주식, 매크로 흐름을 한 화면에 모아 빠르게 비교하는 차트 대시보드입니다.",
   heroBadge: "LIVE SETUP",
-  stat1Label: "\uD2B8\uB808\uB529 \uBC30\uCE58",
+  stat1Label: "트레이딩 배치",
   stat1Value: "9 Charts",
-  stat2Label: "\uD575\uC2EC \uD14C\uB9C8",
-  stat2Value: "Crypto / Tech / Macro",
-  stat3Label: "\uAE30\uBCF8 \uC2DC\uAC04\uB300",
-  notesTitle: "\uBE60\uB978 \uCCB4\uD06C \uD3EC\uC778\uD2B8",
+  stat2Label: "핵심 테마",
+  stat2Value: "KR / US / Macro",
+  stat3Label: "기본 시간대",
+  notesTitle: "빠른 체크 포인트",
   notes: [
-    "\uBA54\uC774\uC800 \uCF54\uC778 \uC139\uC158\uC5D0\uC11C \uC120\uB3C4\uC790\uAC00 \uB204\uAD6C\uC778\uC9C0 \uBA3C\uC800 \uD655\uC778\uD558\uC138\uC694.",
-    "\uAE30\uC220\uC8FC \uC139\uC158\uC740 \uB9AC\uC2A4\uD06C \uC628 \uC2EC\uB9AC\uB97C \uAC00\uC7A5 \uBE60\uB974\uAC8C \uBC18\uC601\uD569\uB2C8\uB2E4.",
-    "\uB9E4\uD06C\uB85C \uC139\uC158\uC5D0\uC11C \uB2EC\uB7EC, \uAE08, \uC6D0/\uB2EC\uB7EC\uB97C \uAC19\uC774 \uBCF4\uBA74 \uD68C\uD53C \uC2EC\uB9AC\uB97C \uBE60\uB974\uAC8C \uC77D\uC744 \uC218 \uC788\uC2B5\uB2C8\uB2E4."
+    "한국주식 섹션에서는 코스피 대형주의 상대 강도를 먼저 확인하세요.",
+    "미국주식 섹션은 나스닥 리더들의 위험 선호를 빠르게 보여줍니다.",
+    "매크로 섹션에서 달러, 금, 원/달러를 함께 보면 글로벌 자금 흐름을 읽기 쉽습니다."
   ],
-  watchTitle: "\uC624\uB298 \uBCF4\uAE30 \uC88B\uC740 \uD750\uB984",
+  watchTitle: "오늘 보기 좋은 흐름",
   watchItems: [
-    { label: "BTC vs ETH", value: "\uAE09\uB4F1 \uC774\uD6C4 \uC120\uB3C4 \uC790\uC0B0 \uD655\uC778" },
-    { label: "SOL / XRP", value: "\uC54C\uD2B8 \uC21C\uD658 \uAC15\uB3C4 \uCCB4\uD06C" },
-    { label: "NVDA / TSLA", value: "\uAE30\uC220\uC8FC \uC704\uD5D8 \uC120\uD638 \uC628\uB3C4" },
-    { label: "DXY / XAUUSD", value: "\uBC29\uC5B4 \uC2EC\uB9AC \uC720\uC785 \uC5EC\uBD80" }
+    { label: "삼성전자 vs SK하이닉스", value: "국내 반도체 리더십 확인" },
+    { label: "NAVER / 현대차", value: "성장주와 경기민감주의 온도차 체크" },
+    { label: "NVDA / TSLA", value: "미국 성장주 위험 선호 확인" },
+    { label: "DXY / USDKRW", value: "달러 강세와 원화 민감도 체크" }
   ],
-  presetTitle: "\uBE60\uB978 \uD504\uB9AC\uC14B",
-  focusTitle: "\uD3EC\uCEE4\uC2A4 \uC2EC\uBCFC",
-  checklistTitle: "\uCC28\uD2B8 \uC77D\uAE30 \uCCB4\uD06C\uB9AC\uC2A4\uD2B8",
-  compareTitle: "\uC9C0\uAE08 \uBE44\uAD50 \uD3EC\uC778\uD2B8"
+  presetTitle: "빠른 프리셋",
+  focusTitle: "포커스 심볼",
+  checklistTitle: "차트 읽기 체크리스트",
+  compareTitle: "지금 비교 포인트"
 };
 
 const SECTION_TABS = [
-  { value: "all", label: "\uC804\uCCB4 \uBCF4\uAE30" },
-  { value: "crypto", label: "\uCF54\uC778" },
-  { value: "tech", label: "\uAE30\uC220\uC8FC" },
-  { value: "macro", label: "\uB9E4\uD06C\uB85C" }
+  { value: "all", label: "전체 보기" },
+  { value: "korea", label: "한국주식" },
+  { value: "us", label: "미국주식" },
+  { value: "macro", label: "매크로" }
 ];
 
 const TIMEFRAME_OPTIONS = [
@@ -49,23 +49,23 @@ const TIMEFRAME_OPTIONS = [
 
 const PRESETS = [
   {
-    id: "crypto-scout",
-    label: "Crypto Scout",
-    description: "\uCF54\uC778 \uC120\uB3C4 \uD750\uB984\uC744 \uBE60\uB974\uAC8C \uBCF4\uB294 \uAD6C\uC131",
-    tab: "crypto",
+    id: "korea-open",
+    label: "Korea Open",
+    description: "한국 대형주와 반도체 흐름을 빠르게 확인",
+    tab: "korea",
     timeframe: "15"
   },
   {
-    id: "tech-swing",
-    label: "Tech Swing",
-    description: "\uAE30\uC220\uC8FC \uC2A4\uC719 \uD750\uB984\uACFC \uB9AC\uC2A4\uD06C \uC628 \uC2EC\uB9AC \uD655\uC778",
-    tab: "tech",
+    id: "us-swing",
+    label: "US Swing",
+    description: "미국 기술주 스윙 흐름과 리더십 확인",
+    tab: "us",
     timeframe: "240"
   },
   {
     id: "macro-defense",
     label: "Macro Defense",
-    description: "\uB2EC\uB7EC\u00B7\uAE08\u00B7\uD658\uC728 \uD750\uB984 \uC704\uC8FC \uBC29\uC5B4 \uCCB4\uD06C",
+    description: "달러·금·환율 중심 방어 체크",
     tab: "macro",
     timeframe: "1D"
   }
@@ -73,107 +73,104 @@ const PRESETS = [
 
 const CHART_SECTIONS = [
   {
-    id: "crypto",
-    title: "\uBA54\uC774\uC800 \uCF54\uC778",
-    description:
-      "\uBE44\uD2B8\uCF54\uC778\uACFC \uC774\uB354\uB9AC\uC6C0 \uADF8\uB9AC\uACE0 \uAC15\uC138 \uC54C\uD2B8\uC758 \uC21C\uC11C\uB97C \uBE44\uAD50\uD558\uAE30 \uC88B\uC740 \uAD6C\uC131\uC785\uB2C8\uB2E4.",
-    focusHint: "\uBA3C\uC800 BTC \uBC29\uD5A5\uC131\uC744 \uBCF4\uACE0 ETH\u00B7SOL \uD655\uC0B0 \uC5EC\uBD80\uB97C \uC774\uC5B4\uC11C \uBCF4\uC138\uC694.",
+    id: "korea",
+    title: "한국주식 리더",
+    description: "코스피 대표 종목과 성장주를 함께 보며 국내 시장의 주도주 흐름을 읽는 구성입니다.",
+    focusHint: "삼성전자와 SK하이닉스가 함께 강하면 국내 반도체 주도력이 살아 있는 경우가 많습니다.",
     checklist: [
-      "\uACE0\uC810 \uB3CC\uD30C \uD6C4 \uAC70\uB798 \uC9C0\uC18D \uC5EC\uBD80",
-      "\uC120\uB3C4\uC790 BTC \uB300\uBE44 \uD6C4\uBC1C \uC790\uC0B0 \uAC15\uB3C4",
-      "\uC9C0\uC9C0 / \uC800\uD56D \uBC18\uC751 \uC18D\uB3C4"
+      "대형주 동반 상승 여부",
+      "반도체와 플랫폼주의 순환 여부",
+      "갭 상승 뒤 지지 유지 여부"
     ],
     charts: [
       {
-        symbol: "BINANCE:BTCUSDT",
-        title: "Bitcoin",
-        caption: "\uC2DC\uC7A5 \uC120\uB3C4\uC790",
-        role: "\uBA54\uC774\uC800 \uB9AC\uC2A4\uD06C \uC628 \uAE30\uC900",
-        summary: "\uC804\uCCB4 \uCF54\uC778 \uC2EC\uB9AC\uB97C \uC774\uB044\uB294 \uC911\uC2EC \uCD95"
+        symbol: "KRX:005930",
+        title: "삼성전자",
+        caption: "국내 시가총액 1위",
+        role: "코스피 리더십 기준점",
+        summary: "국내 대형주 위험 선호를 가장 빠르게 확인할 수 있는 핵심 종목"
       },
       {
-        symbol: "BINANCE:ETHUSDT",
-        title: "Ethereum",
-        caption: "\uB300\uD615 \uC54C\uD2B8 \uAE30\uC900",
-        role: "\uD655\uC0B0 \uC2EC\uB9AC \uC120\uD589 \uC790\uC0B0",
-        summary: "\uBE44\uD2B8\uCF54\uC778 \uC774\uD6C4 \uC790\uAE08 \uD655\uC0B0 \uD750\uB984 \uD655\uC778 \uC6A9\uB3C4"
+        symbol: "KRX:000660",
+        title: "SK하이닉스",
+        caption: "반도체 고베타",
+        role: "반도체 강도 측정",
+        summary: "AI 반도체 수요와 성장 기대를 민감하게 반영하는 대표 종목"
       },
       {
-        symbol: "BINANCE:SOLUSDT",
-        title: "Solana",
-        caption: "\uACF5\uACA9\uC801 \uC218\uAE09 \uCCB4\uD06C",
-        role: "\uACF5\uACA9\uC801 \uC54C\uD2B8 \uCCB4\uB825 \uD655\uC778",
-        summary: "\uB2E8\uAE30 \uC22B\uAE09\uC758 \uAC15\uB3C4\uB97C \uBCF4\uAE30 \uC88B\uC740 \uC885\uBAA9"
+        symbol: "KRX:035420",
+        title: "NAVER",
+        caption: "플랫폼 성장주",
+        role: "성장주 온도 확인",
+        summary: "국내 성장주 수급과 밸류에이션 선호를 읽기 좋은 종목"
       }
     ]
   },
   {
-    id: "tech",
-    title: "\uAE30\uC220\uC8FC \uB9AC\uC2A4\uD06C \uC628",
-    description:
-      "\uB098\uC2A4\uB2E5 \uB300\uD45C \uC885\uBAA9\uB4E4\uC744 \uAC19\uC774 \uBCF4\uBA74 \uD22C\uC790 \uC2EC\uB9AC\uAC00 \uC0B4\uC544\uC788\uB294\uC9C0 \uBE60\uB974\uAC8C \uD30C\uC545\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4.",
-    focusHint: "\uB300\uD615 \uAE30\uC220\uC8FC \uC911 \uB204\uAC00 \uC120\uB3C4\uD558\uB294\uC9C0 \uBCF4\uBA74 \uB9E4\uC218 \uC2EC\uB9AC \uC628\uB3C4\uAC00 \uBCF4\uC785\uB2C8\uB2E4.",
+    id: "us",
+    title: "미국주식 리더",
+    description: "나스닥 대표 종목들을 함께 보며 미국 성장주와 위험 선호 흐름을 비교합니다.",
+    focusHint: "NVDA와 MSFT가 안정적으로 강하면 미국 기술주 중심의 상승 흐름이 유지될 가능성이 높습니다.",
     checklist: [
-      "\uAC2D \uC0C1\uC2B9 \uB4A4 \uC9C0\uC9C0 \uC720\uC9C0 \uC5EC\uBD80",
-      "\uC2DC\uCD1D \uC0C1\uC704 \uC885\uBAA9 \uB3D9\uC870 \uC5EC\uBD80",
-      "\uC2DC\uAC00 \uB300\uBE44 \uC885\uAC00 \uD76C\uC18C \uD750\uB984"
+      "리더 종목 동조화 여부",
+      "갭 상승 뒤 종가까지 힘 유지 여부",
+      "고베타 종목이 추세를 확장하는지 여부"
     ],
     charts: [
       {
         symbol: "NASDAQ:NVDA",
         title: "NVIDIA",
-        caption: "AI \uB300\uD45C\uC8FC",
-        role: "AI \uD14C\uB9C8 \uB300\uD45C \uC8FC\uB3C4\uC8FC",
-        summary: "\uACF5\uACA9\uC801 \uC131\uC7A5 \uC2EC\uB9AC\uC758 \uCCB4\uC628\uACC4"
+        caption: "AI 대표주",
+        role: "성장주 모멘텀 리더",
+        summary: "공격적인 기술주 심리를 가장 빠르게 반영하는 핵심 종목"
       },
       {
         symbol: "NASDAQ:TSLA",
         title: "Tesla",
-        caption: "\uBCC0\uB3D9\uC131 \uC120\uD638 \uB300\uD45C",
-        role: "\uB9AC\uC2A4\uD06C \uC628/\uC624\uD504 \uC804\uD658 \uBBFC\uAC10 \uC885\uBAA9",
-        summary: "\uD22C\uC790\uC790 \uACF5\uACA9\uC131\uC744 \uBE60\uB974\uAC8C \uBC18\uC601"
+        caption: "고변동 성장주",
+        role: "리스크 온·오프 민감 종목",
+        summary: "투자자의 공격성이 살아 있는지 읽기 좋은 대표 종목"
       },
       {
         symbol: "NASDAQ:MSFT",
         title: "Microsoft",
-        caption: "\uB300\uD615 \uD14C\uD06C \uC548\uC815\uAC10",
-        role: "\uC548\uC815\uC801 \uC131\uC7A5 \uD750\uB984 \uAE30\uC900\uC810",
-        summary: "\uBB34\uAC8C\uAC10 \uC788\uB294 \uB300\uD615\uC8FC \uD750\uB984 \uD655\uC778"
+        caption: "대형 테크 안정축",
+        role: "메가캡 안정감 확인",
+        summary: "대형 성장주가 추세를 지지하는지 보기 좋은 기준점"
       }
     ]
   },
   {
     id: "macro",
-    title: "\uB9E4\uD06C\uB85C \uD750\uB984",
-    description:
-      "\uB2EC\uB7EC, \uAE08, \uD658\uC728 \uD750\uB984\uC740 \uCF54\uC778\uACFC \uC8FC\uC2DD \uC591\uCABD\uC758 \uB9AC\uC2A4\uD06C \uC2EC\uB9AC\uB97C \uD574\uC11D\uD560 \uB54C \uAC19\uC774 \uBD10\uC57C \uD569\uB2C8\uB2E4.",
-    focusHint: "\uB2EC\uB7EC \uAC15\uC138 \uACFC \uAE08 \uC0C1\uC2B9\uC774 \uAC19\uC774 \uB098\uC624\uBA74 \uACBD\uACC4 \uC2EC\uB9AC \uC77C \uD655\uB960\uC774 \uB192\uC544\uC9D1\uB2C8\uB2E4.",
+    title: "매크로 흐름",
+    description: "달러, 금, 원/달러 흐름은 한국주식과 미국주식 모두의 자금 흐름을 해석할 때 중요합니다.",
+    focusHint: "달러와 원/달러가 함께 오르면 국내 자산에 부담이 커질 수 있어 주가 반응을 같이 봐야 합니다.",
     checklist: [
-      "\uB2EC\uB7EC \uAC15\uC138 / \uC57D\uC138 \uC804\uD658 \uC9C0\uC810",
-      "\uAE08 \uC0C1\uC2B9\uACFC \uC704\uD5D8 \uC790\uC0B0 \uB3D9\uD589 \uC5EC\uBD80",
-      "\uD658\uC728 \uAE09\uB4F1 \uC2DC \uB9AC\uC2A4\uD06C \uD68C\uD53C \uD750\uB984"
+      "달러 강세 전환 지점",
+      "금 상승과 위험자산 역행 여부",
+      "환율 급등 시 국내주식 민감도"
     ],
     charts: [
       {
         symbol: "TVC:DXY",
         title: "Dollar Index",
-        caption: "\uB2EC\uB7EC \uAC15\uC138 / \uC57D\uC138",
-        role: "\uC804\uCCB4 \uC790\uAE08 \uC120\uD638 \uC9C0\uD45C",
-        summary: "\uC704\uD5D8 \uC790\uC0B0\uACFC \uC885\uC885 \uBC18\uB300 \uD750\uB984\uC744 \uBCF4\uC784"
+        caption: "달러 강세 / 약세",
+        role: "글로벌 자금 선호 지표",
+        summary: "위험 자산과 반대 흐름이 자주 나오는 핵심 매크로 지표"
       },
       {
         symbol: "OANDA:XAUUSD",
         title: "Gold",
-        caption: "\uBC29\uC5B4 \uC790\uC0B0 \uC218\uAE09",
-        role: "\uD53C\uB09C\uCC98 \uC2EC\uB9AC \uD655\uC778 \uC790\uC0B0",
-        summary: "\uBC29\uC5B4 \uC2EC\uB9AC \uC720\uC785 \uC2DC \uAC15\uD558\uAC8C \uBC18\uC751"
+        caption: "방어 자산 수급",
+        role: "피난처 심리 확인",
+        summary: "불확실성이 커질 때 반응이 강하게 나타나는 자산"
       },
       {
         symbol: "FX_IDC:USDKRW",
         title: "USD/KRW",
-        caption: "\uC6D0\uD654 \uBBFC\uAC10\uB3C4",
-        role: "\uC544\uC2DC\uC544 \uC704\uD5D8 \uC120\uD638 \uCCB4\uAC10 \uD658\uC728",
-        summary: "\uAD6D\uB0B4 \uAD00\uC810\uC5D0\uC11C \uC2EC\uB9AC \uBCC0\uD654\uB97C \uBCF4\uAE30 \uC88B\uC74C"
+        caption: "원화 민감도",
+        role: "국내 자산 부담 점검",
+        summary: "국내 시장 기준으로 자금 유출입 압력을 읽기 좋은 환율"
       }
     ]
   }
@@ -215,7 +212,7 @@ function ChartSection({ section, timeframe, selectedSymbol, onSelectSymbol }) {
 export default function ChartsPage() {
   const [activeTab, setActiveTab] = useState("all");
   const [timeframe, setTimeframe] = useState("60");
-  const [selectedSymbol, setSelectedSymbol] = useState("BINANCE:BTCUSDT");
+  const [selectedSymbol, setSelectedSymbol] = useState("KRX:005930");
 
   const visibleSections = useMemo(() => {
     if (activeTab === "all") return CHART_SECTIONS;
@@ -279,7 +276,7 @@ export default function ChartsPage() {
 
       <section className={styles.controlBar}>
         <div className={styles.controlGroup}>
-          <p className={styles.controlLabel}>\uC2EC\uBCFC \uD0ED</p>
+          <p className={styles.controlLabel}>심볼 탭</p>
           <div className={styles.tabRow}>
             {SECTION_TABS.map((tab) => (
               <button
@@ -294,7 +291,7 @@ export default function ChartsPage() {
         </div>
 
         <div className={styles.controlGroup}>
-          <p className={styles.controlLabel}>\uC2DC\uAC04\uD504\uB808\uC784</p>
+          <p className={styles.controlLabel}>시간프레임</p>
           <div className={styles.tabRow}>
             {TIMEFRAME_OPTIONS.map((option) => (
               <button

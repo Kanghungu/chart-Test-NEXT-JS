@@ -1,17 +1,20 @@
 import { NextResponse } from "next/server";
 
 const TRACKED = [
-  { symbol: "BTC", price: null, changePercent: null, volume: null, currency: "USD" },
-  { symbol: "ETH", price: null, changePercent: null, volume: null, currency: "USD" },
+  { symbol: "KOSPI", price: null, changePercent: null, volume: null, currency: "KRW" },
+  { symbol: "KOSDAQ", price: null, changePercent: null, volume: null, currency: "KRW" },
   { symbol: "S&P 500", price: null, changePercent: null, volume: null, currency: "USD" },
   { symbol: "NASDAQ", price: null, changePercent: null, volume: null, currency: "USD" }
 ];
+
+const KR_LEADERS = ["005930", "000660", "035420", "005380"] as const;
+const US_LEADERS = ["aapl.us", "msft.us", "nvda.us", "tsla.us"] as const;
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
 }
 
-function classifyFearGreed(value: number) {
+function classifySentiment(value: number) {
   if (value <= 24) return "Extreme Fear";
   if (value <= 44) return "Fear";
   if (value <= 55) return "Neutral";
@@ -19,74 +22,45 @@ function classifyFearGreed(value: number) {
   return "Extreme Greed";
 }
 
-async function fetchCryptoBinanceSnapshot() {
-  const url =
-    "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=usd&include_24hr_change=true&include_24hr_vol=true";
-  const res = await fetch(url, { cache: "no-store" });
-  if (!res.ok) {
-    throw new Error(`CoinGecko request failed: ${res.status}`);
+function toNumber(value: string | number | null | undefined) {
+  if (typeof value === "number") return Number.isFinite(value) ? value : null;
+  if (typeof value !== "string") return null;
+
+  const normalized = Number(value.replace(/,/g, "").trim());
+  return Number.isFinite(normalized) ? normalized : null;
+}
+
+async function fetchKoreanIndexesSnapshot() {
+  const [kospiRes, kosdaqRes] = await Promise.all([
+    fetch("https://m.stock.naver.com/api/index/KOSPI/basic", { cache: "no-store" }),
+    fetch("https://m.stock.naver.com/api/index/KOSDAQ/basic", { cache: "no-store" })
+  ]);
+
+  if (!kospiRes.ok || !kosdaqRes.ok) {
+    throw new Error(`Naver index request failed: ${kospiRes.status}/${kosdaqRes.status}`);
   }
 
-  const json = await res.json();
-  const btc = json?.bitcoin;
-  const eth = json?.ethereum;
+  const [kospi, kosdaq] = await Promise.all([kospiRes.json(), kosdaqRes.json()]);
 
   return [
     {
-      symbol: "BTC",
-      price: typeof btc?.usd === "number" ? btc.usd : null,
-      changePercent: typeof btc?.usd_24h_change === "number" ? btc.usd_24h_change : null,
-      volume: typeof btc?.usd_24h_vol === "number" ? btc.usd_24h_vol : null,
-      currency: "USD"
+      symbol: "KOSPI",
+      price: toNumber(kospi?.closePrice),
+      changePercent: toNumber(kospi?.fluctuationsRatio),
+      volume: null,
+      currency: "KRW"
     },
     {
-      symbol: "ETH",
-      price: typeof eth?.usd === "number" ? eth.usd : null,
-      changePercent: typeof eth?.usd_24h_change === "number" ? eth.usd_24h_change : null,
-      volume: typeof eth?.usd_24h_vol === "number" ? eth.usd_24h_vol : null,
-      currency: "USD"
+      symbol: "KOSDAQ",
+      price: toNumber(kosdaq?.closePrice),
+      changePercent: toNumber(kosdaq?.fluctuationsRatio),
+      volume: null,
+      currency: "KRW"
     }
   ];
 }
 
-async function fetchIndexesStooqSnapshot() {
-  const res = await fetch("https://stooq.com/q/l/?s=%5Espx,%5Eixic&i=d", {
-    cache: "no-store"
-  });
-  if (!res.ok) {
-    throw new Error(`Stooq index request failed: ${res.status}`);
-  }
-
-  const csv = await res.text();
-  const lines = csv.trim().split("\n");
-  const dataLines = lines.slice(1);
-  const parsed = dataLines.map((line) => line.split(","));
-  const spx = parsed.find((cols) => cols[0]?.toUpperCase() === "^SPX");
-  const ixic = parsed.find((cols) => cols[0]?.toUpperCase() === "^IXIC");
-
-  const toRow = (label: string, row?: string[]) => {
-    if (!row || row.length < 8) {
-      return { symbol: label, price: null, changePercent: null, volume: null, currency: "USD" };
-    }
-    const open = Number(row[3]);
-    const close = Number(row[6]);
-    const volume = Number(row[7]);
-    const valid = Number.isFinite(close) && close > 0;
-    const changePercent = valid && Number.isFinite(open) && open > 0 ? ((close - open) / open) * 100 : null;
-
-    return {
-      symbol: label,
-      price: valid ? close : null,
-      changePercent,
-      volume: Number.isFinite(volume) ? volume : null,
-      currency: "USD"
-    };
-  };
-
-  return [toRow("S&P 500", spx), toRow("NASDAQ", ixic)];
-}
-
-async function fetchIndexesYahooSnapshot() {
+async function fetchUsIndexesYahooSnapshot() {
   type YahooQuoteRow = {
     symbol?: string;
     regularMarketPrice?: number;
@@ -104,6 +78,7 @@ async function fetchIndexesYahooSnapshot() {
 
   const json = await res.json();
   const rows = json?.quoteResponse?.result as YahooQuoteRow[] | undefined;
+
   if (!Array.isArray(rows)) {
     throw new Error("Yahoo index payload malformed");
   }
@@ -111,18 +86,48 @@ async function fetchIndexesYahooSnapshot() {
   const spx = rows.find((r) => r?.symbol === "^GSPC");
   const ixic = rows.find((r) => r?.symbol === "^IXIC");
 
-  const toRow = (label: string, row?: YahooQuoteRow) => {
-    const price = typeof row?.regularMarketPrice === "number" ? row.regularMarketPrice : null;
-    const changePercent =
-      typeof row?.regularMarketChangePercent === "number"
-        ? row.regularMarketChangePercent
-        : null;
+  const toRow = (label: string, row?: YahooQuoteRow) => ({
+    symbol: label,
+    price: typeof row?.regularMarketPrice === "number" ? row.regularMarketPrice : null,
+    changePercent:
+      typeof row?.regularMarketChangePercent === "number" ? row.regularMarketChangePercent : null,
+    volume: null,
+    currency: "USD"
+  });
+
+  return [toRow("S&P 500", spx), toRow("NASDAQ", ixic)];
+}
+
+async function fetchUsIndexesStooqSnapshot() {
+  const res = await fetch("https://stooq.com/q/l/?s=%5Espx,%5Eixic&i=d", {
+    cache: "no-store"
+  });
+
+  if (!res.ok) {
+    throw new Error(`Stooq index request failed: ${res.status}`);
+  }
+
+  const csv = await res.text();
+  const lines = csv.trim().split("\n").slice(1);
+  const parsed = lines.map((line) => line.split(","));
+  const spx = parsed.find((cols) => cols[0]?.toUpperCase() === "^SPX");
+  const ixic = parsed.find((cols) => cols[0]?.toUpperCase() === "^IXIC");
+
+  const toRow = (label: string, row?: string[]) => {
+    if (!row || row.length < 8) {
+      return { symbol: label, price: null, changePercent: null, volume: null, currency: "USD" };
+    }
+
+    const open = Number(row[3]);
+    const close = Number(row[6]);
+    const volume = Number(row[7]);
+    const valid = Number.isFinite(close) && close > 0;
 
     return {
       symbol: label,
-      price,
-      changePercent,
-      volume: null,
+      price: valid ? close : null,
+      changePercent: valid && Number.isFinite(open) && open > 0 ? ((close - open) / open) * 100 : null,
+      volume: Number.isFinite(volume) ? volume : null,
       currency: "USD"
     };
   };
@@ -130,16 +135,39 @@ async function fetchIndexesYahooSnapshot() {
   return [toRow("S&P 500", spx), toRow("NASDAQ", ixic)];
 }
 
-async function fetchIndexesSnapshot() {
+async function fetchUsIndexesSnapshot() {
   try {
-    return await fetchIndexesYahooSnapshot();
+    return await fetchUsIndexesYahooSnapshot();
   } catch {
-    return await fetchIndexesStooqSnapshot();
+    return await fetchUsIndexesStooqSnapshot();
   }
 }
 
-async function fetchStockLeadersSnapshot() {
-  const res = await fetch("https://stooq.com/q/l/?s=aapl.us,msft.us,nvda.us,tsla.us&i=d", {
+async function fetchKoreanLeadersSnapshot() {
+  const rows = await Promise.all(
+    KR_LEADERS.map(async (code) => {
+      const res = await fetch(`https://m.stock.naver.com/api/stock/${code}/basic`, {
+        cache: "no-store"
+      });
+
+      if (!res.ok) {
+        throw new Error(`Naver stock request failed for ${code}: ${res.status}`);
+      }
+
+      const json = await res.json();
+      return {
+        symbol: code,
+        changePercent: toNumber(json?.fluctuationsRatio),
+        tradedValue: toNumber(json?.accumulatedTradingValueRaw)
+      };
+    })
+  );
+
+  return rows;
+}
+
+async function fetchUsLeadersSnapshot() {
+  const res = await fetch(`https://stooq.com/q/l/?s=${US_LEADERS.join(",")}&i=d`, {
     cache: "no-store"
   });
 
@@ -157,51 +185,17 @@ async function fetchStockLeadersSnapshot() {
       const open = Number(cols[3]);
       const close = Number(cols[6]);
       const valid = Number.isFinite(close) && close > 0;
-      const changePercent =
-        valid && Number.isFinite(open) && open > 0 ? ((close - open) / open) * 100 : null;
 
       return {
         symbol,
-        changePercent
+        changePercent: valid && Number.isFinite(open) && open > 0 ? ((close - open) / open) * 100 : null
       };
     })
     .filter((item) => item.symbol);
 }
 
-async function fetchFearGreedIndex() {
-  const res = await fetch("https://api.alternative.me/fng/?limit=1", { cache: "no-store" });
-  if (!res.ok) {
-    return null;
-  }
-
-  const json = await res.json();
-  const item = json?.data?.[0];
-  if (!item) {
-    return null;
-  }
-
-  return {
-    value: Number(item.value),
-    classification: item.value_classification ?? "Unknown"
-  };
-}
-
-async function fetchCryptoGlobalVolume() {
-  const res = await fetch("https://api.coingecko.com/api/v3/global", { cache: "no-store" });
-  if (!res.ok) {
-    return null;
-  }
-
-  const json = await res.json();
-  const volumeUsd = json?.data?.total_volume?.usd;
-  return typeof volumeUsd === "number" ? volumeUsd : null;
-}
-
-function deriveStockFearGreed(
-  indexAssets: Array<{ changePercent: number | null }>,
-  stockLeaders: Array<{ changePercent: number | null }>
-) {
-  const changes = [...indexAssets, ...stockLeaders]
+function deriveSentiment(items: Array<{ changePercent: number | null }>) {
+  const changes = items
     .map((item) => item.changePercent)
     .filter((value): value is number => typeof value === "number");
 
@@ -215,68 +209,44 @@ function deriveStockFearGreed(
 
   return {
     value: score,
-    classification: classifyFearGreed(score)
+    classification: classifySentiment(score)
   };
 }
 
 export async function GET() {
   const settled = await Promise.allSettled([
-    fetchCryptoBinanceSnapshot(),
-    fetchIndexesSnapshot(),
-    fetchFearGreedIndex(),
-    fetchCryptoGlobalVolume(),
-    fetchStockLeadersSnapshot()
+    fetchKoreanIndexesSnapshot(),
+    fetchUsIndexesSnapshot(),
+    fetchKoreanLeadersSnapshot(),
+    fetchUsLeadersSnapshot()
   ]);
 
   const warnings: string[] = [];
 
-  const cryptoAssets =
-    settled[0].status === "fulfilled" ? settled[0].value : TRACKED.slice(0, 2);
+  const koreaAssets = settled[0].status === "fulfilled" ? settled[0].value : TRACKED.slice(0, 2);
+  if (settled[0].status === "rejected") warnings.push("korea_index_unavailable");
 
-  if (settled[0].status === "rejected") {
-    warnings.push("crypto_price_source_unavailable");
-  }
+  const usAssets = settled[1].status === "fulfilled" ? settled[1].value : TRACKED.slice(2);
+  if (settled[1].status === "rejected") warnings.push("us_index_unavailable");
 
-  let indexAssets: Array<{
-    symbol: string;
-    price: number | null;
-    changePercent: number | null;
-    volume: number | null;
-    currency: string;
-  }> = TRACKED.slice(2);
+  const koreanLeaders = settled[2].status === "fulfilled" ? settled[2].value : [];
+  if (settled[2].status === "rejected") warnings.push("korea_leaders_unavailable");
 
-  if (settled[1].status === "fulfilled") {
-    indexAssets = settled[1].value;
-  } else {
-    warnings.push("index_price_source_unavailable");
-  }
+  const usLeaders = settled[3].status === "fulfilled" ? settled[3].value : [];
+  if (settled[3].status === "rejected") warnings.push("us_leaders_unavailable");
 
-  const assets = [...cryptoAssets, ...indexAssets];
-
-  const fearGreed = settled[2].status === "fulfilled" ? settled[2].value : null;
-  if (settled[2].status === "rejected") {
-    warnings.push("fear_greed_unavailable");
-  }
-
-  const cryptoVolumeUsd = settled[3].status === "fulfilled" ? settled[3].value : null;
-  if (settled[3].status === "rejected") {
-    warnings.push("volume_source_unavailable");
-  }
-
-  const stockLeaders =
-    settled[4].status === "fulfilled" ? settled[4].value : [];
-  if (settled[4].status === "rejected") {
-    warnings.push("stock_sentiment_source_unavailable");
-  }
-
-  const stockFearGreed = deriveStockFearGreed(indexAssets, stockLeaders);
+  const assets = [...koreaAssets, ...usAssets];
+  const koreanStockFearGreed = deriveSentiment([...koreaAssets, ...koreanLeaders]);
+  const usStockFearGreed = deriveSentiment([...usAssets, ...usLeaders]);
+  const koreanTradingValue =
+    koreanLeaders.reduce((sum, item) => sum + (item.tradedValue || 0), 0) || null;
 
   return NextResponse.json({
     assets,
-    fearGreed,
-    cryptoFearGreed: fearGreed,
-    stockFearGreed,
-    cryptoVolumeUsd,
+    fearGreed: koreanStockFearGreed,
+    cryptoFearGreed: koreanStockFearGreed,
+    stockFearGreed: usStockFearGreed,
+    cryptoVolumeUsd: koreanTradingValue,
     warnings,
     updatedAt: new Date().toISOString()
   });

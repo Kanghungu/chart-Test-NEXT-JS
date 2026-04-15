@@ -18,60 +18,60 @@ type WatchItem = {
 
 const COPY = {
   ko: {
-    eyebrow: "워치리스트 허브",
-    title: "관심 자산 보드",
-    description: "코인과 미국 주식을 한 화면에서 비교하고, 변동폭 기준으로 빠르게 살펴볼 수 있습니다.",
-    totalAssets: "총 자산 수",
-    totalAssetsHint: "코인 + 주식 통합",
+    eyebrow: "WATCHLIST HUB",
+    title: "미국주식 / 한국주식 보드",
+    description: "미국주식과 한국주식을 한 화면에서 비교하고, 변동폭 기준으로 빠르게 살펴볼 수 있습니다.",
+    totalAssets: "총 자산",
+    totalAssetsHint: "한국주식 + 미국주식",
     strongest: "가장 강한 자산",
     weakest: "가장 약한 자산",
     assetGroup: "자산 그룹",
     quickFilter: "빠른 필터",
     all: "전체",
-    crypto: "코인",
+    crypto: "한국주식",
     stock: "미국주식",
-    moveRanking: "변동폭 순 정렬",
+    moveRanking: "변동률 기준 정렬",
     comparePairs: "오늘 보기 좋은 비교",
     quickPairs: "빠른 비교",
-    empty: "표시할 관심 자산이 없습니다.",
+    empty: "표시할 자산이 없습니다.",
     allAssets: "전체 자산",
-    cryptoType: "코인",
-    stockType: "미국 주식"
+    cryptoType: "한국주식",
+    stockType: "미국주식"
   },
   en: {
     eyebrow: "WATCHLIST HUB",
-    title: "Watchlist board",
-    description: "Compare crypto and US stocks on one screen and sort them by the biggest moves.",
+    title: "US / Korea stock board",
+    description: "Compare US and Korean stocks on one screen and sort them by the biggest moves.",
     totalAssets: "Total assets",
-    totalAssetsHint: "Crypto + stocks",
+    totalAssetsHint: "Korean + US stocks",
     strongest: "Strongest asset",
     weakest: "Weakest asset",
     assetGroup: "Asset group",
     quickFilter: "Quick filter",
     all: "All",
-    crypto: "Crypto",
+    crypto: "Korean stocks",
     stock: "US stocks",
     moveRanking: "Move ranking",
     comparePairs: "Useful pairs today",
     quickPairs: "Quick pairs",
     empty: "No watchlist assets to display.",
     allAssets: "All assets",
-    cryptoType: "Crypto",
+    cryptoType: "Korean stock",
     stockType: "US stock"
   }
 } as const;
 
 const PAIRS = {
   ko: [
-    ["BTC vs ETH", "메이저 코인 주도 흐름 비교"],
-    ["SOL vs DOGE", "공격적 알트 강도 체크"],
-    ["NVDA vs TSLA", "기술주 위험 선호 온도 확인"],
-    ["AAPL vs MSFT", "대형주 안정감과 순환 흐름 점검"]
+    ["삼성전자 vs SK하이닉스", "국내 반도체 주도주 비교"],
+    ["NAVER vs 현대차", "성장주와 경기민감주 온도차 확인"],
+    ["NVDA vs TSLA", "미국 성장주 위험 선호 확인"],
+    ["AAPL vs MSFT", "미국 메가캡 안정감 비교"]
   ],
   en: [
-    ["BTC vs ETH", "Compare leadership among major crypto assets"],
-    ["SOL vs DOGE", "Check high-beta altcoin strength"],
-    ["NVDA vs TSLA", "Read risk appetite inside tech leaders"],
+    ["Samsung vs SK hynix", "Compare Korean semiconductor leadership"],
+    ["NAVER vs Hyundai", "Check growth vs cyclical tone in Korea"],
+    ["NVDA vs TSLA", "Read risk appetite inside US leaders"],
     ["AAPL vs MSFT", "Compare defensive mega-cap rotation"]
   ]
 } as const;

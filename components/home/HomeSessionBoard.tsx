@@ -22,6 +22,10 @@ type SnapshotResponse = {
     value: number;
     classification: string;
   } | null;
+  stockFearGreed?: {
+    value: number;
+    classification: string;
+  } | null;
 };
 
 type EventItem = {
@@ -42,54 +46,48 @@ type SessionStatus = "live" | "next" | "closed";
 const COPY = {
   ko: {
     eyebrow: "SESSION COMPASS",
-    title: "지금 시장의 위치를 읽는 보드",
-    description: "실시간 가격 요약과는 다른 관점으로, 현재 세션과 자산군의 흐름을 빠르게 읽습니다.",
+    title: "한국/미국장 포지셔닝 보드",
+    description: "실시간 가격보다 한 걸음 위에서, 한국장과 미국장의 힘의 균형을 빠르게 읽는 보드입니다.",
     sessions: "주요 세션",
-    crossAsset: "크로스에셋 톤",
-    eventWindow: "다음 변동 시간대",
+    crossAsset: "시장 온도",
+    eventWindow: "다음 변동성 이벤트",
     openNow: "진행 중",
     opensNext: "다음 오픈",
     closed: "종료",
-    regime: "심리 레짐",
-    cryptoLead: "크립토 리더십",
-    equityTone: "주식 톤",
-    betaSpread: "ETH 대 BTC 베타",
-    aheadOfEvent: "이벤트 대기",
-    noEvents: "예정된 이벤트를 불러오는 중입니다.",
+    regime: "한국장 심리",
+    koreaLead: "한국 리더십",
+    usTone: "미국장 톤",
+    relativeSpread: "KOSDAQ 대 KOSPI",
+    noEvents: "일정 이벤트를 불러오는 중입니다.",
     positive: "우호적",
     neutral: "중립",
     defensive: "방어적",
-    stronger: "더 강함",
-    softer: "더 약함",
+    stronger: "강한 확산",
+    softer: "대형주 우위",
     balanced: "균형",
-    activeNow: "현재 활성",
-    opensAt: "오픈 예정",
     activeTag: "LIVE"
   },
   en: {
     eyebrow: "SESSION COMPASS",
-    title: "A board for reading market positioning",
-    description: "A different lens from raw prices, focused on sessions and cross-asset pressure.",
+    title: "US / Korea positioning board",
+    description: "A higher-level view of how Korean and US equities are behaving right now.",
     sessions: "Key sessions",
-    crossAsset: "Cross-asset tone",
+    crossAsset: "Market tone",
     eventWindow: "Next volatility window",
     openNow: "Open now",
     opensNext: "Opens next",
     closed: "Closed",
-    regime: "Sentiment regime",
-    cryptoLead: "Crypto leadership",
-    equityTone: "Equity tone",
-    betaSpread: "ETH vs BTC beta",
-    aheadOfEvent: "Ahead of event",
+    regime: "Korea sentiment",
+    koreaLead: "Korea leadership",
+    usTone: "US tone",
+    relativeSpread: "KOSDAQ vs KOSPI",
     noEvents: "Loading scheduled events.",
     positive: "Constructive",
     neutral: "Neutral",
     defensive: "Defensive",
-    stronger: "Stronger",
-    softer: "Softer",
+    stronger: "Broader risk-on",
+    softer: "Large-cap lead",
     balanced: "Balanced",
-    activeNow: "Active now",
-    opensAt: "Opens at",
     activeTag: "LIVE"
   }
 } as const;
@@ -130,7 +128,8 @@ export default function HomeSessionBoard() {
 
         setSnapshot({
           assets: Array.isArray(snapshotJson?.assets) ? snapshotJson.assets : [],
-          fearGreed: snapshotJson?.fearGreed ?? null
+          fearGreed: snapshotJson?.fearGreed ?? null,
+          stockFearGreed: snapshotJson?.stockFearGreed ?? null
         });
         setEvents(Array.isArray(eventJson?.items) ? eventJson.items.slice(0, 3) : []);
       } catch {
@@ -180,46 +179,55 @@ export default function HomeSessionBoard() {
   }, [now]);
 
   const summary = useMemo(() => {
-    const btc = snapshot.assets?.find((asset) => asset.symbol === "BTC");
-    const eth = snapshot.assets?.find((asset) => asset.symbol === "ETH");
-    const spx = snapshot.assets?.find((asset) => asset.symbol === "S&P 500");
-    const fearGreed = snapshot.fearGreed?.value ?? null;
-    const btcChange = btc?.changePercent ?? null;
-    const ethChange = eth?.changePercent ?? null;
-    const spxChange = spx?.changePercent ?? null;
-    const betaSpread =
-      typeof ethChange === "number" && typeof btcChange === "number" ? ethChange - btcChange : null;
+    const kospi = snapshot.assets?.find((asset) => asset.symbol === "KOSPI");
+    const kosdaq = snapshot.assets?.find((asset) => asset.symbol === "KOSDAQ");
+    const nasdaq = snapshot.assets?.find((asset) => asset.symbol === "NASDAQ");
+    const koreaFearGreed = snapshot.fearGreed?.value ?? null;
+    const usFearGreed = snapshot.stockFearGreed?.value ?? null;
+    const kospiChange = kospi?.changePercent ?? null;
+    const kosdaqChange = kosdaq?.changePercent ?? null;
+    const nasdaqChange = nasdaq?.changePercent ?? null;
+    const relativeSpread =
+      typeof kosdaqChange === "number" && typeof kospiChange === "number"
+        ? kosdaqChange - kospiChange
+        : null;
 
     return {
       regimeLabel:
-        typeof fearGreed === "number"
-          ? fearGreed >= 60
+        typeof koreaFearGreed === "number"
+          ? koreaFearGreed >= 60
             ? copy.positive
-            : fearGreed <= 35
+            : koreaFearGreed <= 35
               ? copy.defensive
               : copy.neutral
           : copy.balanced,
-      cryptoLeadLabel:
-        typeof betaSpread === "number"
-          ? betaSpread > 0.7
+      koreaLeadLabel:
+        typeof relativeSpread === "number"
+          ? relativeSpread > 0.5
             ? copy.stronger
-            : betaSpread < -0.7
+            : relativeSpread < -0.5
               ? copy.softer
               : copy.balanced
           : copy.balanced,
-      equityLabel:
-        typeof spxChange === "number"
-          ? spxChange > 0.3
+      usLabel:
+        typeof usFearGreed === "number"
+          ? usFearGreed >= 60
             ? copy.positive
-            : spxChange < -0.3
+            : usFearGreed <= 35
               ? copy.defensive
               : copy.neutral
-          : copy.neutral,
-      regimeValue: fearGreed,
-      cryptoLeadValue: betaSpread,
-      equityValue: spxChange
+          : typeof nasdaqChange === "number"
+            ? nasdaqChange > 0.3
+              ? copy.positive
+              : nasdaqChange < -0.3
+                ? copy.defensive
+                : copy.neutral
+            : copy.neutral,
+      regimeValue: koreaFearGreed,
+      koreaLeadValue: relativeSpread,
+      usValue: usFearGreed ?? nasdaqChange
     };
-  }, [copy, snapshot.assets, snapshot.fearGreed]);
+  }, [copy, snapshot.assets, snapshot.fearGreed, snapshot.stockFearGreed]);
 
   return (
     <section className={styles.root}>
@@ -280,19 +288,17 @@ export default function HomeSessionBoard() {
             </div>
 
             <div className={styles.metricCard}>
-              <span className={styles.metricLabel}>{copy.cryptoLead}</span>
-              <strong className={styles.metricValue}>{summary.cryptoLeadLabel}</strong>
-              <span className={getToneClass(summary.cryptoLeadValue)}>
-                {formatPercent(summary.cryptoLeadValue)}
+              <span className={styles.metricLabel}>{copy.koreaLead}</span>
+              <strong className={styles.metricValue}>{summary.koreaLeadLabel}</strong>
+              <span className={getToneClass(summary.koreaLeadValue)}>
+                {formatPercent(summary.koreaLeadValue)}
               </span>
             </div>
 
             <div className={styles.metricCard}>
-              <span className={styles.metricLabel}>{copy.equityTone}</span>
-              <strong className={styles.metricValue}>{summary.equityLabel}</strong>
-              <span className={getToneClass(summary.equityValue)}>
-                {formatPercent(summary.equityValue)}
-              </span>
+              <span className={styles.metricLabel}>{copy.usTone}</span>
+              <strong className={styles.metricValue}>{summary.usLabel}</strong>
+              <span className={getToneClass(summary.usValue)}>{formatPercent(summary.usValue)}</span>
             </div>
           </div>
         </article>

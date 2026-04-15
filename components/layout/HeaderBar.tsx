@@ -13,11 +13,11 @@ const COPY = {
       { href: "/watchlist", label: "워치리스트" },
       { href: "/signals", label: "시그널" },
       { href: "/briefing", label: "브리핑" },
-      { href: "/stock-news", label: "주식뉴스" },
-      { href: "/crypto-news", label: "코인뉴스" }
+      { href: "/stock-news", label: "미국주식뉴스" },
+      { href: "/crypto-news", label: "한국주식뉴스" }
     ],
-    description: "실시간 가격 · 뉴스 · 시그널 대시보드",
-    live: "실시간"
+    description: "실시간 주가, 뉴스, 시그널 대시보드",
+    live: "LIVE"
   },
   en: {
     nav: [
@@ -27,8 +27,8 @@ const COPY = {
       { href: "/watchlist", label: "Watchlist" },
       { href: "/signals", label: "Signals" },
       { href: "/briefing", label: "Briefing" },
-      { href: "/stock-news", label: "Stock News" },
-      { href: "/crypto-news", label: "Crypto News" }
+      { href: "/stock-news", label: "US Stock News" },
+      { href: "/crypto-news", label: "Korean Stock News" }
     ],
     description: "Real-time prices, news, and market signals",
     live: "LIVE"
@@ -78,7 +78,6 @@ export default function HeaderBar() {
           </nav>
         </div>
       </header>
-
     </>
   );
 }

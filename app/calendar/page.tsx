@@ -43,7 +43,7 @@ const COPY = {
     items: "개",
     tips: [
       "높은 중요도 일정은 발표 전후로 차트와 뉴스 흐름을 함께 보는 편이 좋습니다.",
-      "미국 이벤트가 몰리면 기술주와 코인 변동성이 같이 커질 수 있습니다.",
+      "미국 이벤트가 몰리면 미국주식과 한국주식 변동성이 함께 커질 수 있습니다.",
       "한국, 일본, 유럽 일정은 아시아 세션과 선물 흐름을 읽는 데 유용합니다.",
       "캘린더 화면은 장 시작 전 브리핑 용도로 특히 잘 맞습니다."
     ]
@@ -68,7 +68,7 @@ const COPY = {
     items: "items",
     tips: [
       "For high-impact releases, keep the chart tab open before and after the event.",
-      "When US events are stacked, volatility in tech and crypto often rises together.",
+      "When US events are stacked, volatility in US and Korean equities often rises together.",
       "Korea, Japan, and Europe events help frame the Asia session and futures tone.",
       "This calendar is especially useful as a pre-market briefing screen."
     ]

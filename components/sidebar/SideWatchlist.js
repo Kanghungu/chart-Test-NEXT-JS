@@ -47,17 +47,17 @@ export default function SideWatchlist() {
     };
   }, []);
 
-  const crypto = items.filter((i) => i.group === "crypto");
-  const stocks = items.filter((i) => i.group === "stock");
+  const koreanStocks = items.filter((i) => i.group === "crypto");
+  const usStocks = items.filter((i) => i.group === "stock");
 
   return (
     <section className={styles.panel}>
       <h3 className={styles.title}>{language === "ko" ? "관심 자산" : "Watchlist"}</h3>
 
       <div className={styles.group}>
-        <p className={styles.groupLabel}>{language === "ko" ? "코인" : "CRYPTO"}</p>
+        <p className={styles.groupLabel}>{language === "ko" ? "한국주식" : "KOREAN STOCKS"}</p>
         <div className={styles.list}>
-          {crypto.map((item) => {
+          {koreanStocks.map((item) => {
             const up = typeof item.changePercent === "number" && item.changePercent >= 0;
             return (
               <div key={item.symbol} className={styles.row}>
@@ -66,7 +66,7 @@ export default function SideWatchlist() {
                   <p className={styles.symbol}>{item.symbol}</p>
                 </div>
                 <div className={styles.valueBox}>
-                  <p className={styles.price}>${formatPrice(item.price)}</p>
+                  <p className={styles.price}>{formatPrice(item.price)}</p>
                   <p className={`${styles.change} ${up ? styles.up : styles.down}`}>
                     {formatChange(item.changePercent)}
                   </p>
@@ -78,9 +78,9 @@ export default function SideWatchlist() {
       </div>
 
       <div className={styles.group}>
-        <p className={styles.groupLabel}>{language === "ko" ? "미국 주식" : "US STOCKS"}</p>
+        <p className={styles.groupLabel}>{language === "ko" ? "미국주식" : "US STOCKS"}</p>
         <div className={styles.list}>
-          {stocks.map((item) => {
+          {usStocks.map((item) => {
             const up = typeof item.changePercent === "number" && item.changePercent >= 0;
             return (
               <div key={item.symbol} className={styles.row}>

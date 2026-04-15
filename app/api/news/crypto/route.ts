@@ -1,30 +1,48 @@
 import { NextResponse } from "next/server";
 
-const BASE_URL = "https://cryptopanic.com/api/developer/v2/posts/";
-const AUTH_TOKEN = "ad3d65ed53699656e4f6ff88e5210a357cb25dff";
+const NAVER_KR_STOCK_NEWS_URL =
+  "https://m.stock.naver.com/api/news/stock/005930?pageSize=30";
 
-async function fetchCryptoNews(region?: string) {
-  const params = new URLSearchParams({ auth_token: AUTH_TOKEN });
-  if (region) params.set("regions", region);
+function normalizeDateTime(value?: string) {
+  if (!value || value.length !== 12) return "";
 
-  const res = await fetch(`${BASE_URL}?${params.toString()}`, { cache: "no-store" });
-  if (!res.ok) {
-    throw new Error(`CryptoPanic request failed: ${res.status}`);
-  }
+  const year = value.slice(0, 4);
+  const month = value.slice(4, 6);
+  const day = value.slice(6, 8);
+  const hour = value.slice(8, 10);
+  const minute = value.slice(10, 12);
 
-  return res.json();
+  return `${year}-${month}-${day}T${hour}:${minute}:00+09:00`;
 }
 
 export async function GET() {
   try {
-    const regional = await fetchCryptoNews("ko");
-    if (Array.isArray(regional?.results) && regional.results.length > 0) {
-      return NextResponse.json(regional);
+    const res = await fetch(NAVER_KR_STOCK_NEWS_URL, { cache: "no-store" });
+
+    if (!res.ok) {
+      return NextResponse.json({ error: "Failed to load Korean stock news", results: [] }, { status: res.status });
     }
 
-    const fallback = await fetchCryptoNews();
-    return NextResponse.json(fallback);
+    const json = await res.json();
+    const groups = Array.isArray(json) ? json : [];
+
+    const results = groups
+      .flatMap((group) => (Array.isArray(group?.items) ? group.items : []))
+      .map((item: any) => ({
+        id: item.id,
+        title: item.titleFull || item.title || "Untitled",
+        title_ko: item.titleFull || item.title || "제목 없음",
+        description: item.body || "",
+        summary: item.body || "",
+        summary_ko: item.body || "",
+        publisher: item.officeName || "네이버 증권",
+        published_at: normalizeDateTime(item.datetime),
+        created_at: normalizeDateTime(item.datetime),
+        content_url: item.mobileNewsUrl || ""
+      }));
+
+    return NextResponse.json({ results });
   } catch {
-    return NextResponse.json({ error: "Failed to load crypto news", results: [] }, { status: 502 });
+    return NextResponse.json({ error: "Server error", results: [] }, { status: 500 });
   }
 }

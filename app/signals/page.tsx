@@ -25,10 +25,10 @@ const COPY = {
   ko: {
     eyebrow: "시그널 보드",
     title: "시장 시그널 센터",
-    description: "가격 변화, 공포탐욕, 거래대금을 한 번에 묶어서 오늘 해석할 만한 시그널을 보여줍니다.",
+    description: "지수 변화, 시장 심리, 대표 한국주식 거래대금을 묶어 오늘의 시그널을 보여줍니다.",
     signalCount: "시그널 수",
-    fearGreed: "공포탐욕",
-    volume: "24H 코인 거래대금",
+    fearGreed: "시장 심리",
+    volume: "대표 한국주식 거래대금",
     generatedSignals: "생성된 시그널",
     autoSummary: "자동 요약",
     assetCheck: "자산 체크",
@@ -41,10 +41,10 @@ const COPY = {
   en: {
     eyebrow: "SIGNAL BOARD",
     title: "Market signal center",
-    description: "Combine price moves, fear and greed, and volume into actionable market signals.",
+    description: "Combine index moves, sentiment, and Korean trading value into actionable signals.",
     signalCount: "Signal count",
-    fearGreed: "Fear & Greed",
-    volume: "24H Crypto Volume",
+    fearGreed: "Market Sentiment",
+    volume: "Korean Leader Trading Value",
     generatedSignals: "Generated signals",
     autoSummary: "Auto summary",
     assetCheck: "Asset check",
@@ -121,7 +121,7 @@ export default function SignalsPage() {
 
     if (snapshot.fearGreed?.value >= 70) {
       list.push({
-        title: language === "ko" ? "탐욕 구간 진입" : "Greed zone",
+        title: language === "ko" ? "심리 과열 구간" : "Greed zone",
         summary:
           language === "ko"
             ? `지수 ${snapshot.fearGreed.value}로 단기 과열 여부를 점검할 필요가 있습니다.`
@@ -132,7 +132,7 @@ export default function SignalsPage() {
 
     if (snapshot.fearGreed?.value <= 30) {
       list.push({
-        title: language === "ko" ? "공포 구간 확인" : "Fear zone check",
+        title: language === "ko" ? "심리 위축 구간" : "Fear zone check",
         summary:
           language === "ko"
             ? `지수 ${snapshot.fearGreed.value}로 방어적 해석이 필요한 구간입니다.`
@@ -167,7 +167,7 @@ export default function SignalsPage() {
             </article>
             <article className={styles.statCard}>
               <p className={styles.statLabel}>{copy.volume}</p>
-              <p className={styles.statValue}>{formatCurrency(snapshot.cryptoVolumeUsd)}</p>
+              <p className={styles.statValue}>{formatCurrency(snapshot.cryptoVolumeUsd, "KRW")}</p>
               <p className={styles.statHint}>{copy.snapshot}</p>
             </article>
           </div>
@@ -218,7 +218,7 @@ export default function SignalsPage() {
                   <div className={styles.itemRow}>
                     <div>
                       <p className={styles.itemTitle}>{asset.symbol}</p>
-                      <p className={styles.itemMeta}>{formatCurrency(asset.price)}</p>
+                      <p className={styles.itemMeta}>{formatCurrency(asset.price, asset.currency || "USD")}</p>
                     </div>
                     <span
                       className={

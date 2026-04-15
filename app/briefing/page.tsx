@@ -42,12 +42,12 @@ type Language = "ko" | "en";
 const QUICK_PROMPTS: Record<Language, string[]> = {
   ko: [
     "오늘 시장에서 가장 중요한 변화 3가지만 짧게 정리해줘.",
-    "지금 코인과 기술주 중 어디에 더 강한 추세 신호가 있는지 설명해줘.",
+    "지금 한국주식과 미국주식 중 어디에 더 강한 추세 신호가 있는지 설명해줘.",
     "오늘 주목해야 할 경제 일정이 시장에 어떤 영향을 줄지 알려줘."
   ],
   en: [
     "Summarize the three most important market changes today.",
-    "Explain whether crypto or tech stocks have the stronger trend right now.",
+    "Explain whether Korean or US stocks have the stronger trend right now.",
     "Tell me how today's key economic events could affect the market."
   ]
 };
