@@ -1,11 +1,13 @@
 import { NextResponse } from "next/server";
 
+type WatchGroup = "korea" | "stock";
+
 type WatchItem = {
   symbol: string;
   name: string;
   nameKo: string;
   nameEn: string;
-  group: "crypto" | "stock";
+  group: WatchGroup;
   price: number | null;
   changePercent: number | null;
 };
@@ -49,7 +51,7 @@ async function fetchKoreanStocks() {
         name: nameKo,
         nameKo,
         nameEn,
-        group: "crypto" as const,
+        group: "korea" as const,
         price: toNumber(json?.closePrice),
         changePercent: toNumber(json?.fluctuationsRatio)
       };

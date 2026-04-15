@@ -36,9 +36,9 @@ export default function MarketOverview() {
         setSnapshot((prev) => ({
           assets: json.assets?.length ? json.assets : prev.assets,
           fearGreed: json.fearGreed ?? null,
-          cryptoFearGreed: json.cryptoFearGreed ?? json.fearGreed ?? null,
+          koreaFearGreed: json.koreaFearGreed ?? json.fearGreed ?? null,
           stockFearGreed: json.stockFearGreed ?? null,
-          cryptoVolumeUsd: json.cryptoVolumeUsd ?? null,
+          koreaTradingValue: json.koreaTradingValue ?? null,
           warnings: json.warnings || [],
           updatedAt: json.updatedAt || prev.updatedAt
         }));
@@ -60,7 +60,7 @@ export default function MarketOverview() {
       mounted = false;
       clearInterval(timer);
     };
-  }, []);
+  }, [copy.networkError, copy.unstableSource]);
 
   useEffect(() => {
     let mounted = true;

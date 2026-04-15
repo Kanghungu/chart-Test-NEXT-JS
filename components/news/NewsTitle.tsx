@@ -9,11 +9,11 @@ export default function NewsTitle() {
 
   return (
     <div className={styles.wrapper}>
-      <div className={`${styles.card} ${styles.cryptoCard}`}>
-        <h2 className={`${styles.title} ${styles.cryptoTitle}`}>
+      <div className={`${styles.card} ${styles.koreaCard}`}>
+        <h2 className={`${styles.title} ${styles.koreaTitle}`}>
           {language === "ko" ? "한국주식 뉴스" : "Korean Stock News"}
         </h2>
-        <Link href="/crypto-news" className={`${styles.link} ${styles.cryptoLink}`}>
+        <Link href="/korea-news" className={`${styles.link} ${styles.koreaLink}`}>
           {language === "ko" ? "전체보기" : "View all"}
         </Link>
       </div>

@@ -17,7 +17,7 @@ type WatchItem = {
   name: string;
   nameKo?: string;
   nameEn?: string;
-  group: "crypto" | "stock";
+  group: "korea" | "stock";
   price: number | null;
   changePercent: number | null;
 };
@@ -91,7 +91,7 @@ const QUICK_LINKS: Array<{
     }
   },
   {
-    href: "/crypto-news",
+    href: "/korea-news",
     eyebrow: "KOREA",
     title: { ko: "한국주식 뉴스 전체보기", en: "Browse all Korean stock news" },
     description: {
@@ -343,9 +343,9 @@ export default function HomeDashboardExtras() {
   const featuredBriefing = briefings[0] ?? null;
   const nextEvent = events[0] ?? null;
 
-  const cryptoHeatmapAssets = useMemo<HeatmapAsset[]>(() => {
+  const koreaHeatmapAssets = useMemo<HeatmapAsset[]>(() => {
     return watchlist
-      .filter((item) => item.group === "crypto" && typeof item.changePercent === "number")
+      .filter((item) => item.group === "korea" && typeof item.changePercent === "number")
       .sort((a, b) => Math.abs(b.changePercent || 0) - Math.abs(a.changePercent || 0))
       .slice(0, 8)
       .map((item) => ({
@@ -353,7 +353,7 @@ export default function HomeDashboardExtras() {
         name: getLocalizedAssetName(item, language),
         price: item.price,
         changePercent: item.changePercent,
-        currency: "USD"
+        currency: "KRW"
       }));
   }, [language, watchlist]);
 
@@ -521,7 +521,7 @@ export default function HomeDashboardExtras() {
                 </div>
 
                 <div className={styles.heatmapGrid}>
-                  {cryptoHeatmapAssets.map((asset, index) => (
+                  {koreaHeatmapAssets.map((asset, index) => (
                     <div
                       key={asset.symbol}
                       className={`${styles.heatTile} ${getHeatmapSizeClass(index)} ${getHeatmapToneClass(asset.changePercent ?? 0)}`}
@@ -738,4 +738,5 @@ export default function HomeDashboardExtras() {
     </section>
   );
 }
+
 

@@ -69,7 +69,7 @@ export async function GET() {
             capturedAt: latestSnapshot.capturedAt,
             fearGreedValue: latestSnapshot.fearGreedValue,
             fearGreedClassification: latestSnapshot.fearGreedClassification,
-            cryptoVolumeUsd: toNumber(latestSnapshot.cryptoVolumeUsd),
+            koreaTradingValue: toNumber(latestSnapshot.koreaTradingValue),
             warnings: latestSnapshot.warnings,
             assets: latestSnapshot.items.map((item) => ({
               symbol: item.asset.symbol,

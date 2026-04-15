@@ -10,14 +10,14 @@ const prisma = new PrismaClient();
 
 async function upsertAssets() {
   const assets = [
-    { symbol: "BTC", name: "Bitcoin", type: AssetType.CRYPTO, market: "CRYPTO" },
-    { symbol: "ETH", name: "Ethereum", type: AssetType.CRYPTO, market: "CRYPTO" },
-    { symbol: "SOL", name: "Solana", type: AssetType.CRYPTO, market: "CRYPTO" },
-    { symbol: "NVDA", name: "NVIDIA", type: AssetType.STOCK, market: "NASDAQ" },
-    { symbol: "AAPL", name: "Apple", type: AssetType.STOCK, market: "NASDAQ" },
-    { symbol: "TSLA", name: "Tesla", type: AssetType.STOCK, market: "NASDAQ" },
-    { symbol: "S&P 500", name: "S&P 500", type: AssetType.INDEX, market: "US" },
-    { symbol: "NASDAQ", name: "NASDAQ Composite", type: AssetType.INDEX, market: "US" }
+    { symbol: "005930", name: "Samsung Electronics", type: AssetType.KOREA_STOCK, market: "KRX", currency: "KRW" },
+    { symbol: "000660", name: "SK hynix", type: AssetType.KOREA_STOCK, market: "KRX", currency: "KRW" },
+    { symbol: "035420", name: "NAVER", type: AssetType.KOREA_STOCK, market: "KRX", currency: "KRW" },
+    { symbol: "NVDA", name: "NVIDIA", type: AssetType.US_STOCK, market: "NASDAQ", currency: "USD" },
+    { symbol: "AAPL", name: "Apple", type: AssetType.US_STOCK, market: "NASDAQ", currency: "USD" },
+    { symbol: "TSLA", name: "Tesla", type: AssetType.US_STOCK, market: "NASDAQ", currency: "USD" },
+    { symbol: "S&P 500", name: "S&P 500", type: AssetType.INDEX, market: "US", currency: "USD" },
+    { symbol: "NASDAQ", name: "NASDAQ Composite", type: AssetType.INDEX, market: "US", currency: "USD" }
   ];
 
   for (const asset of assets) {
@@ -37,9 +37,9 @@ async function upsertAssets() {
 
 async function upsertWatchlist(assetBySymbol) {
   const watchlist = [
-    { symbol: "BTC", groupLabel: "crypto", sortOrder: 1, isPinned: true, note: "Core crypto benchmark" },
-    { symbol: "ETH", groupLabel: "crypto", sortOrder: 2, isPinned: false, note: "Layer 1 leader" },
-    { symbol: "SOL", groupLabel: "crypto", sortOrder: 3, isPinned: false, note: "High-beta alt" },
+    { symbol: "005930", groupLabel: "korea", sortOrder: 1, isPinned: true, note: "Korea mega-cap anchor" },
+    { symbol: "000660", groupLabel: "korea", sortOrder: 2, isPinned: false, note: "Korean semiconductor leader" },
+    { symbol: "035420", groupLabel: "korea", sortOrder: 3, isPinned: false, note: "Korea internet platform leader" },
     { symbol: "NVDA", groupLabel: "stock", sortOrder: 1, isPinned: true, note: "AI semiconductor leader" },
     { symbol: "AAPL", groupLabel: "stock", sortOrder: 2, isPinned: false, note: "Mega-cap defensive tech" },
     { symbol: "TSLA", groupLabel: "stock", sortOrder: 3, isPinned: false, note: "High volatility growth stock" }
@@ -79,13 +79,13 @@ async function createSnapshot(assetBySymbol) {
       capturedAt: new Date(),
       fearGreedValue: 62,
       fearGreedClassification: "Greed",
-      cryptoVolumeUsd: 138000000000,
+      koreaTradingValue: 138000000000,
       warnings: [],
       items: {
         create: [
-          { assetId: assetBySymbol.get("BTC").id, price: 87250.15, changePercent: 3.41, volume: 42000000000 },
-          { assetId: assetBySymbol.get("ETH").id, price: 4620.3, changePercent: 2.28, volume: 19000000000 },
-          { assetId: assetBySymbol.get("SOL").id, price: 184.44, changePercent: 4.92, volume: 8300000000 },
+          { assetId: assetBySymbol.get("005930").id, price: 81200, changePercent: 1.85, volume: 1200000000000 },
+          { assetId: assetBySymbol.get("000660").id, price: 197500, changePercent: 2.64, volume: 680000000000 },
+          { assetId: assetBySymbol.get("035420").id, price: 188300, changePercent: -0.72, volume: 210000000000 },
           { assetId: assetBySymbol.get("NVDA").id, price: 131.42, changePercent: 1.96, volume: 28600000 },
           { assetId: assetBySymbol.get("AAPL").id, price: 224.73, changePercent: -0.84, volume: 51200000 },
           { assetId: assetBySymbol.get("TSLA").id, price: 209.17, changePercent: -1.73, volume: 76800000 },
@@ -101,22 +101,22 @@ async function seedNews(snapshotId) {
   await prisma.newsArticle.createMany({
     data: [
       {
-        externalId: `seed-stock-${snapshotId}`,
+        externalId: `seed-us-stock-${snapshotId}`,
         source: "seed",
-        category: NewsCategory.STOCK,
+        category: NewsCategory.US_STOCK,
         title: "AI demand keeps semiconductor leaders in focus",
         summary: "Large-cap chip names continued to attract risk appetite as AI infrastructure spending stayed firm.",
-        url: `https://example.com/news/${snapshotId}/stock`,
+        url: `https://example.com/news/${snapshotId}/us-stock`,
         language: "en",
         publishedAt: new Date()
       },
       {
-        externalId: `seed-crypto-${snapshotId}`,
+        externalId: `seed-korea-stock-${snapshotId}`,
         source: "seed",
-        category: NewsCategory.CRYPTO,
-        title: "Bitcoin and Ethereum extend risk-on move",
-        summary: "Crypto majors outperformed as traders rotated back into momentum assets ahead of macro events.",
-        url: `https://example.com/news/${snapshotId}/crypto`,
+        category: NewsCategory.KOREA_STOCK,
+        title: "Korean semiconductor leaders extend relative strength",
+        summary: "Samsung Electronics and SK hynix stayed firm as memory-cycle optimism improved local market sentiment.",
+        url: `https://example.com/news/${snapshotId}/korea-stock`,
         language: "en",
         publishedAt: new Date()
       },
@@ -173,13 +173,13 @@ async function seedEvents(snapshotId) {
   });
 }
 
-async function seedSignals(snapshotId) {
+async function seedSignals() {
   await prisma.marketSignal.createMany({
     data: [
       {
-        externalId: "seed-signal-sol-up",
-        title: "SOL momentum expansion",
-        summary: "Solana is showing stronger upside acceleration than BTC and ETH in the latest seeded snapshot.",
+        externalId: "seed-signal-skhynix-up",
+        title: "SK hynix momentum expansion",
+        summary: "SK hynix is showing stronger upside acceleration than the broader Korea board in the latest seeded snapshot.",
         tone: SignalTone.UP,
         source: "seed",
         signalDate: new Date()
@@ -205,15 +205,15 @@ async function seedSignals(snapshotId) {
   });
 }
 
-async function seedBriefings(snapshotId) {
+async function seedBriefings() {
   await prisma.briefing.createMany({
     data: [
       {
         externalId: "seed-briefing-morning",
         title: "Morning market briefing",
-        prompt: "Summarize the current cross-asset tone.",
-        summary: "Crypto remains the strongest pocket of momentum while US equities are positive but more selective.",
-        marketView: "Risk appetite is positive, but leadership is concentrated in semiconductors and large-cap crypto.",
+        prompt: "Summarize the current Korea and US stock tone.",
+        summary: "Korean semiconductors remain firm while US equities are positive but more selective.",
+        marketView: "Risk appetite is constructive, with leadership concentrated in semiconductors and large-cap tech.",
         publishedAt: new Date()
       },
       {
@@ -221,7 +221,7 @@ async function seedBriefings(snapshotId) {
         title: "Macro event prep",
         prompt: "What should traders watch this week?",
         summary: "Inflation data and Fed commentary are the two most important catalysts in the next 48 hours.",
-        marketView: "Stay alert around CPI timing because it can quickly reprice both growth stocks and crypto beta.",
+        marketView: "Stay alert around CPI timing because it can quickly reprice both Korean exporters and US growth stocks.",
         publishedAt: new Date(Date.now() - 1000 * 60 * 60)
       }
     ],
@@ -239,8 +239,8 @@ async function main() {
   await Promise.all([
     seedNews(snapshot.id),
     seedEvents(snapshot.id),
-    seedSignals(snapshot.id),
-    seedBriefings(snapshot.id)
+    seedSignals(),
+    seedBriefings()
   ]);
 }
 

@@ -18,7 +18,7 @@ type SnapshotData = {
     value: number;
     classification: string;
   } | null;
-  cryptoVolumeUsd: number | null;
+  koreaTradingValue: number | null;
 };
 
 const COPY = {
@@ -62,7 +62,7 @@ export default function SignalsPage() {
   const [snapshot, setSnapshot] = useState<SnapshotData>({
     assets: [],
     fearGreed: null,
-    cryptoVolumeUsd: null
+    koreaTradingValue: null
   });
 
   useEffect(() => {
@@ -76,11 +76,11 @@ export default function SignalsPage() {
         setSnapshot({
           assets: Array.isArray(json?.assets) ? json.assets : [],
           fearGreed: json?.fearGreed ?? null,
-          cryptoVolumeUsd: json?.cryptoVolumeUsd ?? null
+          koreaTradingValue: json?.koreaTradingValue ?? null
         });
       } catch {
         if (!mounted) return;
-        setSnapshot({ assets: [], fearGreed: null, cryptoVolumeUsd: null });
+        setSnapshot({ assets: [], fearGreed: null, koreaTradingValue: null });
       }
     };
 
@@ -132,10 +132,10 @@ export default function SignalsPage() {
 
     if (snapshot.fearGreed?.value <= 30) {
       list.push({
-        title: language === "ko" ? "심리 위축 구간" : "Fear zone check",
+        title: language === "ko" ? "심리 공포 구간" : "Fear zone check",
         summary:
           language === "ko"
-            ? `지수 ${snapshot.fearGreed.value}로 방어적 해석이 필요한 구간입니다.`
+            ? `지수 ${snapshot.fearGreed.value}로 방어적인 해석이 필요한 구간입니다.`
             : `At ${snapshot.fearGreed.value}, a defensive read may be more appropriate.`,
         tone: "down"
       });
@@ -167,7 +167,7 @@ export default function SignalsPage() {
             </article>
             <article className={styles.statCard}>
               <p className={styles.statLabel}>{copy.volume}</p>
-              <p className={styles.statValue}>{formatCurrency(snapshot.cryptoVolumeUsd, "KRW")}</p>
+              <p className={styles.statValue}>{formatCurrency(snapshot.koreaTradingValue, "KRW")}</p>
               <p className={styles.statHint}>{copy.snapshot}</p>
             </article>
           </div>

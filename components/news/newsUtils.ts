@@ -15,8 +15,8 @@ const IMPACT_KEYWORDS = [
   "코스닥",
   "삼성전자",
   "하이닉스",
-  "foreign",
-  "외국인"
+  "외국인",
+  "nvidia"
 ];
 
 export function decodeHtmlEntities(value: string) {
@@ -53,21 +53,12 @@ export function getPublisher(item: NewsItem, language: Language = "ko") {
   return item.publisher || (language === "ko" ? "출처 미상" : "Unknown source");
 }
 
-export function getLink(item: NewsItem, type: NewsType) {
-  if (type === "crypto" && item.content_url) {
-    return item.content_url;
-  }
-
-  if (type === "crypto" && item.slug) {
-    return `https://cryptopanic.com/news/${item.slug}`;
-  }
-
+export function getLink(item: NewsItem) {
   return item.content_url || "#";
 }
 
 export function getImpactScore(item: NewsItem, type: NewsType) {
   const sourceText = `${item.title_ko || ""} ${item.title || ""} ${item.summary_ko || ""} ${item.summary || ""} ${item.description || ""}`.toLowerCase();
-
   let score = 0;
 
   for (const keyword of IMPACT_KEYWORDS) {
@@ -75,7 +66,7 @@ export function getImpactScore(item: NewsItem, type: NewsType) {
   }
 
   if (type === "stock" && sourceText.includes("nvidia")) score += 1;
-  if (type === "crypto" && (sourceText.includes("코스피") || sourceText.includes("삼성전자"))) score += 1;
+  if (type === "korea" && (sourceText.includes("코스피") || sourceText.includes("삼성전자"))) score += 1;
 
   const published = getPublishedAt(item);
   if (published) {
@@ -126,12 +117,12 @@ export function filterAndSortNews(
   return sortItems(filtered, type, sort);
 }
 
-export function buildNewsSignals(cryptoItems: NewsItem[], stockItems: NewsItem[], language: Language) {
+export function buildNewsSignals(koreaItems: NewsItem[], stockItems: NewsItem[], language: Language) {
   const candidates: { title: string; score: number; type: NewsType }[] = [];
 
-  cryptoItems.slice(0, 20).forEach((item) => {
-    const score = getImpactScore(item, "crypto");
-    if (score >= 5) candidates.push({ title: getTitle(item, language), score, type: "crypto" });
+  koreaItems.slice(0, 20).forEach((item) => {
+    const score = getImpactScore(item, "korea");
+    if (score >= 5) candidates.push({ title: getTitle(item, language), score, type: "korea" });
   });
 
   stockItems.slice(0, 20).forEach((item) => {
@@ -151,7 +142,7 @@ export function buildNewsSignals(cryptoItems: NewsItem[], stockItems: NewsItem[]
 
   return candidates.slice(0, 3).map((item) =>
     language === "ko"
-      ? `${item.type === "crypto" ? "한국주식" : "미국주식"} 시그널 · ${item.title}`
-      : `${item.type === "crypto" ? "Korean stock" : "US stock"} signal · ${item.title}`
+      ? `${item.type === "korea" ? "한국주식" : "미국주식"} 시그널 · ${item.title}`
+      : `${item.type === "korea" ? "Korean stock" : "US stock"} signal · ${item.title}`
   );
 }

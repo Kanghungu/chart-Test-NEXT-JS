@@ -13,11 +13,10 @@ interface NewsSectionProps {
 
 export default function NewsSection({ items, isFullColumn, type }: NewsSectionProps) {
   const { language } = useLanguage();
-  const titleClassName = type === "crypto" ? styles.cryptoTitle : styles.stockTitle;
-  const linkClassName = type === "crypto" ? styles.cryptoLink : styles.stockLink;
-  const keyField = type === "crypto" ? "content_url" : "content_url";
+  const titleClassName = type === "korea" ? styles.koreaTitle : styles.stockTitle;
+  const linkClassName = type === "korea" ? styles.koreaLink : styles.stockLink;
   const sectionLabel =
-    type === "crypto"
+    type === "korea"
       ? language === "ko"
         ? "한국주식 뉴스"
         : "Korean Stock News"
@@ -31,9 +30,9 @@ export default function NewsSection({ items, isFullColumn, type }: NewsSectionPr
 
       <ul className={styles.newsList}>
         {items.map((item, idx) => (
-          <li key={item.id || `${item[keyField]}-${idx}`} className={styles.newsItem}>
+          <li key={item.id || `${item.content_url}-${idx}`} className={styles.newsItem}>
             <a
-              href={getLink(item, type)}
+              href={getLink(item)}
               target="_blank"
               rel="noopener noreferrer"
               className={`${styles.newsLink} ${linkClassName}`}

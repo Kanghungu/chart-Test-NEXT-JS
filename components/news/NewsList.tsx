@@ -11,20 +11,20 @@ const COPY = {
   ko: {
     filterOptions: [
       { value: "all", label: "전체" },
-      { value: "crypto", label: "한국주식" },
+      { value: "korea", label: "한국주식" },
       { value: "stock", label: "미국주식" }
     ],
     placeholder: "키워드 검색 (코스피, 삼성전자, Fed, NVIDIA...)",
-    latest: "최신순",
-    impact: "영향도순",
-    count: "한국주식",
-    countStock: "미국주식",
+    latest: "최신",
+    impact: "영향도",
+    count: "한국",
+    countStock: "미국",
     signalTitle: "뉴스 시그널"
   },
   en: {
     filterOptions: [
       { value: "all", label: "All" },
-      { value: "crypto", label: "Korean Stocks" },
+      { value: "korea", label: "Korean Stocks" },
       { value: "stock", label: "US Stocks" }
     ],
     placeholder: "Search keyword (KOSPI, Samsung, Fed, NVIDIA...)",
@@ -39,7 +39,7 @@ const COPY = {
 export default function NewsList() {
   const { language } = useLanguage();
   const copy = COPY[language];
-  const [cryptoNews, setCryptoNews] = useState<NewsItem[]>([]);
+  const [koreaNews, setKoreaNews] = useState<NewsItem[]>([]);
   const [stockNews, setStockNews] = useState<NewsItem[]>([]);
   const [filterType, setFilterType] = useState<FilterType>("all");
   const [sortType, setSortType] = useState<SortType>("latest");
@@ -50,18 +50,18 @@ export default function NewsList() {
 
     const loadNews = async () => {
       try {
-        const [cryptoRes, stockRes] = await Promise.all([
-          fetch("/api/news/crypto", { cache: "no-store" }),
+        const [koreaRes, stockRes] = await Promise.all([
+          fetch("/api/news/korea", { cache: "no-store" }),
           fetch("/api/news/stock", { cache: "no-store" })
         ]);
-        const [cryptoJson, stockJson] = await Promise.all([cryptoRes.json(), stockRes.json()]);
+        const [koreaJson, stockJson] = await Promise.all([koreaRes.json(), stockRes.json()]);
 
         if (!mounted) return;
-        setCryptoNews(Array.isArray(cryptoJson?.results) ? cryptoJson.results : []);
+        setKoreaNews(Array.isArray(koreaJson?.results) ? koreaJson.results : []);
         setStockNews(Array.isArray(stockJson?.data) ? stockJson.data : []);
       } catch {
         if (!mounted) return;
-        setCryptoNews([]);
+        setKoreaNews([]);
         setStockNews([]);
       }
     };
@@ -73,19 +73,19 @@ export default function NewsList() {
     };
   }, []);
 
-  const preparedCryptoNews = useMemo(() => {
-    return filterAndSortNews(cryptoNews, "crypto", keyword, sortType, language);
-  }, [cryptoNews, keyword, language, sortType]);
+  const preparedKoreaNews = useMemo(() => {
+    return filterAndSortNews(koreaNews, "korea", keyword, sortType, language);
+  }, [koreaNews, keyword, language, sortType]);
 
   const preparedStockNews = useMemo(() => {
     return filterAndSortNews(stockNews, "stock", keyword, sortType, language);
   }, [keyword, language, sortType, stockNews]);
 
   const newsSignals = useMemo(() => {
-    return buildNewsSignals(preparedCryptoNews, preparedStockNews, language);
-  }, [language, preparedCryptoNews, preparedStockNews]);
+    return buildNewsSignals(preparedKoreaNews, preparedStockNews, language);
+  }, [language, preparedKoreaNews, preparedStockNews]);
 
-  const showCrypto = filterType === "all" || filterType === "crypto";
+  const showKorea = filterType === "all" || filterType === "korea";
   const showStock = filterType === "all" || filterType === "stock";
 
   return (
@@ -95,7 +95,7 @@ export default function NewsList() {
           {copy.filterOptions.map((option) => (
             <button
               key={option.value}
-              onClick={() => setFilterType(option.value)}
+              onClick={() => setFilterType(option.value as FilterType)}
               className={filterType === option.value ? styles.filterBtnActive : styles.filterBtn}
             >
               {option.label}
@@ -121,7 +121,7 @@ export default function NewsList() {
           </select>
 
           <div className={styles.countInfo}>
-            {copy.count} {preparedCryptoNews.length} | {copy.countStock} {preparedStockNews.length}
+            {copy.count} {preparedKoreaNews.length} | {copy.countStock} {preparedStockNews.length}
           </div>
         </div>
       </div>
@@ -138,8 +138,8 @@ export default function NewsList() {
       </div>
 
       <div className={styles.newsContainer}>
-        {showCrypto && <NewsSection items={preparedCryptoNews} isFullColumn={!showStock} type="crypto" />}
-        {showStock && <NewsSection items={preparedStockNews} isFullColumn={!showCrypto} type="stock" />}
+        {showKorea && <NewsSection items={preparedKoreaNews} isFullColumn={!showStock} type="korea" />}
+        {showStock && <NewsSection items={preparedStockNews} isFullColumn={!showKorea} type="stock" />}
       </div>
     </div>
   );

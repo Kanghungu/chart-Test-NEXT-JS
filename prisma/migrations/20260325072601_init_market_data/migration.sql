@@ -1,8 +1,8 @@
 -- CreateEnum
-CREATE TYPE "public"."AssetType" AS ENUM ('CRYPTO', 'STOCK', 'INDEX', 'ETF', 'FOREX', 'COMMODITY');
+CREATE TYPE "public"."AssetType" AS ENUM ('KOREA_STOCK', 'US_STOCK', 'INDEX', 'ETF', 'FOREX', 'COMMODITY');
 
 -- CreateEnum
-CREATE TYPE "public"."NewsCategory" AS ENUM ('CRYPTO', 'STOCK', 'MACRO');
+CREATE TYPE "public"."NewsCategory" AS ENUM ('KOREA_STOCK', 'US_STOCK', 'MACRO');
 
 -- CreateEnum
 CREATE TYPE "public"."EventImpact" AS ENUM ('LOW', 'MEDIUM', 'HIGH');
@@ -43,7 +43,7 @@ CREATE TABLE "public"."MarketSnapshot" (
     "capturedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "fearGreedValue" INTEGER,
     "fearGreedClassification" TEXT,
-    "cryptoVolumeUsd" DECIMAL(20,2),
+    "koreaTradingValue" DECIMAL(20,2),
     "warnings" JSONB,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 

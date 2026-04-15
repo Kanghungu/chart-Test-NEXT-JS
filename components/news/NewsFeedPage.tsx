@@ -16,12 +16,13 @@ type FeedItem = {
 };
 
 type SortType = "latest" | "oldest";
+type NewsFeedVariant = "korea" | "stock";
 
 interface NewsFeedPageProps {
   title: string;
   intro: string;
   badge: string;
-  variant: "crypto" | "stock";
+  variant: NewsFeedVariant;
   quickFilters: string[];
   fetchUrl: string;
   getItems: (json: any) => FeedItem[];
@@ -50,14 +51,14 @@ const COPY = {
     searchPlaceholder: "키워드 검색 (코스피, 삼성전자, Fed, NVIDIA...)",
     favoritesOnly: "즐겨찾기만 보기",
     spotlight: "스포트라이트",
-    signalBoard: "지금 보는 흐름",
-    recentCount: "표시 중인 뉴스",
+    signalBoard: "현재 보고 있는 흐름",
+    recentCount: "노출 기사 수",
     sourceCount: "출처 수",
     latestUpdate: "최신 업데이트",
     emptyDate: "날짜 정보 없음",
     unknownSource: "출처 미상",
     open: "원문 보기",
-    expand: "자세히",
+    expand: "펼치기",
     collapse: "접기",
     share: "링크 복사",
     copied: "복사 완료",
@@ -66,7 +67,7 @@ const COPY = {
     error: "뉴스를 불러오지 못했습니다.",
     noResults: "조건에 맞는 뉴스가 없습니다.",
     favoriteOn: "즐겨찾기 추가",
-    favoriteOff: "즐겨찾기에서 제거",
+    favoriteOff: "즐겨찾기 해제",
     summary: "요약",
     sourceLabel: "출처",
     reset: "전체",
@@ -286,8 +287,10 @@ export default function NewsFeedPage(props: NewsFeedPageProps) {
     } catch {}
   };
 
+  const sectionClassName = variant === "korea" ? styles.koreaTheme : styles.stockTheme;
+
   return (
-    <section className={`${styles.pageSection} ${variant === "crypto" ? styles.cryptoTheme : styles.stockTheme}`}>
+    <section className={`${styles.pageSection} ${sectionClassName}`}>
       <div className={styles.hero}>
         <div className={styles.heroCopy}>
           <span className={styles.heroBadge}>{badge}</span>
@@ -394,7 +397,7 @@ export default function NewsFeedPage(props: NewsFeedPageProps) {
                   className={favoriteIds.includes(item.id) ? styles.favoriteButtonActive : styles.favoriteButton}
                   aria-label={favoriteIds.includes(item.id) ? copy.favoriteOff : copy.favoriteOn}
                 >
-                  {favoriteIds.includes(item.id) ? "★" : "☆"}
+                  {favoriteIds.includes(item.id) ? "Saved" : "Save"}
                 </button>
 
                 <button onClick={() => handleCopy(item)} className={styles.utilityButton}>

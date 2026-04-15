@@ -10,17 +10,17 @@ export function getMarketCopy(language: Language) {
         title: "실시간 시장 요약",
         description: "한국주식과 미국주식의 핵심 지표를 한 번에 확인하세요.",
         fearGreed: "시장 심리 지수",
-        cryptoFearGreed: "한국주식 심리 지수",
+        koreaFearGreed: "한국주식 심리 지수",
         stockFearGreed: "미국주식 심리 지수",
         volume: "대표 한국주식 거래대금",
         signalTitle: "시그널 알림",
-        liveLabel: "실시간 가격 변화",
+        liveLabel: "실시간 가격 변동",
         updatedAt: "업데이트",
         noSignal: "강한 시그널이 아직 없습니다. 실시간 변동을 계속 추적 중입니다.",
         momentum: "강세",
         drop: "약세",
         overheat: "심리 과열",
-        fearZone: "심리 위축",
+        fearZone: "심리 공포",
         overheatHint: "단기 과열 가능성",
         fearHint: "변동성 주의"
       }
@@ -30,7 +30,7 @@ export function getMarketCopy(language: Language) {
         title: "Real-time Market Overview",
         description: "Track Korean and US equity signals at a glance.",
         fearGreed: "Market Sentiment",
-        cryptoFearGreed: "Korean Stock Sentiment",
+        koreaFearGreed: "Korean Stock Sentiment",
         stockFearGreed: "US Stock Sentiment",
         volume: "Korean Leader Trading Value",
         signalTitle: "Signal Alerts",
@@ -56,9 +56,9 @@ export const DEFAULT_ASSETS: AssetItem[] = [
 export const INITIAL_SNAPSHOT: SnapshotData = {
   assets: DEFAULT_ASSETS,
   fearGreed: null,
-  cryptoFearGreed: null,
+  koreaFearGreed: null,
   stockFearGreed: null,
-  cryptoVolumeUsd: null,
+  koreaTradingValue: null,
   warnings: [],
   updatedAt: null
 };
@@ -104,12 +104,12 @@ export function buildSignals(snapshot: SnapshotData) {
     }
   });
 
-  if (snapshot.cryptoFearGreed?.value >= 75) {
-    list.push(`${copy.overheat} (${snapshot.cryptoFearGreed.value}) - ${copy.overheatHint}`);
+  if (snapshot.koreaFearGreed?.value >= 75) {
+    list.push(`${copy.overheat} (${snapshot.koreaFearGreed.value}) - ${copy.overheatHint}`);
   }
 
-  if (snapshot.cryptoFearGreed?.value <= 25) {
-    list.push(`${copy.fearZone} (${snapshot.cryptoFearGreed.value}) - ${copy.fearHint}`);
+  if (snapshot.koreaFearGreed?.value <= 25) {
+    list.push(`${copy.fearZone} (${snapshot.koreaFearGreed.value}) - ${copy.fearHint}`);
   }
 
   if (!list.length) {
@@ -133,12 +133,12 @@ export function buildSignalsByLanguage(snapshot: SnapshotData, language: Languag
     }
   });
 
-  if (snapshot.cryptoFearGreed?.value >= 75) {
-    list.push(`${copy.overheat} (${snapshot.cryptoFearGreed.value}) - ${copy.overheatHint}`);
+  if (snapshot.koreaFearGreed?.value >= 75) {
+    list.push(`${copy.overheat} (${snapshot.koreaFearGreed.value}) - ${copy.overheatHint}`);
   }
 
-  if (snapshot.cryptoFearGreed?.value <= 25) {
-    list.push(`${copy.fearZone} (${snapshot.cryptoFearGreed.value}) - ${copy.fearHint}`);
+  if (snapshot.koreaFearGreed?.value <= 25) {
+    list.push(`${copy.fearZone} (${snapshot.koreaFearGreed.value}) - ${copy.fearHint}`);
   }
 
   if (!list.length) {

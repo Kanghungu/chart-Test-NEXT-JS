@@ -9,8 +9,8 @@ generator client {
 }
 
 enum AssetType {
-  CRYPTO
-  STOCK
+  KOREA_STOCK
+  US_STOCK
   INDEX
   ETF
   FOREX
@@ -18,8 +18,8 @@ enum AssetType {
 }
 
 enum NewsCategory {
-  CRYPTO
-  STOCK
+  KOREA_STOCK
+  US_STOCK
   MACRO
 }
 
@@ -72,7 +72,7 @@ model MarketSnapshot {
   capturedAt            DateTime              @default(now())
   fearGreedValue        Int?
   fearGreedClassification String?
-  cryptoVolumeUsd       Decimal?              @db.Decimal(20, 2)
+  koreaTradingValue     Decimal?              @db.Decimal(20, 2)
   warnings              Json?
   createdAt             DateTime              @default(now())
   items                 MarketSnapshotAsset[]

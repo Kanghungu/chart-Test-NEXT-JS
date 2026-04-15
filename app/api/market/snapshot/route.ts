@@ -238,15 +238,14 @@ export async function GET() {
   const assets = [...koreaAssets, ...usAssets];
   const koreanStockFearGreed = deriveSentiment([...koreaAssets, ...koreanLeaders]);
   const usStockFearGreed = deriveSentiment([...usAssets, ...usLeaders]);
-  const koreanTradingValue =
-    koreanLeaders.reduce((sum, item) => sum + (item.tradedValue || 0), 0) || null;
+  const koreanTradingValue = koreanLeaders.reduce((sum, item) => sum + (item.tradedValue || 0), 0) || null;
 
   return NextResponse.json({
     assets,
     fearGreed: koreanStockFearGreed,
-    cryptoFearGreed: koreanStockFearGreed,
+    koreaFearGreed: koreanStockFearGreed,
     stockFearGreed: usStockFearGreed,
-    cryptoVolumeUsd: koreanTradingValue,
+    koreaTradingValue: koreanTradingValue,
     warnings,
     updatedAt: new Date().toISOString()
   });

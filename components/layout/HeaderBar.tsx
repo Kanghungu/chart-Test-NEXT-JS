@@ -14,10 +14,11 @@ const COPY = {
       { href: "/signals", label: "시그널" },
       { href: "/briefing", label: "브리핑" },
       { href: "/stock-news", label: "미국주식뉴스" },
-      { href: "/crypto-news", label: "한국주식뉴스" }
+      { href: "/korea-news", label: "한국주식뉴스" }
     ],
-    description: "실시간 주가, 뉴스, 시그널 대시보드",
-    live: "LIVE"
+    description: "실시간 가격, 뉴스, 시그널을 한 화면에서",
+    live: "LIVE",
+    navigationLabel: "주요 메뉴"
   },
   en: {
     nav: [
@@ -28,10 +29,11 @@ const COPY = {
       { href: "/signals", label: "Signals" },
       { href: "/briefing", label: "Briefing" },
       { href: "/stock-news", label: "US Stock News" },
-      { href: "/crypto-news", label: "Korean Stock News" }
+      { href: "/korea-news", label: "Korean Stock News" }
     ],
     description: "Real-time prices, news, and market signals",
-    live: "LIVE"
+    live: "LIVE",
+    navigationLabel: "Main navigation"
   }
 } as const;
 
@@ -40,44 +42,42 @@ export default function HeaderBar() {
   const copy = COPY[language];
 
   return (
-    <>
-      <header className={styles.header}>
-        <div className={styles.headerInner}>
-          <div className={styles.brand}>
-            <Link href="/" className={styles.brandLink}>
-              Market Pulse Korea
+    <header className={styles.header}>
+      <div className={styles.headerInner}>
+        <div className={styles.brand}>
+          <Link href="/" className={styles.brandLink}>
+            Market Pulse Korea
+          </Link>
+          <p className={styles.brandDescription}>{copy.description}</p>
+        </div>
+
+        <nav className={styles.nav} aria-label={copy.navigationLabel}>
+          {copy.nav.map((item) => (
+            <Link key={item.href} href={item.href} className={styles.navLink}>
+              {item.label}
             </Link>
-            <p className={styles.brandDescription}>{copy.description}</p>
+          ))}
+
+          <div className={styles.languageToggle} role="group" aria-label="Language toggle">
+            <button
+              type="button"
+              className={language === "ko" ? styles.languageButtonActive : styles.languageButton}
+              onClick={() => setLanguage("ko")}
+            >
+              KO
+            </button>
+            <button
+              type="button"
+              className={language === "en" ? styles.languageButtonActive : styles.languageButton}
+              onClick={() => setLanguage("en")}
+            >
+              EN
+            </button>
           </div>
 
-          <nav className={styles.nav} aria-label={language === "ko" ? "주요 메뉴" : "Main navigation"}>
-            {copy.nav.map((item) => (
-              <Link key={item.href} href={item.href} className={styles.navLink}>
-                {item.label}
-              </Link>
-            ))}
-
-            <div className={styles.languageToggle} role="group" aria-label="Language toggle">
-              <button
-                type="button"
-                className={language === "ko" ? styles.languageButtonActive : styles.languageButton}
-                onClick={() => setLanguage("ko")}
-              >
-                KO
-              </button>
-              <button
-                type="button"
-                className={language === "en" ? styles.languageButtonActive : styles.languageButton}
-                onClick={() => setLanguage("en")}
-              >
-                EN
-              </button>
-            </div>
-
-            <span className={styles.liveBadge}>{copy.live}</span>
-          </nav>
-        </div>
-      </header>
-    </>
+          <span className={styles.liveBadge}>{copy.live}</span>
+        </nav>
+      </div>
+    </header>
   );
 }

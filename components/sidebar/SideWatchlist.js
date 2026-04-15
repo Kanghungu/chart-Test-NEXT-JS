@@ -5,18 +5,21 @@ import styles from "./SideWatchlist.module.css";
 import { useLanguage } from "@/components/i18n/LanguageProvider";
 import { getLocalizedAssetName } from "@/lib/marketLocalization";
 
-function formatPrice(v) {
-  if (typeof v !== "number") return "-";
+function formatPrice(value, currency) {
+  if (typeof value !== "number") return "-";
+
   return new Intl.NumberFormat("en-US", {
-    minimumFractionDigits: v < 1 ? 4 : 2,
-    maximumFractionDigits: v < 1 ? 4 : 2
-  }).format(v);
+    style: "currency",
+    currency,
+    minimumFractionDigits: value < 1 ? 4 : 2,
+    maximumFractionDigits: value < 1 ? 4 : 2
+  }).format(value);
 }
 
-function formatChange(v) {
-  if (typeof v !== "number") return "-";
-  const sign = v > 0 ? "+" : "";
-  return `${sign}${v.toFixed(2)}%`;
+function formatChange(value) {
+  if (typeof value !== "number") return "-";
+  const sign = value > 0 ? "+" : "";
+  return `${sign}${value.toFixed(2)}%`;
 }
 
 export default function SideWatchlist() {
@@ -47,8 +50,8 @@ export default function SideWatchlist() {
     };
   }, []);
 
-  const koreanStocks = items.filter((i) => i.group === "crypto");
-  const usStocks = items.filter((i) => i.group === "stock");
+  const koreanStocks = items.filter((item) => item.group === "korea");
+  const usStocks = items.filter((item) => item.group === "stock");
 
   return (
     <section className={styles.panel}>
@@ -66,10 +69,8 @@ export default function SideWatchlist() {
                   <p className={styles.symbol}>{item.symbol}</p>
                 </div>
                 <div className={styles.valueBox}>
-                  <p className={styles.price}>{formatPrice(item.price)}</p>
-                  <p className={`${styles.change} ${up ? styles.up : styles.down}`}>
-                    {formatChange(item.changePercent)}
-                  </p>
+                  <p className={styles.price}>{formatPrice(item.price, "KRW")}</p>
+                  <p className={`${styles.change} ${up ? styles.up : styles.down}`}>{formatChange(item.changePercent)}</p>
                 </div>
               </div>
             );
@@ -89,10 +90,8 @@ export default function SideWatchlist() {
                   <p className={styles.symbol}>{item.symbol}</p>
                 </div>
                 <div className={styles.valueBox}>
-                  <p className={styles.price}>${formatPrice(item.price)}</p>
-                  <p className={`${styles.change} ${up ? styles.up : styles.down}`}>
-                    {formatChange(item.changePercent)}
-                  </p>
+                  <p className={styles.price}>{formatPrice(item.price, "USD")}</p>
+                  <p className={`${styles.change} ${up ? styles.up : styles.down}`}>{formatChange(item.changePercent)}</p>
                 </div>
               </div>
             );

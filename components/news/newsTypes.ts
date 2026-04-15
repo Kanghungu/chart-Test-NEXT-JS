@@ -1,4 +1,4 @@
-export type NewsType = "crypto" | "stock";
+export type NewsType = "korea" | "stock";
 export type FilterType = "all" | NewsType;
 export type SortType = "latest" | "impact";
 

@@ -6,12 +6,14 @@ import { formatCurrency, formatPercent } from "@/lib/formatters";
 import { useLanguage } from "@/components/i18n/LanguageProvider";
 import { getLocalizedAssetName } from "@/lib/marketLocalization";
 
+type WatchGroup = "korea" | "stock";
+
 type WatchItem = {
   symbol: string;
   name: string;
   nameKo?: string;
   nameEn?: string;
-  group: "crypto" | "stock";
+  group: WatchGroup;
   price: number | null;
   changePercent: number | null;
 };
@@ -20,7 +22,7 @@ const COPY = {
   ko: {
     eyebrow: "WATCHLIST HUB",
     title: "미국주식 / 한국주식 보드",
-    description: "미국주식과 한국주식을 한 화면에서 비교하고, 변동폭 기준으로 빠르게 살펴볼 수 있습니다.",
+    description: "미국주식과 한국주식을 같은 화면에서 비교하고, 변동폭 기준으로 빠르게 훑어봅니다.",
     totalAssets: "총 자산",
     totalAssetsHint: "한국주식 + 미국주식",
     strongest: "가장 강한 자산",
@@ -28,14 +30,14 @@ const COPY = {
     assetGroup: "자산 그룹",
     quickFilter: "빠른 필터",
     all: "전체",
-    crypto: "한국주식",
+    korea: "한국주식",
     stock: "미국주식",
-    moveRanking: "변동률 기준 정렬",
+    moveRanking: "변동폭 기준 정렬",
     comparePairs: "오늘 보기 좋은 비교",
     quickPairs: "빠른 비교",
     empty: "표시할 자산이 없습니다.",
     allAssets: "전체 자산",
-    cryptoType: "한국주식",
+    koreaType: "한국주식",
     stockType: "미국주식"
   },
   en: {
@@ -49,14 +51,14 @@ const COPY = {
     assetGroup: "Asset group",
     quickFilter: "Quick filter",
     all: "All",
-    crypto: "Korean stocks",
+    korea: "Korean stocks",
     stock: "US stocks",
     moveRanking: "Move ranking",
     comparePairs: "Useful pairs today",
     quickPairs: "Quick pairs",
     empty: "No watchlist assets to display.",
     allAssets: "All assets",
-    cryptoType: "Korean stock",
+    koreaType: "Korean stock",
     stockType: "US stock"
   }
 } as const;
@@ -64,8 +66,8 @@ const COPY = {
 const PAIRS = {
   ko: [
     ["삼성전자 vs SK하이닉스", "국내 반도체 주도주 비교"],
-    ["NAVER vs 현대차", "성장주와 경기민감주 온도차 확인"],
-    ["NVDA vs TSLA", "미국 성장주 위험 선호 확인"],
+    ["NAVER vs 현대차", "성장주와 경기민감주 톤 비교"],
+    ["NVDA vs TSLA", "미국 성장주 위험선호 체크"],
     ["AAPL vs MSFT", "미국 메가캡 안정감 비교"]
   ],
   en: [
@@ -80,7 +82,7 @@ export default function WatchlistPage() {
   const { language } = useLanguage();
   const copy = COPY[language];
   const [items, setItems] = useState<WatchItem[]>([]);
-  const [group, setGroup] = useState<"all" | "crypto" | "stock">("all");
+  const [group, setGroup] = useState<"all" | WatchGroup>("all");
 
   useEffect(() => {
     let mounted = true;
@@ -154,13 +156,13 @@ export default function WatchlistPage() {
           <div className={styles.chipRow}>
             {[
               { id: "all", label: copy.all },
-              { id: "crypto", label: copy.crypto },
+              { id: "korea", label: copy.korea },
               { id: "stock", label: copy.stock }
             ].map((item) => (
               <button
                 key={item.id}
                 className={group === item.id ? styles.chipActive : styles.chip}
-                onClick={() => setGroup(item.id as "all" | "crypto" | "stock")}
+                onClick={() => setGroup(item.id as "all" | WatchGroup)}
               >
                 {item.label}
               </button>
@@ -173,7 +175,7 @@ export default function WatchlistPage() {
             <div className={styles.panelHeader}>
               <h2 className={styles.panelTitle}>{copy.moveRanking}</h2>
               <span className={styles.pill}>
-                {group === "all" ? copy.allAssets : group === "crypto" ? copy.crypto : copy.stock}
+                {group === "all" ? copy.allAssets : group === "korea" ? copy.korea : copy.stock}
               </span>
             </div>
             <div className={styles.stack}>
@@ -186,11 +188,11 @@ export default function WatchlistPage() {
                         <p className={styles.itemTitle}>{getLocalizedAssetName(item, language)}</p>
                         <p className={styles.itemSub}>{item.symbol}</p>
                         <p className={styles.itemMeta}>
-                          {item.group === "crypto" ? copy.cryptoType : copy.stockType}
+                          {item.group === "korea" ? copy.koreaType : copy.stockType}
                         </p>
                       </div>
                       <div className={styles.itemValue}>
-                        <p className={styles.price}>{formatCurrency(item.price)}</p>
+                        <p className={styles.price}>{formatCurrency(item.price, item.group === "korea" ? "KRW" : "USD")}</p>
                         <p className={up ? styles.up : styles.down}>{formatPercent(item.changePercent)}</p>
                       </div>
                     </div>

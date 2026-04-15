@@ -23,7 +23,7 @@
   box-shadow: var(--panel-shadow);
 }
 
-.cryptoCard {
+.koreaCard {
   border-bottom: 4px solid rgb(59 130 246);
 }
 
@@ -44,7 +44,7 @@
   }
 }
 
-.cryptoTitle {
+.koreaTitle {
   color: rgb(147 197 253);
 }
 
@@ -57,11 +57,11 @@
   transition: color 0.2s ease;
 }
 
-.cryptoLink {
+.koreaLink {
   color: rgb(191 219 254);
 }
 
-.cryptoLink:hover {
+.koreaLink:hover {
   color: rgb(96 165 250);
   text-decoration: underline;
 }

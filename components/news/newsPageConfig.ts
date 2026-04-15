@@ -1,6 +1,6 @@
 import { Language } from "@/components/i18n/LanguageProvider";
 
-type NewsPageVariant = "crypto" | "stock";
+type NewsPageVariant = "korea" | "stock";
 
 type NewsPageConfig = {
   title: string;
@@ -10,10 +10,10 @@ type NewsPageConfig = {
 };
 
 const NEWS_PAGE_COPY: Record<NewsPageVariant, Record<Language, NewsPageConfig>> = {
-  crypto: {
+  korea: {
     ko: {
       title: "전체 한국주식 뉴스",
-      intro: "코스피, 코스닥, 반도체, 대형주 흐름을 한국주식 관점에서 한 번에 살펴볼 수 있습니다.",
+      intro: "코스피, 코스닥, 반도체, 대형주 흐름을 한국주식 관점에서 한 번에 확인해 보세요.",
       badge: "KOREA STOCK FLOW",
       quickFilters: ["코스피", "코스닥", "삼성전자", "SK하이닉스", "반도체", "외국인"]
     },
@@ -27,7 +27,7 @@ const NEWS_PAGE_COPY: Record<NewsPageVariant, Record<Language, NewsPageConfig>> 
   stock: {
     ko: {
       title: "전체 미국주식 뉴스",
-      intro: "미국주식 시장에서 지금 주목받는 헤드라인과 요약을 한 번에 확인해보세요.",
+      intro: "미국주식 시장에서 지금 주목받는 헤드라인과 요약을 한 번에 확인해 보세요.",
       badge: "US STOCK FLOW",
       quickFilters: ["ETF", "Fed", "AI", "Tesla", "NVIDIA", "Earnings"]
     },
