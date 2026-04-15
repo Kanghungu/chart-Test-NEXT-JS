@@ -113,8 +113,15 @@ async function fetchUsIndexesStooqSnapshot() {
   const csv = await res.text();
   const lines = csv.trim().split("\n").slice(1);
   const parsed = lines.map((line) => line.split(","));
-  const spx = parsed.find((cols) => cols[0]?.toUpperCase() === "^SPX");
-  const ixic = parsed.find((cols) => cols[0]?.toUpperCase() === "^IXIC");
+  const cellKey = (cols: string[]) => (cols[0] || "").toUpperCase().trim();
+  const spx = parsed.find((cols) => {
+    const key = cellKey(cols);
+    return key === "^SPX" || key === "^GSPC" || key.endsWith("SPX");
+  });
+  const ixic = parsed.find((cols) => {
+    const key = cellKey(cols);
+    return key === "^IXIC" || key === "^NDX" || key.endsWith("IXIC");
+  });
 
   const toRow = (label: string, row?: string[]) => {
     if (!row || row.length < 8) {
@@ -138,28 +145,68 @@ async function fetchUsIndexesStooqSnapshot() {
   return [toRow("S&P 500", spx), toRow("NASDAQ", ixic)];
 }
 
+/** 야후 v8 chart: quote가 비었을 때 meta로 종가·전일대비 보강 */
+async function fetchYahooIndexChartFill(yahooSymbol: string) {
+  try {
+    const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(
+      yahooSymbol
+    )}?interval=1d&range=5d`;
+    const res = await fetch(url, {
+      cache: "no-store",
+      headers: { "User-Agent": "MarketPulseKorea/1.0" }
+    });
+
+    if (!res.ok) {
+      return { price: null as number | null, changePercent: null as number | null };
+    }
+
+    const json = await res.json();
+    const meta = json?.chart?.result?.[0]?.meta as
+      | { regularMarketPrice?: number; chartPreviousClose?: number }
+      | undefined;
+
+    const price =
+      typeof meta?.regularMarketPrice === "number" && Number.isFinite(meta.regularMarketPrice)
+        ? meta.regularMarketPrice
+        : null;
+    const prevClose =
+      typeof meta?.chartPreviousClose === "number" && meta.chartPreviousClose > 0
+        ? meta.chartPreviousClose
+        : null;
+    const changePercent =
+      price != null && prevClose != null ? ((price - prevClose) / prevClose) * 100 : null;
+
+    return { price, changePercent };
+  } catch {
+    return { price: null, changePercent: null };
+  }
+}
+
 async function fetchUsIndexesSnapshot() {
   let yahooRows: Awaited<ReturnType<typeof fetchUsIndexesYahooSnapshot>>;
 
   try {
     yahooRows = await fetchUsIndexesYahooSnapshot();
   } catch {
-    return await fetchUsIndexesStooqSnapshot();
+    try {
+      return await fetchUsIndexesStooqSnapshot();
+    } catch {
+      return TRACKED.slice(2);
+    }
   }
 
-  // 야후가 200이어도 장외·지연 시 가격이 null일 수 있어 Stooq로 빈 칸만 보강
-  const needsStooqFill = yahooRows.some(
-    (row) => row.price == null || row.changePercent == null
-  );
+  // 야후 quote가 null이면 Stooq → 그래도 null이면 v8 chart 순으로 보강
+  const needsFill = yahooRows.some((row) => row.price == null || row.changePercent == null);
 
-  if (!needsStooqFill) {
+  if (!needsFill) {
     return yahooRows;
   }
 
+  let merged = [...yahooRows];
+
   try {
     const stooqRows = await fetchUsIndexesStooqSnapshot();
-
-    return yahooRows.map((row, index) => {
+    merged = merged.map((row, index) => {
       const fallbackRow = stooqRows[index];
       if (!fallbackRow) return row;
 
@@ -172,8 +219,24 @@ async function fetchUsIndexesSnapshot() {
       };
     });
   } catch {
-    return yahooRows;
+    // Stooq 실패 시 merged 유지
   }
+
+  const chartSymbols = ["^GSPC", "^IXIC"] as const;
+  for (let i = 0; i < merged.length; i++) {
+    if (merged[i].price != null && merged[i].changePercent != null) continue;
+
+    const chartFill = await fetchYahooIndexChartFill(chartSymbols[i]);
+    merged[i] = {
+      symbol: merged[i].symbol,
+      price: merged[i].price ?? chartFill.price,
+      changePercent: merged[i].changePercent ?? chartFill.changePercent,
+      volume: merged[i].volume,
+      currency: "USD"
+    };
+  }
+
+  return merged;
 }
 
 async function fetchKoreanLeadersSnapshot() {
