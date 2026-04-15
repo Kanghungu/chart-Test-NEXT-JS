@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import HomeDashboardExtras from "@/components/home/HomeDashboardExtras";
 import HomeSessionBoard from "@/components/home/HomeSessionBoard";
 import MarketOverview from "@/components/market/MarketOverview";
@@ -15,6 +16,33 @@ import styles from "./page.module.css";
 
 export default function Home() {
   const { language } = useLanguage();
+  const [majorNewsItems, setMajorNewsItems] = useState([]);
+  const [majorNewsLoading, setMajorNewsLoading] = useState(true);
+
+  useEffect(() => {
+    let mounted = true;
+
+    const loadMajorNews = async () => {
+      try {
+        const res = await fetch("/api/news/major", { cache: "no-store" });
+        const json = await res.json();
+        if (!mounted) return;
+        setMajorNewsItems(Array.isArray(json?.items) ? json.items : []);
+      } catch {
+        if (mounted) setMajorNewsItems([]);
+      } finally {
+        if (mounted) setMajorNewsLoading(false);
+      }
+    };
+
+    loadMajorNews();
+    const timer = setInterval(loadMajorNews, 5 * 60 * 1000);
+
+    return () => {
+      mounted = false;
+      clearInterval(timer);
+    };
+  }, []);
 
   return (
     <main className={styles.page}>
@@ -48,7 +76,9 @@ export default function Home() {
 
         <aside className={styles.sidebar}>
           <SideEconomyAI />
-          <SideMajorNews />
+          <div className={styles.majorNewsDesktopSlot}>
+            <SideMajorNews items={majorNewsItems} loading={majorNewsLoading} />
+          </div>
           <SideWatchlist />
           <SideEvents />
         </aside>

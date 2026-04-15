@@ -34,6 +34,18 @@
   margin-top: 1rem;
 }
 
+/* 주요 뉴스: 모바일에서는 메인(뉴스 블록 직후)에만 표시 — 사이드바는 화면 맨 아래라 스크롤 끝까지 가야 함 */
+.majorNewsMobileSlot {
+  display: block;
+  min-width: 0;
+}
+
+/* 데스크톱(넓은 화면)에서는 사이드바 슬롯만 표시 */
+.majorNewsDesktopSlot {
+  display: none;
+  min-width: 0;
+}
+
 .chartButtonWrap {
   display: flex;
   justify-content: center;
@@ -121,5 +133,13 @@
   .sidebar {
     position: sticky;
     top: 1rem;
+  }
+
+  .majorNewsMobileSlot {
+    display: none;
+  }
+
+  .majorNewsDesktopSlot {
+    display: block;
   }
 }
