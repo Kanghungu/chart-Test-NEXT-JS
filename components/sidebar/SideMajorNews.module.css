@@ -1,0 +1,146 @@
+.panel {
+  border-radius: var(--radius-lg);
+  border: 1px solid rgb(59 130 246 / 0.25);
+  background:
+    radial-gradient(circle at 0% 0%, rgb(59 130 246 / 0.12), transparent 45%),
+    var(--panel-bg-soft);
+  padding: 0.8rem;
+  box-shadow: var(--panel-shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  min-width: 0;
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.title {
+  color: #f8fafc;
+  font-weight: 800;
+  font-size: 0.95rem;
+}
+
+.subtitle {
+  color: var(--muted);
+  font-size: 0.68rem;
+  line-height: 1.45;
+}
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  max-height: 22rem;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+
+.row {
+  display: flex;
+  gap: 0.45rem;
+  align-items: flex-start;
+  border: 1px solid rgb(51 65 85 / 0.75);
+  border-radius: 0.65rem;
+  padding: 0.45rem 0.5rem;
+  background: var(--surface-raised);
+}
+
+.badgeKr,
+.badgeUs {
+  flex: 0 0 auto;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  border-radius: 0.35rem;
+  padding: 0.12rem 0.32rem;
+  margin-top: 0.1rem;
+}
+
+.badgeKr {
+  color: #bae6fd;
+  border: 1px solid rgb(56 189 248 / 0.35);
+  background: rgb(14 165 233 / 0.12);
+}
+
+.badgeUs {
+  color: #c4b5fd;
+  border: 1px solid rgb(167 139 250 / 0.35);
+  background: rgb(139 92 246 / 0.12);
+}
+
+.body {
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.link {
+  color: #e2e8f0;
+  font-size: 0.76rem;
+  font-weight: 650;
+  line-height: 1.35;
+  text-decoration: none;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
+}
+
+.link:hover {
+  color: #93c5fd;
+  text-decoration: underline;
+}
+
+.plainTitle {
+  color: #e2e8f0;
+  font-size: 0.76rem;
+  font-weight: 650;
+  line-height: 1.35;
+}
+
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  justify-content: space-between;
+  font-size: 0.65rem;
+  color: var(--muted);
+}
+
+.metaTime {
+  flex: 0 0 auto;
+}
+
+.empty {
+  color: var(--muted);
+  font-size: 0.75rem;
+  line-height: 1.45;
+}
+
+.footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding-top: 0.25rem;
+  border-top: 1px solid rgb(51 65 85 / 0.6);
+}
+
+.footerLink {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #7dd3fc;
+  text-decoration: none;
+}
+
+.footerLink:hover {
+  text-decoration: underline;
+}

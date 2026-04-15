@@ -20,3 +20,8 @@ export interface NewsItem {
   };
   [key: string]: any;
 }
+
+/** 주요 뉴스 API 응답용: 한국/미국 구분 */
+export type MajorNewsRegion = "korea" | "us";
+
+export type MajorNewsItem = NewsItem & { region: MajorNewsRegion };

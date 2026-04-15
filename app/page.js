@@ -8,6 +8,7 @@ import NewsList from "@/components/news/NewsList";
 import NewsTitle from "@/components/news/NewsTitle";
 import SideEconomyAI from "@/components/sidebar/SideEconomyAI";
 import SideEvents from "@/components/sidebar/SideEvents";
+import SideMajorNews from "@/components/sidebar/SideMajorNews";
 import SideWatchlist from "@/components/sidebar/SideWatchlist";
 import { useLanguage } from "@/components/i18n/LanguageProvider";
 import styles from "./page.module.css";
@@ -47,6 +48,7 @@ export default function Home() {
 
         <aside className={styles.sidebar}>
           <SideEconomyAI />
+          <SideMajorNews />
           <SideWatchlist />
           <SideEvents />
         </aside>
