@@ -1,3 +1,7 @@
+import type { MacroQuotePayload, SessionRiskPayload } from "@/lib/macroQuotes";
+
+export type { MacroQuotePayload, SessionRiskPayload };
+
 export interface AssetItem {
   symbol: string;
   price: number | null;
@@ -16,6 +20,10 @@ export interface SnapshotData {
   koreaFearGreed?: FearGreedData | null;
   stockFearGreed?: FearGreedData | null;
   koreaTradingValue: number | null;
+  /** 원달러·DXY·국채 등 거시 한 줄 */
+  macroRail?: MacroQuotePayload[];
+  /** VIX·미니 선물 (세션 리스크 보조) */
+  sessionRisk?: SessionRiskPayload;
   warnings: string[];
   updatedAt: string | null;
 }

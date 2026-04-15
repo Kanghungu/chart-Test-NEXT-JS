@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import HomeNewsPulse from "@/components/home/HomeNewsPulse";
 import styles from "./HomeDashboardExtras.module.css";
 import { formatCurrency, formatPercent } from "@/lib/formatters";
 import { useLanguage } from "@/components/i18n/LanguageProvider";
@@ -459,6 +460,8 @@ export default function HomeDashboardExtras() {
           </Link>
         ))}
       </div>
+
+      <HomeNewsPulse />
 
       <section className={styles.spotlightGrid}>
         <article className={`${styles.panel} ${styles.spotlightPanel}`}>

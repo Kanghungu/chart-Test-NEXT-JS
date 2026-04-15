@@ -39,6 +39,8 @@ export default function MarketOverview() {
           koreaFearGreed: json.koreaFearGreed ?? json.fearGreed ?? null,
           stockFearGreed: json.stockFearGreed ?? null,
           koreaTradingValue: json.koreaTradingValue ?? null,
+          macroRail: Array.isArray(json.macroRail) ? json.macroRail : prev.macroRail,
+          sessionRisk: json.sessionRisk ?? prev.sessionRisk,
           warnings: json.warnings || [],
           updatedAt: json.updatedAt || prev.updatedAt
         }));

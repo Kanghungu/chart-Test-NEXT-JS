@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import type { MacroQuotePayload, SessionRiskPayload } from "@/lib/macroQuotes";
 
 const TRACKED = [
   { symbol: "KOSPI", price: null, changePercent: null, volume: null, currency: "KRW" },
@@ -67,10 +68,12 @@ async function fetchUsIndexesYahooSnapshot() {
     regularMarketChangePercent?: number;
   };
 
-  const res = await fetch(
-    "https://query1.finance.yahoo.com/v7/finance/quote?symbols=%5EGSPC,%5EIXIC",
-    { cache: "no-store" }
-  );
+  const res = await fetch("https://query1.finance.yahoo.com/v7/finance/quote?symbols=%5EGSPC,%5EIXIC", {
+    cache: "no-store",
+    headers: {
+      "User-Agent": "MarketPulseKorea/1.0"
+    }
+  });
 
   if (!res.ok) {
     throw new Error(`Yahoo index request failed: ${res.status}`);
@@ -136,15 +139,45 @@ async function fetchUsIndexesStooqSnapshot() {
 }
 
 async function fetchUsIndexesSnapshot() {
+  let yahooRows: Awaited<ReturnType<typeof fetchUsIndexesYahooSnapshot>>;
+
   try {
-    return await fetchUsIndexesYahooSnapshot();
+    yahooRows = await fetchUsIndexesYahooSnapshot();
   } catch {
     return await fetchUsIndexesStooqSnapshot();
+  }
+
+  // 야후가 200이어도 장외·지연 시 가격이 null일 수 있어 Stooq로 빈 칸만 보강
+  const needsStooqFill = yahooRows.some(
+    (row) => row.price == null || row.changePercent == null
+  );
+
+  if (!needsStooqFill) {
+    return yahooRows;
+  }
+
+  try {
+    const stooqRows = await fetchUsIndexesStooqSnapshot();
+
+    return yahooRows.map((row, index) => {
+      const fallbackRow = stooqRows[index];
+      if (!fallbackRow) return row;
+
+      return {
+        symbol: row.symbol,
+        price: row.price ?? fallbackRow.price,
+        changePercent: row.changePercent ?? fallbackRow.changePercent,
+        volume: row.volume ?? fallbackRow.volume ?? null,
+        currency: "USD"
+      };
+    });
+  } catch {
+    return yahooRows;
   }
 }
 
 async function fetchKoreanLeadersSnapshot() {
-  const rows = await Promise.all(
+  const settledList = await Promise.allSettled(
     KR_LEADERS.map(async (code) => {
       const res = await fetch(`https://m.stock.naver.com/api/stock/${code}/basic`, {
         cache: "no-store"
@@ -162,6 +195,23 @@ async function fetchKoreanLeadersSnapshot() {
       };
     })
   );
+
+  const rows = settledList.map((entry, index) => {
+    if (entry.status === "fulfilled") {
+      return entry.value;
+    }
+
+    return {
+      symbol: KR_LEADERS[index],
+      changePercent: null,
+      tradedValue: null
+    };
+  });
+
+  const successCount = settledList.filter((entry) => entry.status === "fulfilled").length;
+  if (successCount === 0) {
+    throw new Error("korea_leaders_all_failed");
+  }
 
   return rows;
 }
@@ -194,6 +244,117 @@ async function fetchUsLeadersSnapshot() {
     .filter((item) => item.symbol);
 }
 
+type YahooQuoteRow = {
+  symbol?: string;
+  regularMarketPrice?: number;
+  regularMarketChangePercent?: number;
+};
+
+function yahooRowToValues(row?: YahooQuoteRow) {
+  return {
+    price: typeof row?.regularMarketPrice === "number" ? row.regularMarketPrice : null,
+    changePercent:
+      typeof row?.regularMarketChangePercent === "number" ? row.regularMarketChangePercent : null
+  };
+}
+
+/** 야후 Finance 배치 호용: 거시(원달러·DXY·국채) + VIX·선물 */
+async function fetchYahooMacroVolFutures(): Promise<Map<string, YahooQuoteRow>> {
+  const symbols = ["KRW=X", "DX-Y.NYB", "^TNX", "^VIX", "ES=F", "NQ=F"];
+  const encoded = symbols.map(encodeURIComponent).join(",");
+  const res = await fetch(`https://query1.finance.yahoo.com/v7/finance/quote?symbols=${encoded}`, {
+    cache: "no-store",
+    headers: {
+      "User-Agent": "MarketPulseKorea/1.0 (+https://github.com/)"
+    }
+  });
+
+  if (!res.ok) {
+    throw new Error(`Yahoo macro/vol quote failed: ${res.status}`);
+  }
+
+  const json = await res.json();
+  const rows = json?.quoteResponse?.result as YahooQuoteRow[] | undefined;
+
+  if (!Array.isArray(rows)) {
+    throw new Error("Yahoo macro/vol payload malformed");
+  }
+
+  const bySymbol = new Map<string, YahooQuoteRow>();
+  rows.forEach((row) => {
+    if (row?.symbol) {
+      bySymbol.set(row.symbol, row);
+    }
+  });
+
+  return bySymbol;
+}
+
+/** 스투크 한국 10년 국채 금리(심볼 실패 시 null) */
+async function fetchKorea10YFromStooq(): Promise<{ price: number | null; changePercent: number | null }> {
+  try {
+    const res = await fetch("https://stooq.com/q/l/?s=10ykr.y&i=d", {
+      cache: "no-store",
+      headers: { "User-Agent": "MarketPulseKorea/1.0" }
+    });
+
+    if (!res.ok) {
+      return { price: null, changePercent: null };
+    }
+
+    const csv = await res.text();
+    const lines = csv.trim().split("\n").slice(1);
+    const row = lines.map((line) => line.split(",")).find((cols) => /10ykr/i.test(cols[0] || ""));
+
+    if (!row || row.length < 7) {
+      return { price: null, changePercent: null };
+    }
+
+    const open = Number(row[3]);
+    const close = Number(row[6]);
+    const valid = Number.isFinite(close) && close > 0;
+
+    return {
+      price: valid ? close : null,
+      changePercent: valid && Number.isFinite(open) && open > 0 ? ((close - open) / open) * 100 : null
+    };
+  } catch {
+    return { price: null, changePercent: null };
+  }
+}
+
+function buildMacroAndRiskFromYahoo(
+  bySymbol: Map<string, YahooQuoteRow>,
+  korea10y: { price: number | null; changePercent: number | null }
+): { macroRail: MacroQuotePayload[]; sessionRisk: SessionRiskPayload } {
+  const usdKrw = yahooRowToValues(bySymbol.get("KRW=X"));
+  const dxy = yahooRowToValues(bySymbol.get("DX-Y.NYB"));
+  const us10y = yahooRowToValues(bySymbol.get("^TNX"));
+  const vix = yahooRowToValues(bySymbol.get("^VIX"));
+  const es = yahooRowToValues(bySymbol.get("ES=F"));
+  const nq = yahooRowToValues(bySymbol.get("NQ=F"));
+
+  const macroRail: MacroQuotePayload[] = [
+    { id: "usdkrw", ...usdKrw, displayUnit: "pair" },
+    { id: "dxy", ...dxy, displayUnit: "index" },
+    { id: "us10y", ...us10y, displayUnit: "yield" },
+    {
+      id: "kr10y",
+      price: korea10y.price,
+      changePercent: korea10y.changePercent,
+      displayUnit: "yield"
+    }
+  ];
+
+  const sessionRisk: SessionRiskPayload = {
+    vix,
+    esFuture: es,
+    nqFuture: nq
+  };
+
+  return { macroRail, sessionRisk };
+}
+
 function deriveSentiment(items: Array<{ changePercent: number | null }>) {
   const changes = items
     .map((item) => item.changePercent)
@@ -218,7 +379,9 @@ export async function GET() {
     fetchKoreanIndexesSnapshot(),
     fetchUsIndexesSnapshot(),
     fetchKoreanLeadersSnapshot(),
-    fetchUsLeadersSnapshot()
+    fetchUsLeadersSnapshot(),
+    fetchYahooMacroVolFutures(),
+    fetchKorea10YFromStooq()
   ]);
 
   const warnings: string[] = [];
@@ -235,6 +398,26 @@ export async function GET() {
   const usLeaders = settled[3].status === "fulfilled" ? settled[3].value : [];
   if (settled[3].status === "rejected") warnings.push("us_leaders_unavailable");
 
+  let macroRail: MacroQuotePayload[] = [];
+  let sessionRisk: SessionRiskPayload = {
+    vix: { price: null, changePercent: null },
+    esFuture: { price: null, changePercent: null },
+    nqFuture: { price: null, changePercent: null }
+  };
+
+  if (settled[4].status === "fulfilled") {
+    const korea10y = settled[5].status === "fulfilled" ? settled[5].value : { price: null, changePercent: null };
+    if (settled[5].status === "rejected" || korea10y.price == null) {
+      warnings.push("kr10y_unavailable");
+    }
+
+    const built = buildMacroAndRiskFromYahoo(settled[4].value, korea10y);
+    macroRail = built.macroRail;
+    sessionRisk = built.sessionRisk;
+  } else {
+    warnings.push("macro_vol_unavailable");
+  }
+
   const assets = [...koreaAssets, ...usAssets];
   const koreanStockFearGreed = deriveSentiment([...koreaAssets, ...koreanLeaders]);
   const usStockFearGreed = deriveSentiment([...usAssets, ...usLeaders]);
@@ -246,6 +429,8 @@ export async function GET() {
     koreaFearGreed: koreanStockFearGreed,
     stockFearGreed: usStockFearGreed,
     koreaTradingValue: koreanTradingValue,
+    macroRail,
+    sessionRisk,
     warnings,
     updatedAt: new Date().toISOString()
   });

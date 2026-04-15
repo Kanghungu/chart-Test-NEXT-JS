@@ -67,6 +67,36 @@
   padding: 0.5rem 0.75rem;
 }
 
+.sectionEyebrow {
+  color: rgb(125 211 252);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.macroSection,
+.riskStripSection {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.macroRailGrid,
+.riskStripGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem;
+  min-width: 0;
+}
+
+.macroCard {
+  border: 1px solid rgb(51 65 85 / 0.85);
+  border-radius: var(--radius-md);
+  background: rgb(2 6 23 / 0.55);
+  padding: 0.65rem 0.75rem;
+}
+
 .assetGrid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -367,6 +397,11 @@
   }
 
   .assetGrid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .macroRailGrid,
+  .riskStripGrid {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 

@@ -1,4 +1,5 @@
 import { AssetItem, SnapshotData, TickerItem } from "./marketTypes";
+import type { SessionRiskPayload } from "@/lib/macroQuotes";
 import { formatCurrency, formatPercent } from "@/lib/formatters";
 import { Language } from "@/components/i18n/LanguageProvider";
 
@@ -17,6 +18,8 @@ export function getMarketCopy(language: Language) {
         liveLabel: "실시간 가격 변동",
         updatedAt: "업데이트",
         noSignal: "강한 시그널이 아직 없습니다. 실시간 변동을 계속 추적 중입니다.",
+        macroRailTitle: "거시 레일 (원·달러·금리)",
+        riskStripTitle: "변동성 · 미국 선물",
         momentum: "강세",
         drop: "약세",
         overheat: "심리 과열",
@@ -37,6 +40,8 @@ export function getMarketCopy(language: Language) {
         liveLabel: "Live Price Moves",
         updatedAt: "Updated",
         noSignal: "No strong signal yet. Live moves are still being monitored.",
+        macroRailTitle: "Macro rail (FX & rates)",
+        riskStripTitle: "Volatility · US futures",
         momentum: "momentum",
         drop: "drop signal",
         overheat: "sentiment overheating",
@@ -53,18 +58,53 @@ export const DEFAULT_ASSETS: AssetItem[] = [
   { symbol: "NASDAQ", price: null, changePercent: null, currency: "USD" }
 ];
 
+const EMPTY_SESSION_RISK: SessionRiskPayload = {
+  vix: { price: null, changePercent: null },
+  esFuture: { price: null, changePercent: null },
+  nqFuture: { price: null, changePercent: null }
+};
+
 export const INITIAL_SNAPSHOT: SnapshotData = {
   assets: DEFAULT_ASSETS,
   fearGreed: null,
   koreaFearGreed: null,
   stockFearGreed: null,
   koreaTradingValue: null,
+  macroRail: [],
+  sessionRisk: EMPTY_SESSION_RISK,
   warnings: [],
   updatedAt: null
 };
 
 export const formatMoney = formatCurrency;
 export { formatPercent };
+
+/** 거시 타일 라벨 (한/영) */
+export function getMacroQuoteLabel(id: string, language: Language) {
+  const labelsKo: Record<string, string> = {
+    usdkrw: "USD/KRW",
+    dxy: "달러 인덱스 (DXY)",
+    us10y: "미국 10년 금리",
+    kr10y: "한국 10년 금리"
+  };
+
+  const labelsEn: Record<string, string> = {
+    usdkrw: "USD/KRW",
+    dxy: "US Dollar Index (DXY)",
+    us10y: "US 10-year yield",
+    kr10y: "Korea 10-year yield"
+  };
+
+  const table = language === "ko" ? labelsKo : labelsEn;
+  return table[id] || id;
+}
+
+/** VIX·선물 줄 라벨 */
+export function getRiskStripLabels(language: Language) {
+  return language === "ko"
+    ? { vix: "VIX", es: "S&P 미니 선물", nq: "나스닥 미니 선물" }
+    : { vix: "VIX", es: "S&P 500 futures", nq: "Nasdaq futures" };
+}
 
 export function getLocalizedSentimentLabel(
   classification: string | null | undefined,

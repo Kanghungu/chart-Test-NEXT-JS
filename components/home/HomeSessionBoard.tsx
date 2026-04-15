@@ -16,6 +16,11 @@ type SnapshotAsset = {
   changePercent: number | null;
 };
 
+type SessionRiskRow = {
+  price: number | null;
+  changePercent: number | null;
+};
+
 type SnapshotResponse = {
   assets?: SnapshotAsset[];
   fearGreed?: {
@@ -26,6 +31,11 @@ type SnapshotResponse = {
     value: number;
     classification: string;
   } | null;
+  sessionRisk?: {
+    vix: SessionRiskRow;
+    esFuture: SessionRiskRow;
+    nqFuture: SessionRiskRow;
+  };
 };
 
 type EventItem = {
@@ -58,6 +68,7 @@ const COPY = {
     koreaLead: "한국 리더십",
     usTone: "미국장 톤",
     relativeSpread: "KOSDAQ 대 KOSPI",
+    riskStrip: "변동성 · 미국 선물 (야간)",
     noEvents: "일정 이벤트를 불러오는 중입니다.",
     positive: "우호적",
     neutral: "중립",
@@ -81,6 +92,7 @@ const COPY = {
     koreaLead: "Korea leadership",
     usTone: "US tone",
     relativeSpread: "KOSDAQ vs KOSPI",
+    riskStrip: "Volatility · US futures (overnight)",
     noEvents: "Loading scheduled events.",
     positive: "Constructive",
     neutral: "Neutral",
@@ -129,7 +141,8 @@ export default function HomeSessionBoard() {
         setSnapshot({
           assets: Array.isArray(snapshotJson?.assets) ? snapshotJson.assets : [],
           fearGreed: snapshotJson?.fearGreed ?? null,
-          stockFearGreed: snapshotJson?.stockFearGreed ?? null
+          stockFearGreed: snapshotJson?.stockFearGreed ?? null,
+          sessionRisk: snapshotJson?.sessionRisk
         });
         setEvents(Array.isArray(eventJson?.items) ? eventJson.items.slice(0, 3) : []);
       } catch {
@@ -323,6 +336,51 @@ export default function HomeSessionBoard() {
           </div>
         </article>
       </div>
+
+      {snapshot.sessionRisk &&
+      [snapshot.sessionRisk.vix?.price, snapshot.sessionRisk.esFuture?.price, snapshot.sessionRisk.nqFuture?.price].some(
+        (priceValue) => typeof priceValue === "number"
+      ) ? (
+        <div className={styles.riskStrip}>
+          <div className={styles.riskStripHeader}>
+            <h3 className={styles.riskStripTitle}>{copy.riskStrip}</h3>
+          </div>
+          <div className={styles.riskStripGrid}>
+            {[
+              { key: "vix", label: language === "ko" ? "VIX" : "VIX", row: snapshot.sessionRisk.vix },
+              {
+                key: "es",
+                label: language === "ko" ? "S&P 미니" : "ES",
+                row: snapshot.sessionRisk.esFuture
+              },
+              {
+                key: "nq",
+                label: language === "ko" ? "나스닥 미니" : "NQ",
+                row: snapshot.sessionRisk.nqFuture
+              }
+            ].map(({ key, label, row }) => {
+              const hasChange = typeof row?.changePercent === "number";
+              const up = hasChange && row.changePercent >= 0;
+
+              return (
+                <div key={key} className={styles.riskCell}>
+                  <span className={styles.riskLabel}>{label}</span>
+                  <strong className={styles.riskPrice}>
+                    {typeof row?.price === "number"
+                      ? row.price.toLocaleString(language === "ko" ? "ko-KR" : "en-US", {
+                          maximumFractionDigits: 2
+                        })
+                      : "-"}
+                  </strong>
+                  <span className={`${styles.riskChange} ${hasChange ? (up ? styles.toneUp : styles.toneDown) : styles.toneNeutral}`}>
+                    {formatPercent(row?.changePercent ?? null)}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      ) : null}
     </section>
   );
 }
