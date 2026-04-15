@@ -236,6 +236,47 @@ async function fetchUsIndexesSnapshot() {
     };
   }
 
+  // 지수 심볼이 막혀도 대형 ETF 등락률로 방향만 보강 (가격은 지수와 다를 수 있음)
+  const stillMissingPct = merged.some((row) => row.changePercent == null);
+  if (stillMissingPct) {
+    try {
+      const etfRes = await fetch("https://query1.finance.yahoo.com/v7/finance/quote?symbols=SPY,QQQ", {
+        cache: "no-store",
+        headers: { "User-Agent": "MarketPulseKorea/1.0" }
+      });
+
+      if (etfRes.ok) {
+        const etfJson = await etfRes.json();
+        const etfRows = etfJson?.quoteResponse?.result as
+          | Array<{ symbol?: string; regularMarketChangePercent?: number }>
+          | undefined;
+
+        if (Array.isArray(etfRows)) {
+          const spyRow = etfRows.find((row) => row?.symbol === "SPY");
+          const qqqRow = etfRows.find((row) => row?.symbol === "QQQ");
+          const etfLegs = [
+            typeof spyRow?.regularMarketChangePercent === "number"
+              ? spyRow.regularMarketChangePercent
+              : null,
+            typeof qqqRow?.regularMarketChangePercent === "number"
+              ? qqqRow.regularMarketChangePercent
+              : null
+          ];
+
+          merged = merged.map((row, index) => {
+            if (row.changePercent != null) return row;
+            const pct = etfLegs[index];
+            if (typeof pct !== "number") return row;
+
+            return { ...row, changePercent: pct };
+          });
+        }
+      }
+    } catch {
+      // ETF 보강 실패 시 무시
+    }
+  }
+
   return merged;
 }
 
