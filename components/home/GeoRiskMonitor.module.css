@@ -92,12 +92,46 @@
 .impactMEDIUM { background: linear-gradient(135deg, rgba(251,191,36,0.05), rgba(13,26,46,0.92)); border-color: rgba(251,191,36,0.18); }
 .impactLOW    { background: linear-gradient(135deg, rgba(56,189,248,0.04), rgba(13,26,46,0.92)); }
 
+/* ── Fallback notice ── */
+.fallbackNotice {
+  font-size: 0.65rem;
+  color: var(--muted);
+  margin: -0.3rem 0 0.55rem;
+  font-style: italic;
+}
+
 .alertTop {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 0.5rem;
   margin-bottom: 0.4rem;
+}
+
+.alertTopLeft {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+/* 연합뉴스 출처 태그 */
+.sourceKo {
+  font-size: 0.6rem;
+  font-weight: 700;
+  color: #818cf8;
+  background: rgba(129,140,248,0.12);
+  border: 1px solid rgba(129,140,248,0.2);
+  border-radius: 999px;
+  padding: 0.08rem 0.35rem;
+}
+
+.sourceKoSm {
+  font-size: 0.58rem;
+  font-weight: 700;
+  color: #818cf8;
+  background: rgba(129,140,248,0.1);
+  border-radius: 999px;
+  padding: 0.06rem 0.28rem;
 }
 
 .regionTag {
@@ -173,6 +207,7 @@
   justify-content: space-between;
   gap: 0.4rem;
   margin-bottom: 0.3rem;
+  flex-wrap: wrap;
 }
 
 .regionTagSm {

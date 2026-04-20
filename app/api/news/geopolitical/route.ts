@@ -35,13 +35,13 @@ const RISK_PATTERNS = [
     id: "taiwan",
     regionKo: "대만",
     regionEn: "Taiwan",
-    keywords: ["taiwan", "대만", "taiwan strait", "대만 해협", "tsmc", "chip war", "반도체 전쟁", "pla", "china military"],
+    keywords: ["taiwan", "대만", "taiwan strait", "대만 해협", "tsmc", "chip war", "반도체 전쟁", "pla", "china military", "중국 군"],
     assets: [
-      { symbol: "NVDA",  nameKo: "NVDA",        nameEn: "NVDA",        dir: "down" },
-      { symbol: "TSM",   nameKo: "TSMC",        nameEn: "TSMC",        dir: "down" },
-      { symbol: "KOSPI", nameKo: "KOSPI",       nameEn: "KOSPI",       dir: "down" },
-      { symbol: "USD",   nameKo: "달러",        nameEn: "Dollar",      dir: "up"   },
-      { symbol: "000660",nameKo: "SK하이닉스",  nameEn: "SK Hynix",    dir: "down" },
+      { symbol: "NVDA",   nameKo: "NVDA",       nameEn: "NVDA",       dir: "down" },
+      { symbol: "TSM",    nameKo: "TSMC",       nameEn: "TSMC",       dir: "down" },
+      { symbol: "KOSPI",  nameKo: "KOSPI",      nameEn: "KOSPI",      dir: "down" },
+      { symbol: "USD",    nameKo: "달러",       nameEn: "Dollar",     dir: "up"   },
+      { symbol: "000660", nameKo: "SK하이닉스", nameEn: "SK Hynix",   dir: "down" },
     ],
     impact: "HIGH" as const,
   },
@@ -49,7 +49,7 @@ const RISK_PATTERNS = [
     id: "russia_ukraine",
     regionKo: "러시아/우크라이나",
     regionEn: "Russia/Ukraine",
-    keywords: ["russia", "러시아", "ukraine", "우크라이나", "putin", "푸틴", "nato", "nafo", "war escalation", "전쟁 확전"],
+    keywords: ["russia", "러시아", "ukraine", "우크라이나", "putin", "푸틴", "nato", "nafo", "war escalation", "전쟁 확전", "젤렌스키", "zelensky"],
     assets: [
       { symbol: "XAU",   nameKo: "금",      nameEn: "Gold",    dir: "up"   },
       { symbol: "OIL",   nameKo: "WTI",     nameEn: "WTI",     dir: "up"   },
@@ -62,12 +62,12 @@ const RISK_PATTERNS = [
     id: "china_us",
     regionKo: "미중 갈등",
     regionEn: "US-China",
-    keywords: ["china tariff", "중국 관세", "trade war", "무역전쟁", "chip ban", "반도체 수출 규제", "decoupling", "디커플링", "export control"],
+    keywords: ["china tariff", "중국 관세", "trade war", "무역전쟁", "chip ban", "반도체 수출 규제", "decoupling", "디커플링", "export control", "미중", "관세 전쟁"],
     assets: [
-      { symbol: "000660", nameKo: "SK하이닉스",  nameEn: "SK Hynix",  dir: "down" },
-      { symbol: "005930", nameKo: "삼성전자",    nameEn: "Samsung",   dir: "down" },
-      { symbol: "NVDA",   nameKo: "NVDA",        nameEn: "NVDA",      dir: "down" },
-      { symbol: "USD",    nameKo: "달러",        nameEn: "Dollar",    dir: "up"   },
+      { symbol: "000660", nameKo: "SK하이닉스", nameEn: "SK Hynix", dir: "down" },
+      { symbol: "005930", nameKo: "삼성전자",   nameEn: "Samsung",  dir: "down" },
+      { symbol: "NVDA",   nameKo: "NVDA",       nameEn: "NVDA",     dir: "down" },
+      { symbol: "USD",    nameKo: "달러",       nameEn: "Dollar",   dir: "up"   },
     ],
     impact: "MEDIUM" as const,
   },
@@ -75,11 +75,11 @@ const RISK_PATTERNS = [
     id: "oil_opec",
     regionKo: "유가/OPEC",
     regionEn: "Oil/OPEC",
-    keywords: ["opec", "oil price", "유가", "crude oil", "원유", "production cut", "감산", "brent", "wti spike"],
+    keywords: ["opec", "oil price", "유가", "crude oil", "원유", "production cut", "감산", "brent", "wti spike", "산유국"],
     assets: [
-      { symbol: "OIL",   nameKo: "WTI 유가",  nameEn: "WTI Oil",   dir: "up"   },
-      { symbol: "KRW",   nameKo: "원화",      nameEn: "KRW",        dir: "down" },
-      { symbol: "KOSPI", nameKo: "KOSPI",     nameEn: "KOSPI",      dir: "down" },
+      { symbol: "OIL",   nameKo: "WTI 유가", nameEn: "WTI Oil", dir: "up"   },
+      { symbol: "KRW",   nameKo: "원화",     nameEn: "KRW",     dir: "down" },
+      { symbol: "KOSPI", nameKo: "KOSPI",    nameEn: "KOSPI",   dir: "down" },
     ],
     impact: "MEDIUM" as const,
   },
@@ -90,9 +90,10 @@ type RssItem = {
   description: string;
   pubDate: string;
   link: string;
+  lang: "ko" | "en";
 };
 
-function parseRSS(xml: string): RssItem[] {
+function parseRSS(xml: string, lang: "ko" | "en"): RssItem[] {
   const items: RssItem[] = [];
   const itemRegex = /<item[^>]*>([\s\S]*?)<\/item>/g;
   let match: RegExpExecArray | null;
@@ -112,25 +113,30 @@ function parseRSS(xml: string): RssItem[] {
       description: extractText("description"),
       pubDate: extractText("pubDate"),
       link: extractText("link"),
+      lang,
     });
   }
   return items;
 }
 
-const RSS_FEEDS = [
-  "https://feeds.bbci.co.uk/news/world/rss.xml",
-  "https://rss.nytimes.com/services/xml/rss/nyt/World.xml",
+const RSS_FEEDS: Array<{ url: string; lang: "ko" | "en" }> = [
+  // 영문 소스
+  { url: "https://feeds.bbci.co.uk/news/world/rss.xml",               lang: "en" },
+  { url: "https://rss.nytimes.com/services/xml/rss/nyt/World.xml",    lang: "en" },
+  // 한국어 소스
+  { url: "https://www.yna.co.kr/rss/news.xml",                        lang: "ko" }, // 연합뉴스
+  { url: "https://www.hankyung.com/feed/international-news",           lang: "ko" }, // 한국경제 국제
 ];
 
-async function fetchRSS(url: string): Promise<RssItem[]> {
+async function fetchRSS(url: string, lang: "ko" | "en"): Promise<RssItem[]> {
   try {
     const res = await fetch(url, {
       headers: { "User-Agent": "Mozilla/5.0 (compatible; MarketPulseBot/1.0)" },
-      signal: AbortSignal.timeout(5000),
+      signal: AbortSignal.timeout(6000),
     });
     if (!res.ok) return [];
     const xml = await res.text();
-    return parseRSS(xml);
+    return parseRSS(xml, lang);
   } catch {
     return [];
   }
@@ -162,6 +168,7 @@ export type GeoNewsItem = {
   description: string;
   pubDate: string;
   link: string;
+  lang: "ko" | "en";
   regionKo: string;
   regionEn: string;
   impact: "HIGH" | "MEDIUM" | "LOW";
@@ -171,53 +178,74 @@ export type GeoNewsItem = {
 
 export async function GET() {
   try {
-    const allItems = (await Promise.all(RSS_FEEDS.map(fetchRSS))).flat();
+    const allItems = (
+      await Promise.all(RSS_FEEDS.map(({ url, lang }) => fetchRSS(url, lang)))
+    ).flat();
 
-    // 중복 제거 (제목 기준)
-    const seen = new Set<string>();
+    // 언어별 중복 제거 (제목 기준)
+    const seenKo = new Set<string>();
+    const seenEn = new Set<string>();
     const unique = allItems.filter((item) => {
       const key = item.title.slice(0, 60).toLowerCase();
+      const seen = item.lang === "ko" ? seenKo : seenEn;
       if (seen.has(key)) return false;
       seen.add(key);
       return true;
     });
 
-    const scored: GeoNewsItem[] = unique
-      .map((item) => {
-        const result = scoreItem(item);
-        if (!result) return null;
-        return {
-          ...item,
-          regionKo: result.pattern.regionKo,
-          regionEn: result.pattern.regionEn,
-          impact: result.pattern.impact,
-          assets: result.pattern.assets,
-          score: result.score,
-        };
-      })
-      .filter((x): x is GeoNewsItem => x !== null)
-      .sort((a, b) => {
-        // HIGH 우선, 같으면 score, 같으면 최신순
-        const impactOrder = { HIGH: 2, MEDIUM: 1, LOW: 0 };
-        const impactDiff = impactOrder[b.impact] - impactOrder[a.impact];
-        if (impactDiff !== 0) return impactDiff;
-        if (b.score !== a.score) return b.score - a.score;
-        return new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime();
-      })
-      .slice(0, 8);
+    const sortFn = (a: GeoNewsItem, b: GeoNewsItem) => {
+      const impactOrder = { HIGH: 2, MEDIUM: 1, LOW: 0 };
+      const impactDiff = impactOrder[b.impact] - impactOrder[a.impact];
+      if (impactDiff !== 0) return impactDiff;
+      if (b.score !== a.score) return b.score - a.score;
+      return new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime();
+    };
 
-    // 전체 위험 수준: HIGH 항목이 있으면 HIGH, MEDIUM만 있으면 MEDIUM
+    // 언어별로 스코어링 후 각 8개씩 유지
+    const scoreItems = (items: RssItem[]): GeoNewsItem[] =>
+      items
+        .map((item) => {
+          const result = scoreItem(item);
+          if (!result) return null;
+          return {
+            ...item,
+            regionKo: result.pattern.regionKo,
+            regionEn: result.pattern.regionEn,
+            impact: result.pattern.impact,
+            assets: result.pattern.assets,
+            score: result.score,
+          };
+        })
+        .filter((x): x is GeoNewsItem => x !== null)
+        .sort(sortFn)
+        .slice(0, 8);
+
+    const koItems = scoreItems(unique.filter((i) => i.lang === "ko"));
+    const enItems = scoreItems(unique.filter((i) => i.lang === "en"));
+
+    // overallRisk는 두 소스 중 더 높은 것 기준
+    const combined = [...koItems, ...enItems];
     const overallRisk: "HIGH" | "MEDIUM" | "LOW" | "CLEAR" =
-      scored.some((i) => i.impact === "HIGH")
+      combined.some((i) => i.impact === "HIGH")
         ? "HIGH"
-        : scored.some((i) => i.impact === "MEDIUM")
+        : combined.some((i) => i.impact === "MEDIUM")
           ? "MEDIUM"
-          : scored.length > 0
+          : combined.length > 0
             ? "LOW"
             : "CLEAR";
 
-    return NextResponse.json({ items: scored, overallRisk, fetchedAt: new Date().toISOString() });
+    return NextResponse.json({
+      itemsKo: koItems,
+      itemsEn: enItems,
+      overallRisk,
+      fetchedAt: new Date().toISOString(),
+    });
   } catch {
-    return NextResponse.json({ items: [], overallRisk: "CLEAR", fetchedAt: new Date().toISOString() });
+    return NextResponse.json({
+      itemsKo: [],
+      itemsEn: [],
+      overallRisk: "CLEAR",
+      fetchedAt: new Date().toISOString(),
+    });
   }
 }
