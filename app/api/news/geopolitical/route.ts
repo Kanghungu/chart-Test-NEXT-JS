@@ -42,12 +42,18 @@ export type GeoNewsItem = {
   score: number;
 };
 
-// RSS 소스 - 영문 + 한국어
+// RSS 소스 - 영문 + 한국어 (Google News 검색 RSS - Vercel에서 안정적으로 접근 가능)
 const RSS_FEEDS: Array<{ url: string; lang: "ko" | "en" }> = [
+  // 영문 소스
   { url: "https://feeds.bbci.co.uk/news/world/rss.xml",            lang: "en" },
   { url: "https://rss.nytimes.com/services/xml/rss/nyt/World.xml", lang: "en" },
-  { url: "https://www.yna.co.kr/rss/news.xml",                     lang: "ko" }, // 연합뉴스
-  { url: "https://www.hankyung.com/feed/international-news",        lang: "ko" }, // 한국경제 국제
+  // 한국어 소스 - Google News RSS (패턴별 한국어 검색)
+  { url: "https://news.google.com/rss/search?q=이란+중동+호르무즈&hl=ko&gl=KR&ceid=KR:ko",    lang: "ko" },
+  { url: "https://news.google.com/rss/search?q=북한+미사일+핵실험&hl=ko&gl=KR&ceid=KR:ko",    lang: "ko" },
+  { url: "https://news.google.com/rss/search?q=대만+해협+미중반도체&hl=ko&gl=KR&ceid=KR:ko",  lang: "ko" },
+  { url: "https://news.google.com/rss/search?q=러시아+우크라이나+전쟁&hl=ko&gl=KR&ceid=KR:ko", lang: "ko" },
+  { url: "https://news.google.com/rss/search?q=미중+무역전쟁+관세&hl=ko&gl=KR&ceid=KR:ko",    lang: "ko" },
+  { url: "https://news.google.com/rss/search?q=유가+원유+OPEC+감산&hl=ko&gl=KR&ceid=KR:ko",   lang: "ko" },
 ];
 
 const RISK_PATTERNS: RiskPattern[] = [
