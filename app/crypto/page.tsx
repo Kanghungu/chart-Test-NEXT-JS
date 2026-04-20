@@ -19,14 +19,14 @@ const TV_SYMBOL: Record<Coin, string> = {
   DOGE: "BINANCE:DOGEUSDT",
 };
 
-const COIN_INFO: Record<Coin, { name: string; emoji: string }> = {
-  BTC:  { name: "Bitcoin",  emoji: "₿"  },
-  ETH:  { name: "Ethereum", emoji: "Ξ"  },
-  SOL:  { name: "Solana",   emoji: "◎"  },
-  XRP:  { name: "XRP",      emoji: "✕"  },
-  BNB:  { name: "BNB",      emoji: "⬡"  },
-  ADA:  { name: "Cardano",  emoji: "₳"  },
-  DOGE: { name: "Dogecoin", emoji: "Ð"  },
+const COIN_INFO: Record<Coin, { name: string; symbol: string; tint: string }> = {
+  BTC:  { name: "Bitcoin",  symbol: "₿", tint: "#f7931a" },
+  ETH:  { name: "Ethereum", symbol: "Ξ", tint: "#627eea" },
+  SOL:  { name: "Solana",   symbol: "◎", tint: "#14f195" },
+  XRP:  { name: "XRP",      symbol: "✕", tint: "#00a3e0" },
+  BNB:  { name: "BNB",      symbol: "⬡", tint: "#f3ba2f" },
+  ADA:  { name: "Cardano",  symbol: "₳", tint: "#0033ad" },
+  DOGE: { name: "Dogecoin", symbol: "Ð", tint: "#c2a633" },
 };
 
 const COINS: Coin[] = ["BTC", "ETH", "SOL", "XRP", "BNB", "ADA", "DOGE"];
@@ -79,6 +79,17 @@ function TVWidget({
   );
 }
 
+// ── Live clock ────────────────────────────────────────────────────────────
+function useClock() {
+  const [now, setNow] = useState<Date | null>(null);
+  useEffect(() => {
+    setNow(new Date());
+    const t = setInterval(() => setNow(new Date()), 1000);
+    return () => clearInterval(t);
+  }, []);
+  return now;
+}
+
 // ── Page ──────────────────────────────────────────────────────────────────
 export default function CryptoPage() {
   const { language } = useLanguage();
@@ -86,207 +97,332 @@ export default function CryptoPage() {
   const [tf,   setTf]   = useState<TF>("60");
 
   const detailRef = useRef<HTMLDivElement>(null);
+  const clock = useClock();
 
   const locale   = language === "ko" ? "kr" : "en";
   const tfLabel  = TFS.find((t) => t.value === tf)?.label ?? tf;
 
   const COPY = {
     ko: {
-      eyebrow:    "CRYPTO SIGNALS",
-      title:      "암호화폐 차트 시그널",
-      subtitle:   "TradingView 실시간 기술적 분석 · 오실레이터 · 이동평균 · 종합 시그널",
-      screener:   "암호화폐 전체 시그널 스크리너",
-      detail:     "코인 상세 분석",
-      detailHint: "아래 버튼을 클릭하면 해당 코인의 차트와 기술적 분석을 확인할 수 있습니다",
-      analysis:   "기술적 분석",
-      chart:      "차트",
-      overview:   "시세 개요",
-      powered:    "Powered by TradingView",
+      eyebrow:     "CRYPTO TERMINAL · LIVE",
+      title:       "암호화폐 시그널 터미널",
+      subtitle:    "실시간 가격 · 기술적 분석 · 멀티 타임프레임 차트",
+      liveDot:     "LIVE",
+      powered:     "Powered by TradingView",
+      tapeTitle:   "MARKET TAPE",
+      screener:    "전체 시그널 스크리너",
+      screenerHint:"모든 암호화폐에 대한 종합 매수/매도 시그널 — 컬럼별 정렬 가능",
+      picker:      "코인 선택",
+      pickerHint:  "카드를 클릭하면 상세 분석 섹션으로 이동합니다",
+      detailKicker:"DETAIL",
+      detail:      "상세 분석",
+      overview:    "시세 개요",
+      overviewHint:"가격 · 24H 변동 · 멀티 타임프레임 요약",
+      analysis:    "기술적 분석",
+      analysisHint:"오실레이터 · 이동평균 · 종합 시그널",
+      chart:       "고급 차트",
+      chartHint:   "RSI · MACD 내장 캔들 차트",
     },
     en: {
-      eyebrow:    "CRYPTO SIGNALS",
-      title:      "Crypto Chart Signals",
-      subtitle:   "TradingView live technical analysis · Oscillators · Moving Averages · Summary",
-      screener:   "Crypto Screener — All Signals",
-      detail:     "Coin Detail",
-      detailHint: "Click a coin button below to view its chart and technical analysis",
-      analysis:   "Technical Analysis",
-      chart:      "Chart",
-      overview:   "Price Overview",
-      powered:    "Powered by TradingView",
+      eyebrow:     "CRYPTO TERMINAL · LIVE",
+      title:       "Crypto Signals Terminal",
+      subtitle:    "Live price · Technical analysis · Multi-timeframe charts",
+      liveDot:     "LIVE",
+      powered:     "Powered by TradingView",
+      tapeTitle:   "MARKET TAPE",
+      screener:    "Signal Screener",
+      screenerHint:"Aggregate buy/sell signals across all cryptocurrencies — sortable by column",
+      picker:      "Select Coin",
+      pickerHint:  "Click a card to jump to detailed analysis",
+      detailKicker:"DETAIL",
+      detail:      "Detailed Analysis",
+      overview:    "Price Overview",
+      overviewHint:"Price · 24H change · Multi-timeframe summary",
+      analysis:    "Technical Analysis",
+      analysisHint:"Oscillators · Moving averages · Composite signal",
+      chart:       "Advanced Chart",
+      chartHint:   "Candlestick chart with built-in RSI & MACD",
     },
   };
   const c = COPY[language];
 
   function selectCoin(co: Coin) {
     setCoin(co);
-    // small delay so widgets re-render before scroll
     setTimeout(() => {
       detailRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
     }, 80);
   }
 
+  const timeString = clock
+    ? clock.toLocaleTimeString(language === "ko" ? "ko-KR" : "en-US", {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: false,
+      })
+    : "--:--:--";
+
   return (
     <div className={styles.page}>
+      {/* ── Ambient background glow ── */}
+      <div className={styles.ambient} aria-hidden="true" />
+
       <div className={styles.inner}>
 
-        {/* ── Header ── */}
-        <div className={styles.header}>
-          <div className={styles.headerLeft}>
-            <p className={styles.eyebrow}>{c.eyebrow}</p>
-            <h1 className={styles.title}>{c.title}</h1>
-            <p className={styles.subtitle}>{c.subtitle}</p>
-          </div>
-          <span className={styles.powered}>{c.powered}</span>
-        </div>
-
-        {/* ── Screener ── */}
-        <div className={styles.panel}>
-          <p className={styles.panelTitle}>{c.screener}</p>
-          <TVWidget
-            height={500}
-            src="https://s3.tradingview.com/external-embedding/embed-widget-screener.js"
-            config={{
-              width:           "100%",
-              height:          490,
-              defaultColumn:   "overview",
-              screener_type:   "crypto_mkt",
-              displayCurrency: "USD",
-              colorTheme:      "dark",
-              locale,
-              isTransparent:   true,
-            }}
-          />
-        </div>
-
-        {/* ── Coin selector ── */}
-        <div className={styles.coinSelectorSection}>
-          <p className={styles.selectorHint}>{c.detailHint}</p>
-          <div className={styles.coinGrid}>
-            {COINS.map((co) => (
-              <button
-                key={co}
-                className={`${styles.coinCard} ${coin === co ? styles.coinCardActive : ""}`}
-                onClick={() => selectCoin(co)}
-              >
-                <span className={styles.coinEmoji}>{COIN_INFO[co].emoji}</span>
-                <span className={styles.coinTicker}>{co}</span>
-                <span className={styles.coinName}>{COIN_INFO[co].name}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* ── Detail panel (ref target) ── */}
-        <div ref={detailRef} className={styles.detailSection}>
-
-          {/* Detail header */}
-          <div className={styles.detailHeader}>
-            <div className={styles.detailHeaderLeft}>
-              <span className={styles.detailEmoji}>{COIN_INFO[coin].emoji}</span>
-              <div>
-                <h2 className={styles.detailTitle}>{coin}/USDT</h2>
-                <p className={styles.detailSubtitle}>{COIN_INFO[coin].name} · {c.detail}</p>
+        {/* ═══════════════════════════════════════════════════════════════ */}
+        {/* HERO                                                              */}
+        {/* ═══════════════════════════════════════════════════════════════ */}
+        <header className={styles.hero}>
+          <div className={styles.heroInner}>
+            <div className={styles.heroLeft}>
+              <div className={styles.liveBadge}>
+                <span className={styles.livePulse} />
+                <span className={styles.liveText}>{c.liveDot}</span>
+                <span className={styles.liveClock}>{timeString} KST</span>
               </div>
+              <p className={styles.eyebrow}>{c.eyebrow}</p>
+              <h1 className={styles.title}>{c.title}</h1>
+              <p className={styles.subtitle}>{c.subtitle}</p>
             </div>
-            {/* Timeframe selector */}
-            <div className={styles.filterGroup}>
-              {TFS.map((t) => (
-                <button
-                  key={t.value}
-                  className={`${styles.filterBtn} ${tf === t.value ? styles.filterBtnActive : ""}`}
-                  onClick={() => setTf(t.value)}
-                >
-                  {t.label}
-                </button>
-              ))}
+            <div className={styles.heroRight}>
+              <span className={styles.poweredPill}>{c.powered}</span>
             </div>
           </div>
+        </header>
 
-          {/* ── Symbol Overview (price + mini chart) ── */}
-          <div className={styles.panel}>
-            <p className={styles.panelTitle}>{c.overview} — {coin}/USDT</p>
+        {/* ═══════════════════════════════════════════════════════════════ */}
+        {/* TICKER TAPE                                                      */}
+        {/* ═══════════════════════════════════════════════════════════════ */}
+        <section className={styles.tapeSection}>
+          <div className={styles.tapeLabel}>
+            <span className={styles.tapeDot} />
+            {c.tapeTitle}
+          </div>
+          <div className={styles.tapeWidget}>
             <TVWidget
-              height={200}
-              src="https://s3.tradingview.com/external-embedding/embed-widget-symbol-overview.js"
+              height={72}
+              src="https://s3.tradingview.com/external-embedding/embed-widget-ticker-tape.js"
               config={{
-                symbols:      [[TV_SYMBOL[coin], TV_SYMBOL[coin] + "|1D"]],
-                chartOnly:    false,
-                width:        "100%",
-                height:       190,
+                symbols: COINS.map((co) => ({
+                  proName:    TV_SYMBOL[co],
+                  title:      co,
+                })),
+                showSymbolLogo: true,
+                isTransparent:  true,
+                displayMode:    "adaptive",
+                colorTheme:     "dark",
                 locale,
-                colorTheme:   "dark",
-                autosize:     false,
-                showVolume:   false,
-                showMA:       false,
-                hideDateRanges: false,
-                hideMarketStatus: false,
-                hideSymbolLogo:   false,
-                scalePosition:    "right",
-                scaleMode:        "Normal",
-                fontFamily:       "-apple-system, BlinkMacSystemFont, Trebuchet MS, Roboto, Ubuntu, sans-serif",
-                fontSize:         "10",
-                noTimeScale:      false,
-                valuesTracking:   "1",
-                changeMode:       "price-and-percent",
-                isTransparent:    true,
               }}
             />
           </div>
+        </section>
 
-          {/* ── Technical Analysis + Chart grid ── */}
-          <div className={styles.analysisGrid}>
-            {/* Technical Analysis */}
-            <div className={styles.panel}>
-              <p className={styles.panelTitle}>
-                {c.analysis} — {coin}/USDT · {tfLabel}
-              </p>
+        {/* ═══════════════════════════════════════════════════════════════ */}
+        {/* SCREENER                                                         */}
+        {/* ═══════════════════════════════════════════════════════════════ */}
+        <section className={styles.panel}>
+          <div className={styles.panelHeader}>
+            <div>
+              <p className={styles.panelKicker}>01 · SCREENER</p>
+              <h2 className={styles.panelTitle}>{c.screener}</h2>
+              <p className={styles.panelHint}>{c.screenerHint}</p>
+            </div>
+          </div>
+          <div className={styles.panelBody}>
+            <TVWidget
+              height={500}
+              src="https://s3.tradingview.com/external-embedding/embed-widget-screener.js"
+              config={{
+                width:           "100%",
+                height:          490,
+                defaultColumn:   "overview",
+                screener_type:   "crypto_mkt",
+                displayCurrency: "USD",
+                colorTheme:      "dark",
+                locale,
+                isTransparent:   true,
+              }}
+            />
+          </div>
+        </section>
+
+        {/* ═══════════════════════════════════════════════════════════════ */}
+        {/* COIN PICKER                                                       */}
+        {/* ═══════════════════════════════════════════════════════════════ */}
+        <section className={styles.pickerSection}>
+          <div className={styles.pickerHeader}>
+            <div>
+              <p className={styles.panelKicker}>02 · PICK</p>
+              <h2 className={styles.panelTitle}>{c.picker}</h2>
+              <p className={styles.panelHint}>{c.pickerHint}</p>
+            </div>
+          </div>
+          <div className={styles.coinGrid}>
+            {COINS.map((co) => {
+              const info = COIN_INFO[co];
+              const isActive = coin === co;
+              return (
+                <button
+                  key={co}
+                  className={`${styles.coinCard} ${isActive ? styles.coinCardActive : ""}`}
+                  onClick={() => selectCoin(co)}
+                  style={{ "--tint": info.tint } as React.CSSProperties}
+                >
+                  <span className={styles.coinGlow} aria-hidden="true" />
+                  <span className={styles.coinSymbolMark}>{info.symbol}</span>
+                  <span className={styles.coinTicker}>{co}</span>
+                  <span className={styles.coinName}>{info.name}</span>
+                  {isActive && <span className={styles.coinActiveBar} />}
+                </button>
+              );
+            })}
+          </div>
+        </section>
+
+        {/* ═══════════════════════════════════════════════════════════════ */}
+        {/* DETAIL                                                            */}
+        {/* ═══════════════════════════════════════════════════════════════ */}
+        <section ref={detailRef} className={styles.detailSection}>
+
+          {/* Detail header — big ticker banner */}
+          <div
+            className={styles.detailBanner}
+            style={{ "--tint": COIN_INFO[coin].tint } as React.CSSProperties}
+          >
+            <div className={styles.detailBannerGlow} aria-hidden="true" />
+            <div className={styles.detailBannerContent}>
+              <div className={styles.detailLeft}>
+                <span className={styles.detailCoinMark}>{COIN_INFO[coin].symbol}</span>
+                <div>
+                  <p className={styles.detailKicker}>{c.detailKicker} · 03</p>
+                  <h2 className={styles.detailTitle}>
+                    {coin}<span className={styles.detailPair}>/USDT</span>
+                  </h2>
+                  <p className={styles.detailSub}>{COIN_INFO[coin].name} · {c.detail}</p>
+                </div>
+              </div>
+              <div className={styles.detailRight}>
+                <div className={styles.tfGroup}>
+                  {TFS.map((t) => (
+                    <button
+                      key={t.value}
+                      className={`${styles.tfBtn} ${tf === t.value ? styles.tfBtnActive : ""}`}
+                      onClick={() => setTf(t.value)}
+                    >
+                      {t.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Symbol Overview */}
+          <div className={styles.panel}>
+            <div className={styles.panelHeader}>
+              <div>
+                <p className={styles.panelKicker}>{c.overview}</p>
+                <h3 className={styles.panelTitleSm}>{coin}/USDT · Overview</h3>
+                <p className={styles.panelHint}>{c.overviewHint}</p>
+              </div>
+            </div>
+            <div className={styles.panelBody}>
               <TVWidget
-                height={460}
-                src="https://s3.tradingview.com/external-embedding/embed-widget-technical-analysis.js"
+                height={220}
+                src="https://s3.tradingview.com/external-embedding/embed-widget-symbol-overview.js"
                 config={{
-                  interval:         tf,
+                  symbols:          [[TV_SYMBOL[coin], TV_SYMBOL[coin] + "|1D"]],
+                  chartOnly:        false,
                   width:            "100%",
-                  height:           450,
-                  symbol:           TV_SYMBOL[coin],
-                  showIntervalTabs: false,
-                  displayMode:      "single",
-                  colorTheme:       "dark",
+                  height:           210,
                   locale,
+                  colorTheme:       "dark",
+                  autosize:         false,
+                  showVolume:       false,
+                  showMA:           false,
+                  hideDateRanges:   false,
+                  hideMarketStatus: false,
+                  hideSymbolLogo:   false,
+                  scalePosition:    "right",
+                  scaleMode:        "Normal",
+                  fontFamily:       "-apple-system, BlinkMacSystemFont, Inter, Roboto, sans-serif",
+                  fontSize:         "10",
+                  noTimeScale:      false,
+                  valuesTracking:   "1",
+                  changeMode:       "price-and-percent",
                   isTransparent:    true,
                 }}
               />
             </div>
+          </div>
 
-            {/* Advanced Chart */}
+          {/* Analysis + Chart grid */}
+          <div className={styles.analysisGrid}>
             <div className={styles.panel}>
-              <p className={styles.panelTitle}>
-                {c.chart} — {coin}/USDT · {tfLabel}
-              </p>
-              <TVWidget
-                height={460}
-                src="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js"
-                config={{
-                  autosize:            false,
-                  width:               "100%",
-                  height:              450,
-                  symbol:              TV_SYMBOL[coin],
-                  interval:            tf,
-                  timezone:            "Asia/Seoul",
-                  theme:               "dark",
-                  style:               "1",
-                  locale,
-                  allow_symbol_change: false,
-                  hide_side_toolbar:   true,
-                  calendar:            false,
-                  studies:             ["STD;RSI", "STD;MACD"],
-                  support_host:        "https://www.tradingview.com",
-                }}
-              />
+              <div className={styles.panelHeader}>
+                <div>
+                  <p className={styles.panelKicker}>{c.analysis}</p>
+                  <h3 className={styles.panelTitleSm}>
+                    {coin}/USDT · {tfLabel}
+                  </h3>
+                  <p className={styles.panelHint}>{c.analysisHint}</p>
+                </div>
+              </div>
+              <div className={styles.panelBody}>
+                <TVWidget
+                  height={460}
+                  src="https://s3.tradingview.com/external-embedding/embed-widget-technical-analysis.js"
+                  config={{
+                    interval:         tf,
+                    width:            "100%",
+                    height:           450,
+                    symbol:           TV_SYMBOL[coin],
+                    showIntervalTabs: false,
+                    displayMode:      "single",
+                    colorTheme:       "dark",
+                    locale,
+                    isTransparent:    true,
+                  }}
+                />
+              </div>
+            </div>
+
+            <div className={styles.panel}>
+              <div className={styles.panelHeader}>
+                <div>
+                  <p className={styles.panelKicker}>{c.chart}</p>
+                  <h3 className={styles.panelTitleSm}>
+                    {coin}/USDT · {tfLabel}
+                  </h3>
+                  <p className={styles.panelHint}>{c.chartHint}</p>
+                </div>
+              </div>
+              <div className={styles.panelBody}>
+                <TVWidget
+                  height={460}
+                  src="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js"
+                  config={{
+                    autosize:            false,
+                    width:               "100%",
+                    height:              450,
+                    symbol:              TV_SYMBOL[coin],
+                    interval:            tf,
+                    timezone:            "Asia/Seoul",
+                    theme:               "dark",
+                    style:               "1",
+                    locale,
+                    allow_symbol_change: false,
+                    hide_side_toolbar:   true,
+                    calendar:            false,
+                    studies:             ["STD;RSI", "STD;MACD"],
+                    support_host:        "https://www.tradingview.com",
+                  }}
+                />
+              </div>
             </div>
           </div>
 
-        </div>{/* end detailSection */}
+        </section>
 
       </div>
     </div>
