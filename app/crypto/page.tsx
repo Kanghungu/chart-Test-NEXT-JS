@@ -22,8 +22,18 @@ function fmtTime(iso: string, lang: "ko" | "en"): string {
   return d.toLocaleTimeString(lang === "ko" ? "ko-KR" : "en-US", { hour: "2-digit", minute: "2-digit" });
 }
 
+function timeAgo(ts: number, lang: "ko" | "en"): string {
+  const diff = Date.now() - ts;
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1)   return lang === "ko" ? "방금" : "just now";
+  if (mins < 60)  return lang === "ko" ? `${mins}분 전` : `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs  < 24)  return lang === "ko" ? `${hrs}시간 전` : `${hrs}h ago`;
+  return lang === "ko" ? `${Math.floor(hrs/24)}일 전` : `${Math.floor(hrs/24)}d ago`;
+}
+
 // ── Signal card ───────────────────────────────────────────────────────────
-function SignalCard({ sig, lang }: { sig: CryptoSignal; lang: "ko" | "en" }) {
+function SignalCard({ sig, lang }: { sig: CryptoSignal; lang: "ko" | "en"; }) {
   const tfClass   = sig.timeframe === "15m" ? styles.tf15m  : sig.timeframe === "1h" ? styles.tf1h  : styles.tf4h;
   const typeClass = sig.type === "HARMONIC"  ? styles.typeHarmonic
                   : sig.type === "DIVERGENCE" ? styles.typeDivergence : styles.typeZone;
@@ -73,9 +83,9 @@ function SignalCard({ sig, lang }: { sig: CryptoSignal; lang: "ko" | "en" }) {
         </div>
       )}
 
-      {/* Price */}
+      {/* Price + detected time */}
       <div className={styles.priceRow}>
-        <span>{lang === "ko" ? "현재가" : "Price"}</span>
+        <span className={styles.detectedTime}>{timeAgo(sig.detectedAt, lang)}</span>
         <span className={styles.priceVal}>${fmtPrice(sig.currentPrice)}</span>
       </div>
     </div>

@@ -260,6 +260,12 @@
   font-variant-numeric: tabular-nums;
 }
 
+.detectedTime {
+  font-size: 0.68rem;
+  color: var(--muted);
+  font-style: italic;
+}
+
 /* ── Empty / Loading ── */
 .empty {
   text-align: center;

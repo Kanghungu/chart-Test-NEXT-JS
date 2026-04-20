@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-export const revalidate = 60; // 1분 캐시
+export const revalidate = 60;
 
 // ── Types ──────────────────────────────────────────────────────────────────
 export type TF = "15m" | "1h" | "4h";
@@ -18,23 +18,24 @@ type Pivot = {
   type: "high" | "low";
   price: number;
   index: number;
+  time: number;
 };
 
 export type CryptoSignal = {
   id: string;
-  symbol: string;       // "BTCUSDT"
-  base: string;         // "BTC"
+  symbol: string;
+  base: string;
   timeframe: TF;
   type: "HARMONIC" | "DIVERGENCE" | "ZONE_BREAK";
   direction: "BULLISH" | "BEARISH";
-  patternName?: string; // Bat / Gartley / Butterfly / Crab / Shark / Cypher
+  patternName?: string;
   currentPrice: number;
   przMin?: number;
   przMax?: number;
   strength: "STRONG" | "MEDIUM";
   descriptionKo: string;
   descriptionEn: string;
-  detectedAt: number;
+  detectedAt: number; // actual candle timestamp
 };
 
 export type CryptoSignalsResponse = {
@@ -45,16 +46,15 @@ export type CryptoSignalsResponse = {
 // ── Config ─────────────────────────────────────────────────────────────────
 const SYMBOLS = ["BTCUSDT", "ETHUSDT", "SOLUSDT", "XRPUSDT", "BNBUSDT", "ADAUSDT", "DOGEUSDT"];
 const TIMEFRAMES: TF[] = ["15m", "1h", "4h"];
-const PIVOT_N: Record<TF, number> = { "15m": 3, "1h": 5, "4h": 7 };
+const PIVOT_N: Record<TF, number> = { "15m": 3, "1h": 4, "4h": 5 };
+// How many candles back a signal D-point (or extreme) can be and still be "recent"
+const RECENCY: Record<TF, number> = { "15m": 24, "1h": 20, "4h": 14 };
 
-// ── Binance OHLCV Fetch ────────────────────────────────────────────────────
+// ── Binance OHLCV ──────────────────────────────────────────────────────────
 async function fetchCandles(symbol: string, interval: string, limit = 200): Promise<Candle[]> {
   try {
     const url = `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${interval}&limit=${limit}`;
-    const res = await fetch(url, {
-      cache: "no-store",
-      signal: AbortSignal.timeout(5000),
-    });
+    const res = await fetch(url, { cache: "no-store", signal: AbortSignal.timeout(6000) });
     if (!res.ok) return [];
     const raw: unknown[][] = await res.json();
     return raw.map((d) => ({
@@ -74,7 +74,6 @@ async function fetchCandles(symbol: string, interval: string, limit = 200): Prom
 function calcRSI(closes: number[], period = 14): number[] {
   const out: number[] = new Array(period).fill(NaN);
   if (closes.length <= period) return out;
-
   let ag = 0, al = 0;
   for (let i = 1; i <= period; i++) {
     const d = closes[i] - closes[i - 1];
@@ -83,7 +82,6 @@ function calcRSI(closes: number[], period = 14): number[] {
   }
   ag /= period; al /= period;
   out.push(al === 0 ? 100 : 100 - 100 / (1 + ag / al));
-
   for (let i = period + 1; i < closes.length; i++) {
     const d = closes[i] - closes[i - 1];
     ag = (ag * (period - 1) + (d > 0 ? d : 0)) / period;
@@ -93,7 +91,7 @@ function calcRSI(closes: number[], period = 14): number[] {
   return out;
 }
 
-// ── Pivot Points (ZigZag) ──────────────────────────────────────────────────
+// ── Pivot Points ───────────────────────────────────────────────────────────
 function findPivots(candles: Candle[], n: number): Pivot[] {
   const pivots: Pivot[] = [];
   for (let i = n; i < candles.length - n; i++) {
@@ -103,31 +101,26 @@ function findPivots(candles: Candle[], n: number): Pivot[] {
       if (candles[j].high >= candles[i].high) isH = false;
       if (candles[j].low  <= candles[i].low)  isL = false;
     }
-    if (isH) pivots.push({ type: "high", price: candles[i].high, index: i });
-    else if (isL) pivots.push({ type: "low",  price: candles[i].low,  index: i });
+    if (isH) pivots.push({ type: "high", price: candles[i].high, index: i, time: candles[i].time });
+    else if (isL) pivots.push({ type: "low", price: candles[i].low, index: i, time: candles[i].time });
   }
   return pivots;
 }
 
 // ── Fibonacci helpers ──────────────────────────────────────────────────────
-function inRange(v: number, lo: number, hi: number, tol = 0.06): boolean {
+function inRange(v: number, lo: number, hi: number, tol = 0.08): boolean {
   return v >= lo - tol && v <= hi + tol;
 }
 
 // ── Harmonic Pattern Definitions ───────────────────────────────────────────
-// Each pattern defined by AB/XA ratio range and XD/XA ratio range
-const HARMONIC_DEFS: Array<{
-  name: string;
-  ab_xa: [number, number];
-  xd_xa: [number, number];
-}> = [
-  { name: "Bat",       ab_xa: [0.30, 0.55], xd_xa: [0.82, 0.95] },  // B@.382-.5, D@.886 of XA
-  { name: "Gartley",   ab_xa: [0.55, 0.68], xd_xa: [0.73, 0.84] },  // B@.618, D@.786 of XA
-  { name: "Butterfly", ab_xa: [0.72, 0.84], xd_xa: [1.17, 1.72] },  // B@.786, D@1.27-1.618 of XA
-  { name: "Crab",      ab_xa: [0.30, 0.65], xd_xa: [1.55, 1.72] },  // B@.382-.618, D@1.618 of XA
-  { name: "Deep Crab", ab_xa: [0.82, 0.93], xd_xa: [1.55, 1.72] },  // B@.886, D@1.618 of XA
-  { name: "Shark",     ab_xa: [1.05, 1.72], xd_xa: [0.82, 1.18] },  // B beyond A (extension)
-  { name: "Cypher",    ab_xa: [0.35, 0.62], xd_xa: [0.73, 0.84] },  // B@.382-.618, D@.786 of XC
+const HARMONIC_DEFS: Array<{ name: string; ab_xa: [number, number]; xd_xa: [number, number] }> = [
+  { name: "Bat",       ab_xa: [0.28, 0.55], xd_xa: [0.80, 0.96] },
+  { name: "Gartley",   ab_xa: [0.54, 0.68], xd_xa: [0.72, 0.84] },
+  { name: "Butterfly", ab_xa: [0.70, 0.86], xd_xa: [1.15, 1.75] },
+  { name: "Crab",      ab_xa: [0.28, 0.66], xd_xa: [1.54, 1.75] },
+  { name: "Deep Crab", ab_xa: [0.80, 0.95], xd_xa: [1.54, 1.75] },
+  { name: "Shark",     ab_xa: [1.00, 1.80], xd_xa: [0.80, 1.20] },
+  { name: "Cypher",    ab_xa: [0.33, 0.65], xd_xa: [0.72, 0.84] },
 ];
 
 type HarmonicHit = {
@@ -135,31 +128,33 @@ type HarmonicHit = {
   direction: "BULLISH" | "BEARISH";
   przMin: number;
   przMax: number;
+  detectedAt: number;
 };
 
-function detectHarmonics(pivots: Pivot[], currentPrice: number): HarmonicHit[] {
+/**
+ * Detects harmonic patterns among recent pivots.
+ * Key change from v1: we no longer require current price to be near D.
+ * Instead, D just needs to have formed within RECENCY[tf] candles.
+ */
+function detectHarmonics(pivots: Pivot[], candles: Candle[], recency: number): HarmonicHit[] {
   const hits: HarmonicHit[] = [];
   if (pivots.length < 5) return hits;
 
-  const recent = pivots.slice(-10);
+  const recent = pivots.slice(-14);
+  const candleLen = candles.length;
 
   for (let i = 0; i <= recent.length - 5; i++) {
     const [X, A, B, C, D] = recent.slice(i, i + 5);
 
-    // Strict alternation check
+    // Alternation must be strict
     if (X.type === A.type || A.type === B.type || B.type === C.type || C.type === D.type) continue;
 
     const bullish = X.type === "low"  && D.type === "low";
     const bearish = X.type === "high" && D.type === "high";
     if (!bullish && !bearish) continue;
 
-    // D must be a recent pivot (last 3)
-    const lastPivotIdx = pivots[pivots.length - 1].index;
-    const thirdLastIdx = pivots[Math.max(0, pivots.length - 3)].index;
-    if (D.index < thirdLastIdx) continue;
-
-    // Price must be within 2.5% of D
-    if (Math.abs(currentPrice - D.price) / D.price > 0.025) continue;
+    // D must have formed within the recency window
+    if (D.index < candleLen - recency) continue;
 
     const XA = Math.abs(A.price - X.price);
     const AB = Math.abs(B.price - A.price);
@@ -167,8 +162,7 @@ function detectHarmonics(pivots: Pivot[], currentPrice: number): HarmonicHit[] {
 
     const ab_xa = AB / XA;
     const xd_xa = Math.abs(D.price - X.price) / XA;
-
-    const spread = D.price * 0.018;
+    const spread = D.price * 0.02;
     const direction: "BULLISH" | "BEARISH" = bullish ? "BULLISH" : "BEARISH";
 
     for (const def of HARMONIC_DEFS) {
@@ -179,8 +173,9 @@ function detectHarmonics(pivots: Pivot[], currentPrice: number): HarmonicHit[] {
           direction,
           przMin: D.price - spread,
           przMax: D.price + spread,
+          detectedAt: D.time,
         });
-        break; // one pattern per XABCD set
+        break;
       }
     }
   }
@@ -196,90 +191,125 @@ function detectHarmonics(pivots: Pivot[], currentPrice: number): HarmonicHit[] {
 }
 
 // ── RSI Divergence ─────────────────────────────────────────────────────────
-type DivHit = { direction: "BULLISH" | "BEARISH"; strength: "STRONG" | "MEDIUM" };
+type DivHit = {
+  direction: "BULLISH" | "BEARISH";
+  strength: "STRONG" | "MEDIUM";
+  detectedAt: number;
+};
 
+/**
+ * Key changes from v1:
+ * - Scan last 60 candles (was 40)
+ * - Signal valid if extreme occurred in last 25 candles (was 12)
+ * - RSI delta threshold lowered to 0.8 (was 1.5)
+ */
 function detectDivergence(candles: Candle[], rsi: number[]): DivHit[] {
   const hits: DivHit[] = [];
   const len = candles.length;
   if (len < 35 || rsi.length < len) return hits;
 
-  const window = 40;
-  const lows:  Array<{ i: number; price: number; r: number }> = [];
-  const highs: Array<{ i: number; price: number; r: number }> = [];
+  const window = 60;
+  const lows:  Array<{ i: number; price: number; r: number; time: number }> = [];
+  const highs: Array<{ i: number; price: number; r: number; time: number }> = [];
 
-  for (let i = len - window; i < len - 2; i++) {
+  for (let i = Math.max(2, len - window); i < len - 2; i++) {
     const r = rsi[i];
-    if (isNaN(r) || i < 2) continue;
+    if (isNaN(r)) continue;
     const c = candles[i];
-    const isLocalLow  = c.low  < candles[i-1].low  && c.low  < candles[i-2].low  && c.low  < candles[i+1].low  && c.low  < candles[i+2].low;
-    const isLocalHigh = c.high > candles[i-1].high && c.high > candles[i-2].high && c.high > candles[i+1].high && c.high > candles[i+2].high;
-    if (isLocalLow)  lows.push({ i, price: c.low,  r });
-    if (isLocalHigh) highs.push({ i, price: c.high, r });
+    const isLow  = c.low  < candles[i-1].low  && c.low  < candles[i-2].low  && c.low  < candles[i+1].low  && c.low  < candles[i+2].low;
+    const isHigh = c.high > candles[i-1].high && c.high > candles[i-2].high && c.high > candles[i+1].high && c.high > candles[i+2].high;
+    if (isLow)  lows.push({ i, price: c.low,  r, time: c.time });
+    if (isHigh) highs.push({ i, price: c.high, r, time: c.time });
   }
 
-  // Bullish divergence: lower low in price, higher low in RSI, recent
+  // Bullish: lower low in price, higher low in RSI — last extreme within 25 candles
   if (lows.length >= 2) {
     const last = lows[lows.length - 1];
     const prev = lows[lows.length - 2];
-    if (last.i >= len - 12 && last.price < prev.price && last.r > prev.r + 1.5) {
-      hits.push({ direction: "BULLISH", strength: last.r < 35 ? "STRONG" : "MEDIUM" });
+    if (last.i >= len - 25 && last.price < prev.price && last.r > prev.r + 0.8) {
+      hits.push({
+        direction: "BULLISH",
+        strength: last.r < 38 ? "STRONG" : "MEDIUM",
+        detectedAt: last.time,
+      });
     }
   }
 
-  // Bearish divergence: higher high in price, lower high in RSI, recent
+  // Bearish: higher high in price, lower high in RSI — last extreme within 25 candles
   if (highs.length >= 2) {
     const last = highs[highs.length - 1];
     const prev = highs[highs.length - 2];
-    if (last.i >= len - 12 && last.price > prev.price && last.r < prev.r - 1.5) {
-      hits.push({ direction: "BEARISH", strength: last.r > 65 ? "STRONG" : "MEDIUM" });
+    if (last.i >= len - 25 && last.price > prev.price && last.r < prev.r - 0.8) {
+      hits.push({
+        direction: "BEARISH",
+        strength: last.r > 62 ? "STRONG" : "MEDIUM",
+        detectedAt: last.time,
+      });
     }
   }
 
   return hits;
 }
 
-// ── Volume Zone (Supply / Demand) Breakout ─────────────────────────────────
-function detectZoneBreak(candles: Candle[]): {
+// ── Volume Zone Breakout ───────────────────────────────────────────────────
+type ZoneHit = {
   direction: "BULLISH" | "BEARISH";
   strength: "STRONG" | "MEDIUM";
-} | null {
-  if (candles.length < 70) return null;
+  detectedAt: number;
+};
 
-  const hist = candles.slice(-70, -4);
-  const recent = candles.slice(-4);
+/**
+ * Key changes from v1:
+ * - Scan last 20 candles for break events (was 1)
+ * - Volume threshold lowered to 1.3x (was 1.8x)
+ */
+function detectZoneBreak(candles: Candle[]): ZoneHit[] {
+  if (candles.length < 70) return [];
 
-  if (hist.length < 20) return null;
+  const hist = candles.slice(-70, -20);
+  if (hist.length < 20) return [];
 
-  // Volume-weighted resistance & support via price percentile buckets
-  const prices = hist.map((c) => (c.high + c.low) / 2).sort((a, b) => a - b);
-  const p80 = prices[Math.floor(prices.length * 0.80)];
-  const p20 = prices[Math.floor(prices.length * 0.20)];
+  const sortedMid = [...hist].map((c) => (c.high + c.low) / 2).sort((a, b) => a - b);
+  const p80 = sortedMid[Math.floor(sortedMid.length * 0.80)];
+  const p20 = sortedMid[Math.floor(sortedMid.length * 0.20)];
 
-  const topCandles = hist.filter((c) => (c.high + c.low) / 2 >= p80);
-  const botCandles = hist.filter((c) => (c.high + c.low) / 2 <= p20);
+  const vwap = (cs: Candle[]) => {
+    const totalVol = cs.reduce((s, c) => s + c.volume, 0);
+    if (totalVol < 1e-10) return (cs[0]?.high + cs[0]?.low) / 2 || 0;
+    return cs.reduce((s, c) => s + (c.high + c.low) / 2 * c.volume, 0) / totalVol;
+  };
 
-  const vwap = (cs: Candle[]) =>
-    cs.reduce((s, c) => s + (c.high + c.low) / 2 * c.volume, 0) /
-    Math.max(1e-10, cs.reduce((s, c) => s + c.volume, 0));
+  const resistance = vwap(hist.filter((c) => (c.high + c.low) / 2 >= p80));
+  const support    = vwap(hist.filter((c) => (c.high + c.low) / 2 <= p20));
+  const avgVol     = hist.reduce((s, c) => s + c.volume, 0) / hist.length;
 
-  const resistance = vwap(topCandles);
-  const support    = vwap(botCandles);
+  const hits: ZoneHit[] = [];
+  const recent = candles.slice(-20); // scan last 20 candles
 
-  const avgVol  = hist.reduce((s, c) => s + c.volume, 0) / hist.length;
-  const prevClose = candles[candles.length - 5].close;
-  const currClose = recent[recent.length - 1].close;
-  const currVol   = recent[recent.length - 1].volume;
-  const volStrong = currVol > avgVol * 1.8;
+  for (let i = 1; i < recent.length; i++) {
+    const prev = recent[i - 1].close;
+    const curr = recent[i].close;
+    const vol  = recent[i].volume;
+    const volStrong = vol > avgVol * 1.3;
 
-  // Breakout above resistance zone
-  if (prevClose < resistance && currClose > resistance) {
-    return { direction: "BULLISH", strength: volStrong ? "STRONG" : "MEDIUM" };
+    if (prev < resistance && curr > resistance) {
+      hits.push({ direction: "BULLISH", strength: volStrong ? "STRONG" : "MEDIUM", detectedAt: recent[i].time });
+    }
+    if (prev > support && curr < support) {
+      hits.push({ direction: "BEARISH", strength: volStrong ? "STRONG" : "MEDIUM", detectedAt: recent[i].time });
+    }
   }
-  // Breakdown below support zone
-  if (prevClose > support && currClose < support) {
-    return { direction: "BEARISH", strength: volStrong ? "STRONG" : "MEDIUM" };
+
+  // Return the most recent of each direction (deduplicate)
+  const result: ZoneHit[] = [];
+  const dirs = new Set<string>();
+  for (const h of [...hits].reverse()) {
+    if (!dirs.has(h.direction)) {
+      dirs.add(h.direction);
+      result.push(h);
+    }
   }
-  return null;
+  return result;
 }
 
 // ── Description builders ───────────────────────────────────────────────────
@@ -289,12 +319,11 @@ function buildDesc(
   dir: CryptoSignal["direction"],
   pat?: string,
 ): { ko: string; en: string } {
-  const tf_ko = tf === "15m" ? "15분봉" : tf === "1h" ? "1시간봉" : "4시간봉";
+  const tf_ko  = tf === "15m" ? "15분봉" : tf === "1h" ? "1시간봉" : "4시간봉";
   const dir_ko = dir === "BULLISH" ? "상승" : "하락";
-
   if (type === "HARMONIC") return {
-    ko: `${base} ${tf_ko} — ${dir_ko} ${pat} 하모닉 패턴. PRZ 구간 도달 시 반전 주시`,
-    en: `${base} ${tf} — ${dir} ${pat} harmonic. Watch PRZ for reversal`,
+    ko: `${base} ${tf_ko} — ${dir_ko} ${pat} 하모닉 패턴. PRZ 구간 반전 주시`,
+    en: `${base} ${tf} — ${dir} ${pat} harmonic pattern. Watch PRZ for reversal`,
   };
   if (type === "DIVERGENCE") return {
     ko: `${base} ${tf_ko} — RSI ${dir_ko} 다이버전스. 추세 전환 가능성`,
@@ -303,21 +332,21 @@ function buildDesc(
   const zone_ko = dir === "BULLISH" ? "저항대" : "지지대";
   return {
     ko: `${base} ${tf_ko} — ${zone_ko} 돌파. ${dir_ko} 모멘텀 확인`,
-    en: `${base} ${tf} — ${dir === "BULLISH" ? "Resistance" : "Support"} zone break. ${dir} momentum`,
+    en: `${base} ${tf} — ${dir === "BULLISH" ? "Resistance" : "Support"} zone breakout. ${dir} momentum`,
   };
 }
 
-// ── Per-symbol-timeframe processor ────────────────────────────────────────
+// ── Per-cell processor ─────────────────────────────────────────────────────
 async function processCell(symbol: string, tf: TF): Promise<CryptoSignal[]> {
   const candles = await fetchCandles(symbol, tf, 200);
   if (candles.length < 60) return [];
 
-  const base   = symbol.replace("USDT", "");
-  const closes = candles.map((c) => c.close);
-  const price  = closes[closes.length - 1];
-  const rsi    = calcRSI(closes);
-  const pivots = findPivots(candles, PIVOT_N[tf]);
-  const now    = Date.now();
+  const base    = symbol.replace("USDT", "");
+  const closes  = candles.map((c) => c.close);
+  const price   = closes[closes.length - 1];
+  const rsi     = calcRSI(closes);
+  const pivots  = findPivots(candles, PIVOT_N[tf]);
+  const recency = RECENCY[tf];
   const out: CryptoSignal[] = [];
 
   // Divergence
@@ -327,34 +356,39 @@ async function processCell(symbol: string, tf: TF): Promise<CryptoSignal[]> {
       id: `${symbol}-${tf}-div-${d.direction}`,
       symbol, base, timeframe: tf,
       type: "DIVERGENCE", direction: d.direction,
-      currentPrice: price, strength: d.strength,
-      descriptionKo: ko, descriptionEn: en, detectedAt: now,
+      currentPrice: price,
+      strength: d.strength,
+      descriptionKo: ko, descriptionEn: en,
+      detectedAt: d.detectedAt,
     });
   }
 
   // Harmonic
-  for (const h of detectHarmonics(pivots, price)) {
+  for (const h of detectHarmonics(pivots, candles, recency)) {
     const { ko, en } = buildDesc(base, tf, "HARMONIC", h.direction, h.name);
     out.push({
       id: `${symbol}-${tf}-har-${h.name}-${h.direction}`,
       symbol, base, timeframe: tf,
       type: "HARMONIC", direction: h.direction, patternName: h.name,
-      currentPrice: price, przMin: h.przMin, przMax: h.przMax,
+      currentPrice: price,
+      przMin: h.przMin, przMax: h.przMax,
       strength: "MEDIUM",
-      descriptionKo: ko, descriptionEn: en, detectedAt: now,
+      descriptionKo: ko, descriptionEn: en,
+      detectedAt: h.detectedAt,
     });
   }
 
   // Zone breakout
-  const zb = detectZoneBreak(candles);
-  if (zb) {
-    const { ko, en } = buildDesc(base, tf, "ZONE_BREAK", zb.direction);
+  for (const z of detectZoneBreak(candles)) {
+    const { ko, en } = buildDesc(base, tf, "ZONE_BREAK", z.direction);
     out.push({
-      id: `${symbol}-${tf}-zone-${zb.direction}`,
+      id: `${symbol}-${tf}-zone-${z.direction}`,
       symbol, base, timeframe: tf,
-      type: "ZONE_BREAK", direction: zb.direction,
-      currentPrice: price, strength: zb.strength,
-      descriptionKo: ko, descriptionEn: en, detectedAt: now,
+      type: "ZONE_BREAK", direction: z.direction,
+      currentPrice: price,
+      strength: z.strength,
+      descriptionKo: ko, descriptionEn: en,
+      detectedAt: z.detectedAt,
     });
   }
 
@@ -364,14 +398,15 @@ async function processCell(symbol: string, tf: TF): Promise<CryptoSignal[]> {
 // ── GET ────────────────────────────────────────────────────────────────────
 export async function GET() {
   try {
-    const tasks = SYMBOLS.flatMap((sym) => TIMEFRAMES.map((tf) => processCell(sym, tf)));
+    const tasks  = SYMBOLS.flatMap((sym) => TIMEFRAMES.map((tf) => processCell(sym, tf)));
     const nested = await Promise.all(tasks);
     const signals = nested.flat();
 
-    // Sort: STRONG first → HARMONIC > DIVERGENCE > ZONE_BREAK
+    // Sort: STRONG first → by detectedAt desc (most recent first) → HARMONIC > DIVERGENCE > ZONE
     const typeScore = { HARMONIC: 2, DIVERGENCE: 1, ZONE_BREAK: 0 };
     signals.sort((a, b) => {
       if (a.strength !== b.strength) return a.strength === "STRONG" ? -1 : 1;
+      if (b.detectedAt !== a.detectedAt) return b.detectedAt - a.detectedAt;
       return typeScore[b.type] - typeScore[a.type];
     });
 
