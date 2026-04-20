@@ -1,0 +1,264 @@
+.root {
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  background: var(--gradient-card);
+  padding: 1.25rem;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+}
+
+.header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.headerLeft {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.eyebrow {
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.2em;
+  background: var(--gradient-accent);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.title {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #f8fafc;
+}
+
+.subtitle {
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.controls {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  align-items: flex-end;
+}
+
+.tabs {
+  display: flex;
+  gap: 0.2rem;
+  background: rgba(13, 26, 46, 0.8);
+  border: 1px solid var(--border-subtle);
+  border-radius: 999px;
+  padding: 0.18rem;
+}
+
+.tab {
+  border: none;
+  border-radius: 999px;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+  background: transparent;
+  color: var(--muted);
+  transition: background 0.2s ease, color 0.2s ease;
+  white-space: nowrap;
+}
+
+.tabActive {
+  background: rgba(56, 189, 248, 0.18);
+  color: var(--accent-blue);
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.dateGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.dateRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.dateLabel {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--muted-strong);
+}
+
+.dateLabelToday {
+  color: var(--accent-blue);
+}
+
+.daysTag {
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--muted);
+  background: rgba(51, 65, 85, 0.4);
+  border-radius: 999px;
+  padding: 0.1rem 0.45rem;
+}
+
+.daysTagToday {
+  background: rgba(56, 189, 248, 0.15);
+  color: var(--accent-blue);
+}
+
+.daysTagSoon {
+  background: rgba(251, 191, 36, 0.12);
+  color: var(--accent-amber);
+}
+
+.entries {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.entryCard {
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-subtle);
+  padding: 0.65rem 0.8rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  transition: border-color 0.15s ease;
+}
+
+.entryCard:hover {
+  border-color: var(--border-accent);
+}
+
+.usCard {
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.04), rgba(13, 26, 46, 0.9));
+}
+
+.krCard {
+  background: linear-gradient(135deg, rgba(129, 140, 248, 0.04), rgba(13, 26, 46, 0.9));
+}
+
+.entryTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.entryMeta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.entrySymbol {
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: #f8fafc;
+}
+
+.entryName {
+  font-size: 0.7rem;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.entryRight {
+  display: flex;
+  gap: 0.3rem;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.timeBadge, .marketBadge {
+  border-radius: 999px;
+  padding: 0.15rem 0.45rem;
+  font-size: 0.65rem;
+  font-weight: 700;
+}
+
+.bmoBadge {
+  background: rgba(56, 189, 248, 0.15);
+  color: #7dd3fc;
+}
+
+.amcBadge {
+  background: rgba(129, 140, 248, 0.15);
+  color: #a5b4fc;
+}
+
+.tbdBadge {
+  background: rgba(51, 65, 85, 0.5);
+  color: var(--muted);
+}
+
+.usBadge {
+  background: rgba(56, 189, 248, 0.12);
+  color: #7dd3fc;
+  border: 1px solid rgba(56, 189, 248, 0.2);
+}
+
+.krBadge {
+  background: rgba(129, 140, 248, 0.12);
+  color: #a5b4fc;
+  border: 1px solid rgba(129, 140, 248, 0.2);
+}
+
+.entryStats {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.entryStat {
+  display: flex;
+  gap: 0.3rem;
+  align-items: baseline;
+}
+
+.entryStatLabel {
+  font-size: 0.65rem;
+  color: var(--muted);
+}
+
+.entryStatValue {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--muted-strong);
+}
+
+.empty {
+  color: var(--muted);
+  font-size: 0.85rem;
+  text-align: center;
+  padding: 1.5rem 0;
+}
+
+@media (max-width: 640px) {
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .controls {
+    align-items: flex-start;
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+}

@@ -295,9 +295,6 @@ export default function HomeSessionBoard() {
             <div className={styles.metricCard}>
               <span className={styles.metricLabel}>{copy.regime}</span>
               <strong className={styles.metricValue}>{summary.regimeLabel}</strong>
-              <span className={getToneClass(summary.regimeValue)}>
-                {typeof summary.regimeValue === "number" ? `${summary.regimeValue}` : "-"}
-              </span>
             </div>
 
             <div className={styles.metricCard}>

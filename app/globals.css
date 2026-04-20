@@ -3,10 +3,19 @@
 @tailwind utilities;
 
 :root {
-  --background: #030712;
+  /* Base */
+  --background: #02040f;
   --foreground: #e5e7eb;
   --muted: #94a3b8;
   --muted-strong: #cbd5e1;
+
+  /* Surface layers - creates depth hierarchy */
+  --surface-0: #02040f;
+  --surface-1: #060d1f;
+  --surface-2: #0d1a2e;
+  --surface-3: #132035;
+
+  /* Legacy aliases (kept for compatibility) */
   --panel-bg: linear-gradient(180deg, rgb(15 23 42 / 0.9), rgb(2 6 23 / 0.94));
   --panel-bg-soft: linear-gradient(160deg, rgb(2 6 23 / 0.95), rgb(15 23 42 / 0.92));
   --panel-border: rgb(51 65 85);
@@ -14,6 +23,38 @@
   --panel-shadow-strong: 0 25px 50px -12px rgb(0 0 0 / 0.5);
   --surface-raised: rgb(15 23 42 / 0.78);
   --surface-strong: rgb(15 23 42 / 0.88);
+
+  /* New border system */
+  --border-subtle: rgba(51, 65, 85, 0.5);
+  --border-default: rgba(51, 65, 85, 0.85);
+  --border-accent: rgba(56, 189, 248, 0.25);
+  --border-green: rgba(74, 222, 128, 0.25);
+  --border-red: rgba(248, 113, 113, 0.25);
+
+  /* Gradient tokens */
+  --gradient-card: linear-gradient(135deg, rgba(13, 26, 46, 0.95), rgba(6, 13, 31, 0.98));
+  --gradient-header: linear-gradient(180deg, #060d1f 0%, rgba(2, 4, 15, 0.96) 100%);
+  --gradient-accent: linear-gradient(90deg, #38bdf8, #818cf8);
+  --gradient-green: linear-gradient(90deg, #4ade80, #34d399);
+  --gradient-hero: radial-gradient(ellipse 80% 60% at 50% -10%, rgba(56, 189, 248, 0.08) 0%, transparent 70%);
+
+  /* Glow effects */
+  --glow-blue: 0 0 24px rgba(56, 189, 248, 0.1), 0 4px 16px rgba(0, 0, 0, 0.4);
+  --glow-green: 0 0 24px rgba(74, 222, 128, 0.1), 0 4px 16px rgba(0, 0, 0, 0.4);
+  --glow-red: 0 0 24px rgba(248, 113, 113, 0.1), 0 4px 16px rgba(0, 0, 0, 0.4);
+  --glow-amber: 0 0 24px rgba(251, 191, 36, 0.12), 0 4px 16px rgba(0, 0, 0, 0.4);
+
+  /* Accent colors */
+  --accent-blue: #38bdf8;
+  --accent-blue-dim: rgba(56, 189, 248, 0.12);
+  --accent-green: #4ade80;
+  --accent-green-dim: rgba(74, 222, 128, 0.12);
+  --accent-red: #f87171;
+  --accent-red-dim: rgba(248, 113, 113, 0.12);
+  --accent-amber: #fbbf24;
+  --accent-amber-dim: rgba(251, 191, 36, 0.12);
+  --accent-purple: #818cf8;
+
   --radius-lg: 1rem;
   --radius-md: 0.75rem;
   --radius-sm: 0.65rem;
