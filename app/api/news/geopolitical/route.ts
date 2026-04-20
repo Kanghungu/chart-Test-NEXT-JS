@@ -239,8 +239,17 @@ export async function GET() {
       return true;
     });
 
+    // 7일 이내 기사만 유효
+    const cutoff = Date.now() - 7 * 24 * 60 * 60 * 1000;
+    const isRecent = (item: RssItem) => {
+      if (!item.pubDate) return false;
+      const t = new Date(item.pubDate).getTime();
+      return !isNaN(t) && t >= cutoff;
+    };
+
     const scoreAndSort = (items: RssItem[]): GeoNewsItem[] =>
       items
+        .filter(isRecent)
         .map((item) => {
           const result = scoreItem(item);
           if (!result) return null;
