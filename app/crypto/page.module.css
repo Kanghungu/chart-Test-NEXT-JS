@@ -48,38 +48,144 @@
   margin: 0;
 }
 
-.headerRight {
+.powered {
+  font-size: 0.68rem;
+  color: var(--muted);
+  opacity: 0.6;
+}
+
+/* ── Panel ── */
+.panel {
+  background: var(--gradient-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 1rem;
+  overflow: hidden;
+}
+
+.panelTitle {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #94a3b8;
+  letter-spacing: 0.04em;
+  margin: 0 0 0.75rem;
+  text-transform: uppercase;
+}
+
+/* ── Coin Selector Section ── */
+.coinSelectorSection {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.selectorHint {
+  font-size: 0.78rem;
+  color: var(--muted);
+  margin: 0;
+  text-align: center;
+}
+
+.coinGrid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.5rem;
+}
+
+.coinCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0.75rem 0.5rem;
+  background: rgba(13,26,46,0.7);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, transform 0.12s, box-shadow 0.15s;
+  text-align: center;
+}
+
+.coinCard:hover {
+  background: rgba(56,189,248,0.06);
+  border-color: rgba(56,189,248,0.3);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(56,189,248,0.08);
+}
+
+.coinCardActive {
+  background: rgba(56,189,248,0.12);
+  border-color: rgba(56,189,248,0.45);
+  box-shadow: 0 0 20px rgba(56,189,248,0.15);
+}
+
+.coinEmoji {
+  font-size: 1.3rem;
+  line-height: 1;
+  display: block;
+}
+
+.coinTicker {
+  font-size: 0.8rem;
+  font-weight: 900;
+  color: #f8fafc;
+  letter-spacing: 0.03em;
+}
+
+.coinName {
+  font-size: 0.6rem;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+/* ── Detail section ── */
+.detailSection {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  scroll-margin-top: 5rem; /* account for sticky header */
+}
+
+.detailHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  padding: 0.75rem 1rem;
+  background: rgba(13,26,46,0.6);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+}
+
+.detailHeaderLeft {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  flex-wrap: wrap;
 }
 
-.lastUpdate {
-  font-size: 0.68rem;
-  color: var(--muted);
+.detailEmoji {
+  font-size: 2rem;
+  line-height: 1;
 }
 
-.refreshBtn {
+.detailTitle {
+  font-size: 1.25rem;
+  font-weight: 900;
+  color: #f8fafc;
+  margin: 0;
+}
+
+.detailSubtitle {
   font-size: 0.72rem;
-  font-weight: 700;
-  color: var(--accent-blue);
-  background: rgba(56,189,248,0.08);
-  border: 1px solid rgba(56,189,248,0.2);
-  border-radius: 999px;
-  padding: 0.3rem 0.75rem;
-  cursor: pointer;
-  transition: background 0.15s;
-}
-.refreshBtn:hover { background: rgba(56,189,248,0.15); }
-
-/* ── Filters ── */
-.filters {
-  display: flex;
-  gap: 0.6rem;
-  flex-wrap: wrap;
+  color: var(--muted);
+  margin: 0;
 }
 
+/* ── Timeframe filter group ── */
 .filterGroup {
   display: flex;
   gap: 0.2rem;
@@ -107,198 +213,33 @@
   color: var(--accent-blue);
 }
 
-/* ── Summary row ── */
-.summary {
-  display: flex;
-  gap: 0.75rem;
-  flex-wrap: wrap;
-}
-
-.summaryCard {
-  flex: 1;
-  min-width: 120px;
-  background: var(--gradient-card);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-md);
-  padding: 0.75rem 1rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.2rem;
-}
-
-.summaryLabel {
-  font-size: 0.65rem;
-  color: var(--muted);
-  font-weight: 600;
-  letter-spacing: 0.06em;
-}
-
-.summaryValue {
-  font-size: 1.4rem;
-  font-weight: 900;
-  color: #f8fafc;
-}
-
-.summaryBull { color: #4ade80; }
-.summaryBear { color: #f87171; }
-
-/* ── Signal grid ── */
-.grid {
+/* ── Analysis 2-col grid ── */
+.analysisGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 0.85rem;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
 }
 
-/* ── Signal card ── */
-.card {
-  background: var(--gradient-card);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-md);
-  padding: 0.9rem 1rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.55rem;
-  transition: border-color 0.15s, transform 0.15s;
+/* ── Responsive ── */
+@media (max-width: 900px) {
+  .coinGrid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .analysisGrid {
+    grid-template-columns: 1fr;
+  }
 }
 
-.card:hover {
-  transform: translateY(-1px);
-}
-
-.cardBull { border-color: rgba(74,222,128,0.25); box-shadow: 0 0 16px rgba(74,222,128,0.06); }
-.cardBear { border-color: rgba(239,68,68,0.22);  box-shadow: 0 0 16px rgba(239,68,68,0.06); }
-
-/* card top row */
-.cardTop {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
-}
-
-.coinName {
-  font-size: 1rem;
-  font-weight: 900;
-  color: #f8fafc;
-}
-
-.badges {
-  display: flex;
-  gap: 0.3rem;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-}
-
-.badge {
-  font-size: 0.62rem;
-  font-weight: 700;
-  padding: 0.12rem 0.42rem;
-  border-radius: 999px;
-  white-space: nowrap;
-}
-
-/* Timeframe badges */
-.tf15m  { background: rgba(51,65,85,0.6);         color: #94a3b8; }
-.tf1h   { background: rgba(56,189,248,0.12);       color: #38bdf8; border: 1px solid rgba(56,189,248,0.2); }
-.tf4h   { background: rgba(129,140,248,0.14);      color: #818cf8; border: 1px solid rgba(129,140,248,0.22); }
-
-/* Type badges */
-.typeHarmonic   { background: rgba(251,191,36,0.13); color: #fbbf24; border: 1px solid rgba(251,191,36,0.2); }
-.typeDivergence { background: rgba(56,189,248,0.12); color: #38bdf8; border: 1px solid rgba(56,189,248,0.2); }
-.typeZone       { background: rgba(167,139,250,0.12);color: #a78bfa; border: 1px solid rgba(167,139,250,0.2); }
-
-/* Direction badges */
-.dirBull { background: rgba(74,222,128,0.13); color: #4ade80; border: 1px solid rgba(74,222,128,0.22); }
-.dirBear { background: rgba(239,68,68,0.12);  color: #f87171; border: 1px solid rgba(239,68,68,0.2); }
-
-/* Strength */
-.strengthStrong { background: rgba(251,191,36,0.15); color: #fbbf24; border: 1px solid rgba(251,191,36,0.25); }
-.strengthMedium { background: rgba(51,65,85,0.5);    color: #94a3b8; }
-
-/* description */
-.desc {
-  font-size: 0.78rem;
-  color: #cbd5e1;
-  line-height: 1.5;
-  margin: 0;
-}
-
-/* PRZ row */
-.prz {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  font-size: 0.7rem;
-}
-
-.przLabel {
-  color: var(--muted);
-  font-weight: 600;
-}
-
-.przRange {
-  color: #fbbf24;
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-}
-
-/* price row */
-.priceRow {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  font-size: 0.7rem;
-  color: var(--muted);
-  border-top: 1px solid rgba(51,65,85,0.35);
-  padding-top: 0.4rem;
-}
-
-.priceVal {
-  font-size: 0.8rem;
-  font-weight: 700;
-  color: #94a3b8;
-  font-variant-numeric: tabular-nums;
-}
-
-.detectedTime {
-  font-size: 0.68rem;
-  color: var(--muted);
-  font-style: italic;
-}
-
-/* ── Empty / Loading ── */
-.empty {
-  text-align: center;
-  color: var(--muted);
-  font-size: 0.9rem;
-  padding: 3rem 0;
-}
-
-.skeletonGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 0.85rem;
-}
-
-.skeleton {
-  height: 140px;
-  border-radius: var(--radius-md);
-  background: linear-gradient(90deg,
-    rgba(51,65,85,0.3) 25%,
-    rgba(51,65,85,0.5) 50%,
-    rgba(51,65,85,0.3) 75%);
-  background-size: 200% 100%;
-  animation: shimmer 1.4s infinite;
-}
-
-@keyframes shimmer {
-  0%   { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
-}
-
-@media (max-width: 640px) {
+@media (max-width: 560px) {
   .title { font-size: 1.2rem; }
-  .grid, .skeletonGrid { grid-template-columns: 1fr; }
-  .summary { gap: 0.5rem; }
-  .summaryCard { min-width: 90px; padding: 0.6rem 0.75rem; }
+
+  .coinGrid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .detailHeader {
+    flex-direction: column;
+    align-items: flex-start;
+  }
 }
