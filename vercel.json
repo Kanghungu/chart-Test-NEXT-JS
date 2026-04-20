@@ -1,8 +1,0 @@
-{
-  "crons": [
-    {
-      "path": "/api/cron/ingest-dashboard",
-      "schedule": "0 */6 * * *"
-    }
-  ]
-}
