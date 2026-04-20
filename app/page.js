@@ -5,6 +5,8 @@ import { useEffect, useState } from "react";
 import HomeDashboardExtras from "@/components/home/HomeDashboardExtras";
 import HomeSessionBoard from "@/components/home/HomeSessionBoard";
 import MarketOverview from "@/components/market/MarketOverview";
+import SectorHeatmap from "@/components/home/SectorHeatmap";
+import EarningsCalendar from "@/components/home/EarningsCalendar";
 import NewsList from "@/components/news/NewsList";
 import NewsTitle from "@/components/news/NewsTitle";
 import SideEconomyAI from "@/components/sidebar/SideEconomyAI";
@@ -58,6 +60,14 @@ export default function Home() {
 
           <section className={styles.panel}>
             <HomeDashboardExtras />
+          </section>
+
+          <section className={styles.panel}>
+            <SectorHeatmap />
+          </section>
+
+          <section className={styles.panel}>
+            <EarningsCalendar />
           </section>
 
           <section className={styles.panel}>

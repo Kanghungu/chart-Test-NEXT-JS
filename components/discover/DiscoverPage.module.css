@@ -1,9 +1,9 @@
 .page {
   min-height: 100vh;
   background:
-    radial-gradient(circle at top left, rgb(14 165 233 / 0.18), transparent 28%),
-    radial-gradient(circle at top right, rgb(16 185 129 / 0.14), transparent 24%),
-    linear-gradient(180deg, rgb(2 6 23), rgb(3 7 18));
+    radial-gradient(ellipse 80% 40% at 20% 0%, rgba(56, 189, 248, 0.1), transparent 50%),
+    radial-gradient(ellipse 60% 30% at 80% 0%, rgba(129, 140, 248, 0.08), transparent 50%),
+    linear-gradient(180deg, #02040f, #060d1f 30%, #02040f);
   padding: 2.5rem 0.75rem 4rem;
 }
 
@@ -19,11 +19,13 @@
   display: grid;
   gap: 1rem;
   align-items: end;
-  padding: 1.5rem;
-  border: 1px solid rgb(56 189 248 / 0.16);
+  padding: 1.75rem;
+  border: 1px solid rgba(56, 189, 248, 0.18);
   border-radius: 1.5rem;
-  background: linear-gradient(145deg, rgb(8 47 73 / 0.5), rgb(15 23 42 / 0.96));
-  box-shadow: 0 24px 48px rgb(2 6 23 / 0.34);
+  background:
+    radial-gradient(ellipse 100% 120% at 50% -20%, rgba(56, 189, 248, 0.1) 0%, transparent 60%),
+    linear-gradient(145deg, rgba(8, 47, 73, 0.6), rgba(13, 26, 46, 0.97));
+  box-shadow: 0 24px 48px rgba(2, 6, 23, 0.4), 0 0 60px rgba(56, 189, 248, 0.04);
 }
 
 .heroCopy {
@@ -33,10 +35,13 @@
 }
 
 .eyebrow {
-  font-size: 0.75rem;
-  letter-spacing: 0.2em;
+  font-size: 0.72rem;
+  letter-spacing: 0.22em;
   font-weight: 800;
-  color: #7dd3fc;
+  background: var(--gradient-accent);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .title {
@@ -63,10 +68,17 @@
 .metricCard,
 .listCard,
 .inputCard {
-  border: 1px solid rgb(51 65 85 / 0.9);
+  border: 1px solid var(--border-subtle);
   border-radius: 1.15rem;
-  background: rgb(15 23 42 / 0.82);
-  box-shadow: 0 18px 28px rgb(0 0 0 / 0.18);
+  background: var(--gradient-card);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.03);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.statCard:hover,
+.panel:hover {
+  border-color: var(--border-accent);
+  box-shadow: var(--glow-blue);
 }
 
 .statCard {
