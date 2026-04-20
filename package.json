@@ -11,9 +11,6 @@
     "db:seed": "node prisma/seed.cjs",
     "ingest:dashboard": "node scripts/ingest-dashboard.cjs"
   },
-  "prisma": {
-    "seed": "node prisma/seed.cjs"
-  },
   "dependencies": {
     "@prisma/client": "^6.15.0",
     "framer-motion": "^12.23.12",
