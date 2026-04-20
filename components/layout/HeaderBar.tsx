@@ -13,6 +13,7 @@ const COPY = {
       { href: "/calendar", label: "캘린더" },
       { href: "/watchlist", label: "워치리스트" },
       { href: "/signals", label: "시그널" },
+      { href: "/crypto",  label: "크립토" },
       { href: "/briefing", label: "브리핑" },
     ],
     newsDropdown: {
@@ -33,6 +34,7 @@ const COPY = {
       { href: "/calendar", label: "Calendar" },
       { href: "/watchlist", label: "Watchlist" },
       { href: "/signals", label: "Signals" },
+      { href: "/crypto",  label: "Crypto" },
       { href: "/briefing", label: "Briefing" },
     ],
     newsDropdown: {
