@@ -13,6 +13,7 @@ import SideEconomyAI from "@/components/sidebar/SideEconomyAI";
 import SideEvents from "@/components/sidebar/SideEvents";
 import SideMajorNews from "@/components/sidebar/SideMajorNews";
 import SideWatchlist from "@/components/sidebar/SideWatchlist";
+import GeoRiskMonitor from "@/components/home/GeoRiskMonitor";
 import { useLanguage } from "@/components/i18n/LanguageProvider";
 import styles from "./page.module.css";
 
@@ -50,6 +51,10 @@ export default function Home() {
     <main className={styles.page}>
       <div className={styles.layout}>
         <div className={styles.mainColumn}>
+          <section className={styles.panel}>
+            <GeoRiskMonitor />
+          </section>
+
           <section className={styles.panel}>
             <MarketOverview />
           </section>
