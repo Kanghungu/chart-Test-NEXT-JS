@@ -47,27 +47,54 @@ export type CryptoSignalsResponse = {
 const SYMBOLS = ["BTCUSDT", "ETHUSDT", "SOLUSDT", "XRPUSDT", "BNBUSDT", "ADAUSDT", "DOGEUSDT"];
 const TIMEFRAMES: TF[] = ["15m", "1h", "4h"];
 const PIVOT_N: Record<TF, number> = { "15m": 3, "1h": 4, "4h": 5 };
-// How many candles back a signal D-point (or extreme) can be and still be "recent"
-const RECENCY: Record<TF, number> = { "15m": 24, "1h": 20, "4h": 14 };
+const RECENCY:  Record<TF, number> = { "15m": 24, "1h": 20, "4h": 14 };
 
-// ── Binance OHLCV ──────────────────────────────────────────────────────────
-async function fetchCandles(symbol: string, interval: string, limit = 200): Promise<Candle[]> {
+// Bybit interval codes
+const BYBIT_INTERVAL: Record<TF, string> = { "15m": "15", "1h": "60", "4h": "240" };
+
+// ── OHLCV Fetch: Bybit primary → Binance backup ────────────────────────────
+async function fetchCandles(symbol: string, tf: TF, limit = 200): Promise<Candle[]> {
+  // 1) Bybit (accessible from Vercel global edge)
   try {
-    const url = `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${interval}&limit=${limit}`;
-    const res = await fetch(url, { cache: "no-store", signal: AbortSignal.timeout(6000) });
-    if (!res.ok) return [];
-    const raw: unknown[][] = await res.json();
-    return raw.map((d) => ({
-      time:   d[0] as number,
-      open:   parseFloat(d[1] as string),
-      high:   parseFloat(d[2] as string),
-      low:    parseFloat(d[3] as string),
-      close:  parseFloat(d[4] as string),
-      volume: parseFloat(d[5] as string),
-    }));
-  } catch {
-    return [];
+    const url = `https://api.bybit.com/v5/market/kline?category=spot&symbol=${symbol}&interval=${BYBIT_INTERVAL[tf]}&limit=${limit}`;
+    const res = await fetch(url, { cache: "no-store", signal: AbortSignal.timeout(7000) });
+    if (res.ok) {
+      const data = await res.json();
+      const list: string[][] = data?.result?.list;
+      if (Array.isArray(list) && list.length > 0) {
+        // Bybit returns newest-first → reverse to oldest-first
+        return list.slice().reverse().map((d) => ({
+          time:   parseInt(d[0]),
+          open:   parseFloat(d[1]),
+          high:   parseFloat(d[2]),
+          low:    parseFloat(d[3]),
+          close:  parseFloat(d[4]),
+          volume: parseFloat(d[5]),
+        }));
+      }
+    }
+  } catch { /* fallthrough to backup */ }
+
+  // 2) Binance backup endpoints
+  for (const base of ["https://api1.binance.com", "https://api2.binance.com", "https://api3.binance.com"]) {
+    try {
+      const url = `${base}/api/v3/klines?symbol=${symbol}&interval=${tf}&limit=${limit}`;
+      const res = await fetch(url, { cache: "no-store", signal: AbortSignal.timeout(5000) });
+      if (res.ok) {
+        const raw: unknown[][] = await res.json();
+        return raw.map((d) => ({
+          time:   d[0] as number,
+          open:   parseFloat(d[1] as string),
+          high:   parseFloat(d[2] as string),
+          low:    parseFloat(d[3] as string),
+          close:  parseFloat(d[4] as string),
+          volume: parseFloat(d[5] as string),
+        }));
+      }
+    } catch { /* try next */ }
   }
+
+  return [];
 }
 
 // ── RSI (Wilder smoothing) ─────────────────────────────────────────────────
@@ -338,7 +365,7 @@ function buildDesc(
 
 // ── Per-cell processor ─────────────────────────────────────────────────────
 async function processCell(symbol: string, tf: TF): Promise<CryptoSignal[]> {
-  const candles = await fetchCandles(symbol, tf, 200);
+  const candles = await fetchCandles(symbol, tf, 200); // tf now passed directly
   if (candles.length < 60) return [];
 
   const base    = symbol.replace("USDT", "");
