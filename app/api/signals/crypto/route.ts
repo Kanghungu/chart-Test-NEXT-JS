@@ -444,11 +444,11 @@ export async function GET() {
     const nested = await Promise.all(tasks);
     const signals = nested.flat();
 
-    // Sort: STRONG first → by detectedAt desc (most recent first) → HARMONIC > DIVERGENCE > ZONE
+    // Sort: most recent detection first, then STRONG, then HARMONIC > DIVERGENCE > ZONE.
     const typeScore = { HARMONIC: 2, DIVERGENCE: 1, ZONE_BREAK: 0 };
     signals.sort((a, b) => {
-      if (a.strength !== b.strength) return a.strength === "STRONG" ? -1 : 1;
       if (b.detectedAt !== a.detectedAt) return b.detectedAt - a.detectedAt;
+      if (a.strength !== b.strength) return a.strength === "STRONG" ? -1 : 1;
       return typeScore[b.type] - typeScore[a.type];
     });
 

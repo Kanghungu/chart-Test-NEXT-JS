@@ -525,8 +525,8 @@ export async function scanAllCryptoSignals(
 
   const typeScore = { HARMONIC: 2, DIVERGENCE: 1, ZONE_BREAK: 0 };
   signals.sort((a, b) => {
-    if (a.strength !== b.strength) return a.strength === "STRONG" ? -1 : 1;
     if (b.detectedAt !== a.detectedAt) return b.detectedAt - a.detectedAt;
+    if (a.strength !== b.strength) return a.strength === "STRONG" ? -1 : 1;
     return typeScore[b.type] - typeScore[a.type];
   });
 
