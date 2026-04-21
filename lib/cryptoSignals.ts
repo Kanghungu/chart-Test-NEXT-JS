@@ -262,8 +262,8 @@ function detectDivergence(candles: Candle[], rsi: number[]): DivHit[] {
   if (len < 35 || rsi.length < len) return hits;
 
   const window = 60;
-  const lows:  Array<{ i: number; price: number; r: number; time: number }> = [];
-  const highs: Array<{ i: number; price: number; r: number; time: number }> = [];
+  const lows:  Array<{ i: number; price: number; r: number; time: number; vol: number }> = [];
+  const highs: Array<{ i: number; price: number; r: number; time: number; vol: number }> = [];
 
   for (let i = Math.max(2, len - window); i < len - 2; i++) {
     const r = rsi[i];
@@ -275,17 +275,29 @@ function detectDivergence(candles: Candle[], rsi: number[]): DivHit[] {
     const isHigh =
       c.high > candles[i-1].high && c.high > candles[i-2].high &&
       c.high > candles[i+1].high && c.high > candles[i+2].high;
-    if (isLow)  lows.push({ i, price: c.low,  r, time: c.time });
-    if (isHigh) highs.push({ i, price: c.high, r, time: c.time });
+    if (isLow)  lows.push({  i, price: c.low,  r, time: c.time, vol: c.volume });
+    if (isHigh) highs.push({ i, price: c.high, r, time: c.time, vol: c.volume });
   }
+
+  // Volume cool-down check: second pivot's volume must be meaningfully lower than first's.
+  // Allow up to ~15% tolerance to avoid missing slight bumps.
+  const VOL_COOL_RATIO = 0.85;
 
   if (lows.length >= 2) {
     const last = lows[lows.length - 1];
     const prev = lows[lows.length - 2];
-    if (last.i >= len - 25 && last.price < prev.price && last.r > prev.r + 0.8) {
+    const priceCondition = last.price < prev.price;          // lower low
+    const rsiCondition   = last.r > prev.r + 0.8;            // higher low on RSI
+    const oversoldStart  = prev.r < 30;                      // first low was oversold
+    const rsiCooled      = last.r > prev.r && last.r > 32;   // RSI came back up (no longer oversold territory)
+    const volCooled      = last.vol < prev.vol * VOL_COOL_RATIO;
+    const recent         = last.i >= len - 25;
+
+    if (recent && priceCondition && rsiCondition && oversoldStart && rsiCooled && volCooled) {
       hits.push({
         direction: "BULLISH",
-        strength: last.r < 38 ? "STRONG" : "MEDIUM",
+        // STRONG when the reset is deeper and volume shrink is bigger
+        strength: (prev.r < 25 && last.vol < prev.vol * 0.6) ? "STRONG" : "MEDIUM",
         detectedAt: last.time,
         pricePoints: [
           { time: prev.time, price: prev.price, label: "L1" },
@@ -302,10 +314,17 @@ function detectDivergence(candles: Candle[], rsi: number[]): DivHit[] {
   if (highs.length >= 2) {
     const last = highs[highs.length - 1];
     const prev = highs[highs.length - 2];
-    if (last.i >= len - 25 && last.price > prev.price && last.r < prev.r - 0.8) {
+    const priceCondition  = last.price > prev.price;         // higher high
+    const rsiCondition    = last.r < prev.r - 0.8;           // lower high on RSI
+    const overboughtStart = prev.r > 70;                     // first high was overbought
+    const rsiCooled       = last.r < prev.r && last.r < 68;  // RSI came back down
+    const volCooled       = last.vol < prev.vol * VOL_COOL_RATIO;
+    const recent          = last.i >= len - 25;
+
+    if (recent && priceCondition && rsiCondition && overboughtStart && rsiCooled && volCooled) {
       hits.push({
         direction: "BEARISH",
-        strength: last.r > 62 ? "STRONG" : "MEDIUM",
+        strength: (prev.r > 75 && last.vol < prev.vol * 0.6) ? "STRONG" : "MEDIUM",
         detectedAt: last.time,
         pricePoints: [
           { time: prev.time, price: prev.price, label: "H1" },
