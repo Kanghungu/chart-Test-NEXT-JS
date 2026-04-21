@@ -11,7 +11,7 @@
 // ── Types ──────────────────────────────────────────────────────────────────
 export type TF = "15m" | "1h" | "4h";
 
-type Candle = {
+export type Candle = {
   time: number;
   open: number;
   high: number;
@@ -26,6 +26,13 @@ type Pivot = {
   index: number;
   time: number;
 };
+
+export type VizPoint = { time: number; price: number; label?: string };
+
+export type SignalViz =
+  | { kind: "HARMONIC"; points: VizPoint[]; przMin: number; przMax: number }
+  | { kind: "DIVERGENCE"; pricePoints: VizPoint[]; rsiPoints: VizPoint[]; rsi: Array<{ time: number; value: number }> }
+  | { kind: "ZONE_BREAK"; zoneLow: number; zoneHigh: number; breakoutTime: number };
 
 export type CryptoSignal = {
   id: string;
@@ -42,6 +49,10 @@ export type CryptoSignal = {
   descriptionKo: string;
   descriptionEn: string;
   detectedAt: number;
+  /** Last ~120 candles for chart rendering. */
+  candles: Candle[];
+  /** Pattern-specific overlay geometry. */
+  viz: SignalViz;
 };
 
 // ── Config ─────────────────────────────────────────────────────────────────
@@ -176,6 +187,7 @@ type HarmonicHit = {
   przMin: number;
   przMax: number;
   detectedAt: number;
+  points: VizPoint[];
 };
 
 function detectHarmonics(pivots: Pivot[], candles: Candle[], recency: number): HarmonicHit[] {
@@ -213,6 +225,13 @@ function detectHarmonics(pivots: Pivot[], candles: Candle[], recency: number): H
           przMin: D.price - spread,
           przMax: D.price + spread,
           detectedAt: D.time,
+          points: [
+            { time: X.time, price: X.price, label: "X" },
+            { time: A.time, price: A.price, label: "A" },
+            { time: B.time, price: B.price, label: "B" },
+            { time: C.time, price: C.price, label: "C" },
+            { time: D.time, price: D.price, label: "D" },
+          ],
         });
         break;
       }
@@ -229,7 +248,13 @@ function detectHarmonics(pivots: Pivot[], candles: Candle[], recency: number): H
 }
 
 // ── Divergence ────────────────────────────────────────────────────────────
-type DivHit = { direction: "BULLISH" | "BEARISH"; strength: "STRONG" | "MEDIUM"; detectedAt: number };
+type DivHit = {
+  direction: "BULLISH" | "BEARISH";
+  strength: "STRONG" | "MEDIUM";
+  detectedAt: number;
+  pricePoints: VizPoint[];
+  rsiPoints: VizPoint[];
+};
 
 function detectDivergence(candles: Candle[], rsi: number[]): DivHit[] {
   const hits: DivHit[] = [];
@@ -262,6 +287,14 @@ function detectDivergence(candles: Candle[], rsi: number[]): DivHit[] {
         direction: "BULLISH",
         strength: last.r < 38 ? "STRONG" : "MEDIUM",
         detectedAt: last.time,
+        pricePoints: [
+          { time: prev.time, price: prev.price, label: "L1" },
+          { time: last.time, price: last.price, label: "L2" },
+        ],
+        rsiPoints: [
+          { time: prev.time, price: prev.r, label: "R1" },
+          { time: last.time, price: last.r, label: "R2" },
+        ],
       });
     }
   }
@@ -274,6 +307,14 @@ function detectDivergence(candles: Candle[], rsi: number[]): DivHit[] {
         direction: "BEARISH",
         strength: last.r > 62 ? "STRONG" : "MEDIUM",
         detectedAt: last.time,
+        pricePoints: [
+          { time: prev.time, price: prev.price, label: "H1" },
+          { time: last.time, price: last.price, label: "H2" },
+        ],
+        rsiPoints: [
+          { time: prev.time, price: prev.r, label: "R1" },
+          { time: last.time, price: last.r, label: "R2" },
+        ],
       });
     }
   }
@@ -282,7 +323,13 @@ function detectDivergence(candles: Candle[], rsi: number[]): DivHit[] {
 }
 
 // ── Zone Breakout ─────────────────────────────────────────────────────────
-type ZoneHit = { direction: "BULLISH" | "BEARISH"; strength: "STRONG" | "MEDIUM"; detectedAt: number };
+type ZoneHit = {
+  direction: "BULLISH" | "BEARISH";
+  strength: "STRONG" | "MEDIUM";
+  detectedAt: number;
+  zoneLow: number;
+  zoneHigh: number;
+};
 
 function detectZoneBreak(candles: Candle[]): ZoneHit[] {
   if (candles.length < 70) return [];
@@ -300,9 +347,19 @@ function detectZoneBreak(candles: Candle[]): ZoneHit[] {
     return cs.reduce((s, c) => s + (c.high + c.low) / 2 * c.volume, 0) / totalVol;
   };
 
-  const resistance = vwap(hist.filter((c) => (c.high + c.low) / 2 >= p80));
-  const support    = vwap(hist.filter((c) => (c.high + c.low) / 2 <= p20));
+  const resHist = hist.filter((c) => (c.high + c.low) / 2 >= p80);
+  const supHist = hist.filter((c) => (c.high + c.low) / 2 <= p20);
+  const resistance = vwap(resHist);
+  const support    = vwap(supHist);
   const avgVol     = hist.reduce((s, c) => s + c.volume, 0) / hist.length;
+
+  // Zone bands — top/bottom of the cluster of bars in each zone
+  const resBand: [number, number] = resHist.length > 0
+    ? [Math.min(...resHist.map((c) => c.low)), Math.max(...resHist.map((c) => c.high))]
+    : [resistance * 0.995, resistance * 1.005];
+  const supBand: [number, number] = supHist.length > 0
+    ? [Math.min(...supHist.map((c) => c.low)), Math.max(...supHist.map((c) => c.high))]
+    : [support * 0.995, support * 1.005];
 
   const hits: ZoneHit[] = [];
   const recent = candles.slice(-20);
@@ -314,10 +371,20 @@ function detectZoneBreak(candles: Candle[]): ZoneHit[] {
     const volStrong = vol > avgVol * 1.3;
 
     if (prev < resistance && curr > resistance) {
-      hits.push({ direction: "BULLISH", strength: volStrong ? "STRONG" : "MEDIUM", detectedAt: recent[i].time });
+      hits.push({
+        direction: "BULLISH",
+        strength: volStrong ? "STRONG" : "MEDIUM",
+        detectedAt: recent[i].time,
+        zoneLow: resBand[0], zoneHigh: resBand[1],
+      });
     }
     if (prev > support && curr < support) {
-      hits.push({ direction: "BEARISH", strength: volStrong ? "STRONG" : "MEDIUM", detectedAt: recent[i].time });
+      hits.push({
+        direction: "BEARISH",
+        strength: volStrong ? "STRONG" : "MEDIUM",
+        detectedAt: recent[i].time,
+        zoneLow: supBand[0], zoneHigh: supBand[1],
+      });
     }
   }
 
@@ -371,6 +438,10 @@ async function processCell(symbol: string, tf: TF): Promise<CryptoSignal[]> {
   const recency = RECENCY[tf];
   const out: CryptoSignal[] = [];
 
+  // Last ~120 candles for chart rendering
+  const vizCandles = candles.slice(-120);
+  const rsiSeries = candles.map((c, i) => ({ time: c.time, value: rsi[i] })).filter((p) => !isNaN(p.value)).slice(-120);
+
   for (const d of detectDivergence(candles, rsi)) {
     const { ko, en } = buildDesc(base, tf, "DIVERGENCE", d.direction);
     out.push({
@@ -379,6 +450,8 @@ async function processCell(symbol: string, tf: TF): Promise<CryptoSignal[]> {
       type: "DIVERGENCE", direction: d.direction,
       currentPrice: price, strength: d.strength,
       descriptionKo: ko, descriptionEn: en, detectedAt: d.detectedAt,
+      candles: vizCandles,
+      viz: { kind: "DIVERGENCE", pricePoints: d.pricePoints, rsiPoints: d.rsiPoints, rsi: rsiSeries },
     });
   }
 
@@ -391,6 +464,8 @@ async function processCell(symbol: string, tf: TF): Promise<CryptoSignal[]> {
       currentPrice: price, przMin: h.przMin, przMax: h.przMax,
       strength: "MEDIUM",
       descriptionKo: ko, descriptionEn: en, detectedAt: h.detectedAt,
+      candles: vizCandles,
+      viz: { kind: "HARMONIC", points: h.points, przMin: h.przMin, przMax: h.przMax },
     });
   }
 
@@ -402,6 +477,8 @@ async function processCell(symbol: string, tf: TF): Promise<CryptoSignal[]> {
       type: "ZONE_BREAK", direction: z.direction,
       currentPrice: price, strength: z.strength,
       descriptionKo: ko, descriptionEn: en, detectedAt: z.detectedAt,
+      candles: vizCandles,
+      viz: { kind: "ZONE_BREAK", zoneLow: z.zoneLow, zoneHigh: z.zoneHigh, breakoutTime: z.detectedAt },
     });
   }
 

@@ -8,6 +8,7 @@ import {
   type CryptoSignal,
   type TF,
 } from "@/lib/cryptoSignals";
+import SignalChartModal from "./SignalChartModal";
 import styles from "./SignalsPanel.module.css";
 
 type TypeFilter = "ALL" | "HARMONIC" | "DIVERGENCE" | "ZONE_BREAK";
@@ -31,6 +32,7 @@ export default function SignalsPanel() {
   const [lastScan, setLastScan] = useState<number>(0);
   const [typeFilter, setTypeFilter] = useState<TypeFilter>("ALL");
   const [dirFilter, setDirFilter]   = useState<DirFilter>("ALL");
+  const [selected,   setSelected]   = useState<CryptoSignal | null>(null);
 
   const C = COPY[language];
 
@@ -150,11 +152,20 @@ export default function SignalsPanel() {
         {filtered.length > 0 && (
           <div className={styles.cardGrid}>
             {filtered.map((s) => (
-              <SignalCard key={s.id} signal={s} language={language} />
+              <SignalCard
+                key={s.id}
+                signal={s}
+                language={language}
+                onClick={() => setSelected(s)}
+              />
             ))}
           </div>
         )}
       </div>
+
+      {selected && (
+        <SignalChartModal signal={selected} onClose={() => setSelected(null)} />
+      )}
     </section>
   );
 }
@@ -181,9 +192,11 @@ function SummaryCard({
 function SignalCard({
   signal,
   language,
+  onClick,
 }: {
   signal: CryptoSignal;
   language: "ko" | "en";
+  onClick: () => void;
 }) {
   const tint = COIN_TINT[signal.base] ?? "#64748b";
   const isBull = signal.direction === "BULLISH";
@@ -195,6 +208,10 @@ function SignalCard({
 
   return (
     <article
+      role="button"
+      tabIndex={0}
+      onClick={onClick}
+      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onClick(); } }}
       className={`${styles.card} ${isBull ? styles.cardBull : styles.cardBear}`}
       style={{ "--tint": tint } as React.CSSProperties}
     >
