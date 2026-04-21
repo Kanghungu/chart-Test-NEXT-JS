@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useLanguage } from "@/components/i18n/LanguageProvider";
+import SignalsPanel from "@/components/crypto/SignalsPanel";
 import styles from "./page.module.css";
 
 // ── Types ─────────────────────────────────────────────────────────────────
@@ -247,12 +248,17 @@ export default function CryptoPage() {
         </section>
 
         {/* ═══════════════════════════════════════════════════════════════ */}
+        {/* SIGNALS (harmonic / divergence / zone-break)                     */}
+        {/* ═══════════════════════════════════════════════════════════════ */}
+        <SignalsPanel />
+
+        {/* ═══════════════════════════════════════════════════════════════ */}
         {/* COIN PICKER                                                       */}
         {/* ═══════════════════════════════════════════════════════════════ */}
         <section className={styles.pickerSection}>
           <div className={styles.pickerHeader}>
             <div>
-              <p className={styles.panelKicker}>02 · PICK</p>
+              <p className={styles.panelKicker}>03 · PICK</p>
               <h2 className={styles.panelTitle}>{c.picker}</h2>
               <p className={styles.panelHint}>{c.pickerHint}</p>
             </div>
@@ -294,7 +300,7 @@ export default function CryptoPage() {
               <div className={styles.detailLeft}>
                 <span className={styles.detailCoinMark}>{COIN_INFO[coin].symbol}</span>
                 <div>
-                  <p className={styles.detailKicker}>{c.detailKicker} · 03</p>
+                  <p className={styles.detailKicker}>{c.detailKicker} · 04</p>
                   <h2 className={styles.detailTitle}>
                     {coin}<span className={styles.detailPair}>/USDT</span>
                   </h2>
