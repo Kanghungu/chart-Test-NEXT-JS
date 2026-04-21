@@ -39,6 +39,14 @@ const TFS: { value: TF; label: string }[] = [
   { value: "1D",  label: "1D"  },
 ];
 
+// Technical-analysis widget expects different interval tokens than the chart widget
+const TA_INTERVAL: Record<TF, string> = {
+  "15":  "15m",
+  "60":  "1h",
+  "240": "4h",
+  "1D":  "1D",
+};
+
 // ── TradingView widget injector ────────────────────────────────────────────
 function TVWidget({
   src,
@@ -209,9 +217,10 @@ export default function CryptoPage() {
                   title:      co,
                 })),
                 showSymbolLogo: true,
-                isTransparent:  true,
+                isTransparent:  false,
                 displayMode:    "adaptive",
                 colorTheme:     "dark",
+                backgroundColor:"#060d1f",
                 locale,
               }}
             />
@@ -240,8 +249,9 @@ export default function CryptoPage() {
                 screener_type:   "crypto_mkt",
                 displayCurrency: "USD",
                 colorTheme:      "dark",
+                backgroundColor: "#060d1f",
                 locale,
-                isTransparent:   true,
+                isTransparent:   false,
               }}
             />
           </div>
@@ -337,26 +347,42 @@ export default function CryptoPage() {
                 height={220}
                 src="https://s3.tradingview.com/external-embedding/embed-widget-symbol-overview.js"
                 config={{
-                  symbols:          [[TV_SYMBOL[coin], TV_SYMBOL[coin] + "|1D"]],
-                  chartOnly:        false,
-                  width:            "100%",
-                  height:           210,
+                  symbols:                   [[TV_SYMBOL[coin], TV_SYMBOL[coin] + "|1D"]],
+                  chartOnly:                 false,
+                  width:                     "100%",
+                  height:                    210,
                   locale,
-                  colorTheme:       "dark",
-                  autosize:         false,
-                  showVolume:       false,
-                  showMA:           false,
-                  hideDateRanges:   false,
-                  hideMarketStatus: false,
-                  hideSymbolLogo:   false,
-                  scalePosition:    "right",
-                  scaleMode:        "Normal",
-                  fontFamily:       "-apple-system, BlinkMacSystemFont, Inter, Roboto, sans-serif",
-                  fontSize:         "10",
-                  noTimeScale:      false,
-                  valuesTracking:   "1",
-                  changeMode:       "price-and-percent",
-                  isTransparent:    true,
+                  colorTheme:                "dark",
+                  autosize:                  false,
+                  showVolume:                false,
+                  showMA:                    false,
+                  hideDateRanges:            false,
+                  hideMarketStatus:          false,
+                  hideSymbolLogo:            false,
+                  scalePosition:             "right",
+                  scaleMode:                 "Normal",
+                  fontFamily:                "-apple-system, BlinkMacSystemFont, Inter, Roboto, sans-serif",
+                  fontSize:                  "10",
+                  noTimeScale:               false,
+                  valuesTracking:            "1",
+                  changeMode:                "price-and-percent",
+                  isTransparent:             true,
+                  // Dark color overrides — widget defaults to white plot area
+                  backgroundColor:           "rgba(0, 0, 0, 0)",
+                  widgetFontColor:           "#cbd5e1",
+                  lineColor:                 "#38bdf8",
+                  topColor:                  "rgba(56, 189, 248, 0.28)",
+                  bottomColor:               "rgba(56, 189, 248, 0.0)",
+                  gridLineColor:             "rgba(51, 65, 85, 0.3)",
+                  scaleFontColor:            "#94a3b8",
+                  belowLineFillColorGrowing: "rgba(74, 222, 128, 0.12)",
+                  belowLineFillColorFalling: "rgba(248, 113, 113, 0.12)",
+                  upColor:                   "#4ade80",
+                  downColor:                 "#f87171",
+                  borderUpColor:             "#4ade80",
+                  borderDownColor:           "#f87171",
+                  wickUpColor:               "#4ade80",
+                  wickDownColor:             "#f87171",
                 }}
               />
             </div>
@@ -379,15 +405,16 @@ export default function CryptoPage() {
                   height={460}
                   src="https://s3.tradingview.com/external-embedding/embed-widget-technical-analysis.js"
                   config={{
-                    interval:         tf,
+                    interval:         TA_INTERVAL[tf],
                     width:            "100%",
                     height:           450,
                     symbol:           TV_SYMBOL[coin],
                     showIntervalTabs: false,
                     displayMode:      "single",
                     colorTheme:       "dark",
+                    backgroundColor:  "#060d1f",
                     locale,
-                    isTransparent:    true,
+                    isTransparent:    false,
                   }}
                 />
               </div>
