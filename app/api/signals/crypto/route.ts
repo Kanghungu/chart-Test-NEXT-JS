@@ -44,7 +44,10 @@ export type CryptoSignalsResponse = {
 };
 
 // ── Config ─────────────────────────────────────────────────────────────────
-const SYMBOLS = ["BTCUSDT", "ETHUSDT", "SOLUSDT", "XRPUSDT", "BNBUSDT", "ADAUSDT", "DOGEUSDT"];
+const SYMBOLS = [
+  "BTCUSDT", "ETHUSDT", "SOLUSDT", "XRPUSDT", "BNBUSDT", "ADAUSDT", "DOGEUSDT",
+  "VIRTUALUSDT", "TAOUSDT", "WLDUSDT", "MAGICUSDT", "LTCUSDT", "ENAUSDT", "TURBOUSDT",
+];
 const TIMEFRAMES: TF[] = ["15m", "1h", "4h"];
 const PIVOT_N: Record<TF, number> = { "15m": 3, "1h": 4, "4h": 5 };
 const RECENCY:  Record<TF, number> = { "15m": 24, "1h": 20, "4h": 14 };

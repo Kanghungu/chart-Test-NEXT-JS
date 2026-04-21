@@ -58,6 +58,7 @@ export type CryptoSignal = {
 // ── Config ─────────────────────────────────────────────────────────────────
 export const CRYPTO_SYMBOLS = [
   "BTCUSDT", "ETHUSDT", "SOLUSDT", "XRPUSDT", "BNBUSDT", "ADAUSDT", "DOGEUSDT",
+  "VIRTUALUSDT", "TAOUSDT", "WLDUSDT", "MAGICUSDT", "LTCUSDT", "ENAUSDT", "TURBOUSDT",
 ];
 export const CRYPTO_TFS: TF[] = ["15m", "1h", "4h"];
 
