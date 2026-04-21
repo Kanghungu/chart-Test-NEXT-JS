@@ -168,19 +168,102 @@ function findPivots(candles: Candle[], n: number): Pivot[] {
 }
 
 // ── Harmonic ──────────────────────────────────────────────────────────────
-const HARMONIC_DEFS: Array<{ name: string; ab_xa: [number, number]; xd_xa: [number, number] }> = [
-  { name: "Bat",       ab_xa: [0.28, 0.55], xd_xa: [0.80, 0.96] },
-  { name: "Gartley",   ab_xa: [0.54, 0.68], xd_xa: [0.72, 0.84] },
-  { name: "Butterfly", ab_xa: [0.70, 0.86], xd_xa: [1.15, 1.75] },
-  { name: "Crab",      ab_xa: [0.28, 0.66], xd_xa: [1.54, 1.75] },
-  { name: "Deep Crab", ab_xa: [0.80, 0.95], xd_xa: [1.54, 1.75] },
-  { name: "Shark",     ab_xa: [1.00, 1.80], xd_xa: [0.80, 1.20] },
-  { name: "Cypher",    ab_xa: [0.33, 0.65], xd_xa: [0.72, 0.84] },
-];
+// Tolerance: ±5% for B/XA, C ratios; ±6% for D ratios
+const H_TOL_BC = 0.05;
+const H_TOL_D  = 0.06;
 
-function inRange(v: number, lo: number, hi: number, tol = 0.08): boolean {
+function inRange(v: number, lo: number, hi: number, tol: number): boolean {
   return v >= lo - tol && v <= hi + tol;
 }
+
+/**
+ * C-point measurement variants:
+ *   "c_ab"  : |BC| / |AB|           – standard retracement of AB
+ *   "bc_xb" : |BC| / |XB|           – Cypher: C extension relative to XB leg
+ *   "xc_xa" : |XC| / |XA|           – Shark:  C extends BEYOND A (>1.0)
+ *
+ * D-point measurement variants:
+ *   "ad_xa" : |AD| / |XA|           – standard (Gartley, Bat, Butterfly, Crab…)
+ *   "cd_xc" : |CD| / |XC|           – Cypher: D retraces XC leg
+ */
+type CCheck =
+  | { type: "c_ab";  range: [number, number] }
+  | { type: "bc_xb"; range: [number, number] }
+  | { type: "xc_xa"; range: [number, number] };
+
+type DCheck =
+  | { type: "ad_xa"; range: [number, number] }
+  | { type: "cd_xc"; range: [number, number] };
+
+type HarmonicDef = {
+  name: string;
+  b_xa:   [number, number];   // |AB| / |XA|
+  c_check: CCheck;
+  d_check: DCheck;
+  cd_bc?: [number, number];   // optional |CD| / |BC| confluence check
+};
+
+const HARMONIC_DEFS: HarmonicDef[] = [
+  // ── Classic patterns ────────────────────────────────────────────────────
+  {
+    name: "Gartley",
+    b_xa:    [0.566, 0.670],
+    c_check: { type: "c_ab",  range: [0.382, 0.886] },
+    d_check: { type: "ad_xa", range: [0.726, 0.846] },
+    cd_bc:   [1.13, 1.618],
+  },
+  {
+    name: "Bat",
+    b_xa:    [0.332, 0.530],
+    c_check: { type: "c_ab",  range: [0.382, 0.886] },
+    d_check: { type: "ad_xa", range: [0.836, 0.936] },
+    cd_bc:   [1.618, 2.618],
+  },
+  {
+    name: "Alt Bat",
+    b_xa:    [0.332, 0.432],
+    c_check: { type: "c_ab",  range: [0.382, 0.886] },
+    d_check: { type: "ad_xa", range: [1.080, 1.180] },
+    cd_bc:   [2.0,   3.618],
+  },
+  {
+    name: "Butterfly",
+    b_xa:    [0.736, 0.836],
+    c_check: { type: "c_ab",  range: [0.382, 0.886] },
+    d_check: { type: "ad_xa", range: [1.202, 1.342] },
+    cd_bc:   [1.618, 2.24],
+  },
+  {
+    name: "Crab",
+    b_xa:    [0.332, 0.668],
+    c_check: { type: "c_ab",  range: [0.382, 0.886] },
+    d_check: { type: "ad_xa", range: [1.568, 1.668] },
+    cd_bc:   [2.24,  3.618],
+  },
+  {
+    name: "Deep Crab",
+    b_xa:    [0.836, 0.936],
+    c_check: { type: "c_ab",  range: [0.382, 0.886] },
+    d_check: { type: "ad_xa", range: [1.568, 1.668] },
+    cd_bc:   [2.0,   3.618],
+  },
+  // ── Special patterns ────────────────────────────────────────────────────
+  {
+    // Shark: B is inside XA; C extends BEYOND A (|XC|/XA > 1.0); D between X and A
+    name: "Shark",
+    b_xa:    [0.332, 0.668],
+    c_check: { type: "xc_xa", range: [1.080, 1.668] },
+    d_check: { type: "ad_xa", range: [0.836, 1.180] },
+    cd_bc:   [1.618, 2.24],
+  },
+  {
+    // Cypher: B inside XA; C measured vs |XB| leg; D retraces XC to 0.786
+    name: "Cypher",
+    b_xa:    [0.332, 0.668],
+    c_check: { type: "bc_xb", range: [1.222, 1.464] },
+    d_check: { type: "cd_xc", range: [0.736, 0.836] },
+  },
+];
 
 type HarmonicHit = {
   name: string;
@@ -195,57 +278,94 @@ function detectHarmonics(pivots: Pivot[], candles: Candle[], recency: number): H
   const hits: HarmonicHit[] = [];
   if (pivots.length < 5) return hits;
 
-  const recent = pivots.slice(-14);
+  const recent = pivots.slice(-16);
   const candleLen = candles.length;
 
   for (let i = 0; i <= recent.length - 5; i++) {
     const [X, A, B, C, D] = recent.slice(i, i + 5);
+
+    // XABCD must alternate high/low
     if (X.type === A.type || A.type === B.type || B.type === C.type || C.type === D.type) continue;
 
+    // Bullish: X=low, A=high, B=low, C=high, D=low  → buy at D
+    // Bearish: X=high, A=low, B=high, C=low, D=high → sell at D
     const bullish = X.type === "low"  && D.type === "low";
     const bearish = X.type === "high" && D.type === "high";
     if (!bullish && !bearish) continue;
 
+    // D must be recent enough
     if (D.index < candleLen - recency) continue;
 
+    // Core leg measurements
     const XA = Math.abs(A.price - X.price);
     const AB = Math.abs(B.price - A.price);
-    if (XA < 1e-10 || AB < 1e-10) continue;
+    const BC = Math.abs(C.price - B.price);
+    const CD = Math.abs(D.price - C.price);
+    const XB = Math.abs(B.price - X.price);
+    const XC = Math.abs(C.price - X.price);
+    const AD = Math.abs(D.price - A.price);
+    if (XA < 1e-10 || AB < 1e-10 || BC < 1e-10 || CD < 1e-10) continue;
 
-    const ab_xa = AB / XA;
-    const xd_xa = Math.abs(D.price - X.price) / XA;
-    const spread = D.price * 0.02;
     const direction: "BULLISH" | "BEARISH" = bullish ? "BULLISH" : "BEARISH";
 
     for (const def of HARMONIC_DEFS) {
-      if (inRange(ab_xa, def.ab_xa[0], def.ab_xa[1]) &&
-          inRange(xd_xa, def.xd_xa[0], def.xd_xa[1])) {
-        hits.push({
-          name: def.name,
-          direction,
-          przMin: D.price - spread,
-          przMax: D.price + spread,
-          detectedAt: D.time,
-          points: [
-            { time: X.time, price: X.price, label: "X" },
-            { time: A.time, price: A.price, label: "A" },
-            { time: B.time, price: B.price, label: "B" },
-            { time: C.time, price: C.price, label: "C" },
-            { time: D.time, price: D.price, label: "D" },
-          ],
-        });
-        break;
+      // ① B/XA retracement
+      if (!inRange(AB / XA, def.b_xa[0], def.b_xa[1], H_TOL_BC)) continue;
+
+      // ② C check (varies by pattern)
+      let cOk = false;
+      const cc = def.c_check;
+      if (cc.type === "c_ab")  cOk = inRange(BC / AB, cc.range[0], cc.range[1], H_TOL_BC);
+      if (cc.type === "bc_xb") cOk = XB > 1e-10 && inRange(BC / XB, cc.range[0], cc.range[1], H_TOL_BC);
+      if (cc.type === "xc_xa") cOk = inRange(XC / XA, cc.range[0], cc.range[1], H_TOL_BC);
+      if (!cOk) continue;
+
+      // ③ D check (varies by pattern)
+      let dOk = false;
+      const dc = def.d_check;
+      if (dc.type === "ad_xa") dOk = inRange(AD / XA, dc.range[0], dc.range[1], H_TOL_D);
+      if (dc.type === "cd_xc") dOk = XC > 1e-10 && inRange(CD / XC, dc.range[0], dc.range[1], H_TOL_D);
+      if (!dOk) continue;
+
+      // ④ CD/BC confluence (optional, skip if not defined)
+      if (def.cd_bc) {
+        if (!inRange(CD / BC, def.cd_bc[0], def.cd_bc[1], H_TOL_D)) continue;
       }
+
+      // ── PRZ calculation ──────────────────────────────────────────────
+      // Primary: D itself
+      // Secondary: AB=CD confluence — project CD leg from C
+      const abcd = bullish
+        ? C.price - AB   // C minus AB length → projected D
+        : C.price + AB;
+      const przLow  = Math.min(D.price, abcd) * 0.995;
+      const przHigh = Math.max(D.price, abcd) * 1.005;
+
+      hits.push({
+        name: def.name,
+        direction,
+        przMin: przLow,
+        przMax: przHigh,
+        detectedAt: D.time,
+        points: [
+          { time: X.time, price: X.price, label: "X" },
+          { time: A.time, price: A.price, label: "A" },
+          { time: B.time, price: B.price, label: "B" },
+          { time: C.time, price: C.price, label: "C" },
+          { time: D.time, price: D.price, label: "D" },
+        ],
+      });
+      break; // first matching def wins
     }
   }
 
-  const seen = new Set<string>();
-  return hits.filter((h) => {
+  // Deduplicate: keep the most-recent occurrence of each name+direction pair
+  const seen = new Map<string, HarmonicHit>();
+  for (const h of hits) {
     const k = `${h.name}-${h.direction}`;
-    if (seen.has(k)) return false;
-    seen.add(k);
-    return true;
-  });
+    if (!seen.has(k) || h.detectedAt > seen.get(k)!.detectedAt) seen.set(k, h);
+  }
+  return Array.from(seen.values());
 }
 
 // ── Divergence ────────────────────────────────────────────────────────────
