@@ -1,0 +1,458 @@
+.panel {
+  position: relative;
+  background: var(--gradient-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--glow-blue);
+  overflow: hidden;
+}
+
+.panel::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(56, 189, 248, 0.4), transparent);
+}
+
+/* ── Header ────────────────────────────────────────────────────────────── */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1.5rem;
+  padding: 1.5rem 1.75rem 1rem;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.kicker {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  color: var(--accent-blue);
+  text-transform: uppercase;
+  margin-bottom: 0.5rem;
+}
+
+.title {
+  font-size: 1.45rem;
+  font-weight: 700;
+  color: var(--foreground);
+  letter-spacing: -0.01em;
+  margin: 0 0 0.35rem;
+}
+
+.hint {
+  color: var(--muted);
+  font-size: 0.85rem;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.headerRight {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.6rem;
+  flex-shrink: 0;
+}
+
+.scanLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--muted);
+  letter-spacing: 0.05em;
+}
+
+.scanDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent-green);
+  box-shadow: 0 0 8px var(--accent-green);
+}
+
+.scanDotActive {
+  animation: pulse 1.2s ease-in-out infinite;
+  background: var(--accent-amber);
+  box-shadow: 0 0 10px var(--accent-amber);
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%      { opacity: 0.5; transform: scale(1.3); }
+}
+
+.refreshBtn {
+  background: var(--surface-2);
+  border: 1px solid var(--border-default);
+  color: var(--foreground);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  padding: 0.4rem 0.85rem;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  letter-spacing: 0.05em;
+}
+
+.refreshBtn:hover:not(:disabled) {
+  background: var(--accent-blue-dim);
+  border-color: var(--accent-blue);
+  color: var(--accent-blue);
+}
+
+.refreshBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ── Summary ───────────────────────────────────────────────────────────── */
+.summaryGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.75rem;
+  padding: 1.25rem 1.75rem 0;
+}
+
+.summaryCard {
+  position: relative;
+  padding: 1rem 1.1rem;
+  background: var(--surface-2);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  overflow: hidden;
+}
+
+.summaryCard::after {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 2px;
+  background: currentColor;
+  opacity: 0.7;
+}
+
+.tone_neutral { color: var(--muted-strong); }
+.tone_bullish { color: var(--accent-green); box-shadow: 0 0 16px rgba(74, 222, 128, 0.08) inset; }
+.tone_bearish { color: var(--accent-red);   box-shadow: 0 0 16px rgba(248, 113, 113, 0.08) inset; }
+.tone_strong  { color: var(--accent-amber); box-shadow: 0 0 16px rgba(251, 191, 36, 0.08) inset; }
+
+.summaryLabel {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.summaryValue {
+  font-family: var(--font-mono);
+  font-size: 1.75rem;
+  font-weight: 700;
+  line-height: 1;
+  color: currentColor;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Filter row ────────────────────────────────────────────────────────── */
+.filterRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.25rem;
+  padding: 1.25rem 1.75rem;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.filterGroup {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+}
+
+.filterLabel {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-right: 0.25rem;
+}
+
+.pill {
+  background: var(--surface-1);
+  border: 1px solid var(--border-subtle);
+  color: var(--muted-strong);
+  font-size: 0.78rem;
+  padding: 0.4rem 0.9rem;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  letter-spacing: 0.01em;
+}
+
+.pill:hover {
+  background: var(--surface-3);
+  color: var(--foreground);
+  border-color: var(--border-default);
+}
+
+.pillActive {
+  background: var(--accent-blue-dim);
+  color: var(--accent-blue);
+  border-color: var(--accent-blue);
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.15);
+}
+
+.pill_BULLISH.pillActive {
+  background: var(--accent-green-dim);
+  color: var(--accent-green);
+  border-color: var(--accent-green);
+  box-shadow: 0 0 12px rgba(74, 222, 128, 0.18);
+}
+
+.pill_BEARISH.pillActive {
+  background: var(--accent-red-dim);
+  color: var(--accent-red);
+  border-color: var(--accent-red);
+  box-shadow: 0 0 12px rgba(248, 113, 113, 0.18);
+}
+
+/* ── Body / states ─────────────────────────────────────────────────────── */
+.body {
+  padding: 1.25rem 1.75rem 1.75rem;
+}
+
+.stateBox {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  padding: 3rem 1.5rem;
+  color: var(--muted);
+  text-align: center;
+  background: var(--surface-1);
+  border: 1px dashed var(--border-subtle);
+  border-radius: var(--radius-md);
+}
+
+.errorText {
+  color: var(--accent-red);
+  font-weight: 600;
+}
+
+.hintSm {
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.spinner {
+  width: 28px;
+  height: 28px;
+  border: 2px solid var(--border-default);
+  border-top-color: var(--accent-blue);
+  border-radius: 50%;
+  animation: spin 0.9s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Card grid ─────────────────────────────────────────────────────────── */
+.cardGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1rem;
+}
+
+.card {
+  position: relative;
+  background: var(--surface-1);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 1.1rem 1.1rem 1rem 1.35rem;
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  border-color: var(--tint);
+  box-shadow:
+    0 12px 32px -8px rgba(0, 0, 0, 0.5),
+    0 0 18px -4px color-mix(in oklch, var(--tint) 45%, transparent);
+}
+
+.cardBull { background: linear-gradient(135deg, color-mix(in oklch, var(--tint) 10%, var(--surface-1)), var(--surface-1) 60%); }
+.cardBear { background: linear-gradient(135deg, color-mix(in oklch, var(--tint) 10%, var(--surface-1)), var(--surface-1) 60%); }
+
+.cardTintBar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--tint);
+  box-shadow: 0 0 12px var(--tint);
+}
+
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.6rem;
+}
+
+.cardBaseWrap {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.cardBase {
+  font-family: var(--font-mono);
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--foreground);
+  letter-spacing: 0.02em;
+}
+
+.cardTf {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--muted);
+  background: var(--surface-2);
+  padding: 0.12rem 0.45rem;
+  border-radius: 4px;
+  letter-spacing: 0.05em;
+}
+
+.dirBadge {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0.22rem 0.55rem;
+  border-radius: 4px;
+  letter-spacing: 0.06em;
+}
+
+.dirBull {
+  background: var(--accent-green-dim);
+  color: var(--accent-green);
+}
+
+.dirBear {
+  background: var(--accent-red-dim);
+  color: var(--accent-red);
+}
+
+.cardBadges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-bottom: 0.7rem;
+}
+
+.typeBadge {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 600;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border: 1px solid currentColor;
+}
+
+.type_HARMONIC   { color: var(--accent-purple); }
+.type_DIVERGENCE { color: var(--accent-blue); }
+.type_ZONE_BREAK { color: var(--accent-amber); }
+
+.patternBadge {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 600;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  color: var(--muted-strong);
+  background: var(--surface-2);
+  letter-spacing: 0.04em;
+}
+
+.strongBadge {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  color: var(--accent-amber);
+  background: var(--accent-amber-dim);
+  letter-spacing: 0.08em;
+}
+
+.cardDesc {
+  font-size: 0.82rem;
+  line-height: 1.5;
+  color: var(--muted-strong);
+  margin: 0 0 0.85rem;
+}
+
+.cardMeta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  padding-top: 0.7rem;
+  border-top: 1px solid var(--border-subtle);
+  margin: 0;
+}
+
+.metaRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 0.75rem;
+}
+
+.metaRow dt {
+  font-family: var(--font-mono);
+  color: var(--muted);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-size: 0.68rem;
+}
+
+.metaRow dd {
+  font-family: var(--font-mono);
+  color: var(--muted-strong);
+  font-variant-numeric: tabular-nums;
+  margin: 0;
+}
+
+.priceValue {
+  color: var(--foreground) !important;
+  font-weight: 600;
+}
+
+.przValue {
+  color: var(--accent-amber) !important;
+}
+
+@media (max-width: 768px) {
+  .header         { flex-direction: column; align-items: stretch; padding: 1.1rem 1.25rem 0.9rem; }
+  .headerRight    { align-items: flex-start; flex-direction: row; justify-content: space-between; }
+  .summaryGrid    { grid-template-columns: repeat(2, 1fr); padding: 1rem 1.25rem 0; }
+  .filterRow      { padding: 1rem 1.25rem; gap: 0.8rem; }
+  .body           { padding: 1rem 1.25rem 1.5rem; }
+  .cardGrid       { grid-template-columns: 1fr; }
+  .title          { font-size: 1.2rem; }
+}
