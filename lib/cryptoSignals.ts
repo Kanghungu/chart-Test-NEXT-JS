@@ -32,7 +32,7 @@ export type VizPoint = { time: number; price: number; label?: string };
 export type SignalViz =
   | { kind: "HARMONIC"; points: VizPoint[]; przMin: number; przMax: number }
   | { kind: "DIVERGENCE"; pricePoints: VizPoint[]; rsiPoints: VizPoint[]; rsi: Array<{ time: number; value: number }> }
-  | { kind: "ZONE_BREAK"; zoneLow: number; zoneHigh: number; breakoutTime: number };
+  | { kind: "ZONE_BREAK"; zoneLow: number; zoneHigh: number; breakoutTime: number; zoneStartTime: number; zoneEndTime: number };
 
 export type CryptoSignal = {
   id: string;
@@ -498,7 +498,15 @@ async function processCell(symbol: string, tf: TF): Promise<CryptoSignal[]> {
       currentPrice: price, strength: z.strength,
       descriptionKo: ko, descriptionEn: en, detectedAt: z.detectedAt,
       candles: vizCandles,
-      viz: { kind: "ZONE_BREAK", zoneLow: z.zoneLow, zoneHigh: z.zoneHigh, breakoutTime: z.detectedAt },
+      viz: {
+        kind: "ZONE_BREAK",
+        zoneLow: z.zoneLow,
+        zoneHigh: z.zoneHigh,
+        breakoutTime: z.detectedAt,
+        // Zone historical window was candles.slice(-70, -20); box spans from there to last candle
+        zoneStartTime: candles[Math.max(0, candles.length - 70)].time,
+        zoneEndTime:   candles[candles.length - 1].time,
+      },
     });
   }
 
