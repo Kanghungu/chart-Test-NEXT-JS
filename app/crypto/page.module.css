@@ -115,7 +115,7 @@
 
 .liveClock {
   color: var(--muted-strong);
-  font-family: "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+  font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.04em;
   padding-left: 0.5rem;
