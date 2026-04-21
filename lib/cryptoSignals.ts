@@ -383,15 +383,20 @@ function detectZoneBreak(candles: Candle[]): ZoneHit[] {
     : [support * 0.995, support * 1.005];
 
   const hits: ZoneHit[] = [];
+  // Exclude the last candle (still forming — close not final).
+  // Also require the breakout candle's close to be meaningfully above/below
+  // the zone (≥ 0.25% buffer) to filter out wicks and borderline touches.
   const recent = candles.slice(-20);
+  const BREAK_BUFFER = 0.0025; // 0.25% min close distance past the zone
 
-  for (let i = 1; i < recent.length; i++) {
+  for (let i = 1; i < recent.length - 1; i++) {   // ← -1: skip forming candle
     const prev = recent[i - 1].close;
     const curr = recent[i].close;
     const vol  = recent[i].volume;
     const volStrong = vol > avgVol * 1.3;
 
-    if (prev < resistance && curr > resistance) {
+    // Bullish: closed convincingly above resistance
+    if (prev < resistance && curr > resistance * (1 + BREAK_BUFFER)) {
       hits.push({
         direction: "BULLISH",
         strength: volStrong ? "STRONG" : "MEDIUM",
@@ -399,7 +404,8 @@ function detectZoneBreak(candles: Candle[]): ZoneHit[] {
         zoneLow: resBand[0], zoneHigh: resBand[1],
       });
     }
-    if (prev > support && curr < support) {
+    // Bearish: closed convincingly below support
+    if (prev > support && curr < support * (1 - BREAK_BUFFER)) {
       hits.push({
         direction: "BEARISH",
         strength: volStrong ? "STRONG" : "MEDIUM",
@@ -525,8 +531,8 @@ export async function scanAllCryptoSignals(
 
   const typeScore = { HARMONIC: 2, DIVERGENCE: 1, ZONE_BREAK: 0 };
   signals.sort((a, b) => {
-    if (b.detectedAt !== a.detectedAt) return b.detectedAt - a.detectedAt;
     if (a.strength !== b.strength) return a.strength === "STRONG" ? -1 : 1;
+    if (b.detectedAt !== a.detectedAt) return b.detectedAt - a.detectedAt;
     return typeScore[b.type] - typeScore[a.type];
   });
 
