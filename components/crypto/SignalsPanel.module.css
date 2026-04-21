@@ -283,6 +283,20 @@
   padding: 1.1rem 1.1rem 1rem 1.35rem;
   overflow: hidden;
   transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  cursor: pointer;
+  outline: none;
+}
+
+.card::after {
+  content: "↗";
+  position: absolute;
+  top: 0.85rem;
+  right: 0.95rem;
+  font-size: 0.9rem;
+  color: var(--muted);
+  opacity: 0;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  pointer-events: none;
 }
 
 .card:hover {
@@ -291,6 +305,18 @@
   box-shadow:
     0 12px 32px -8px rgba(0, 0, 0, 0.5),
     0 0 18px -4px color-mix(in oklch, var(--tint) 45%, transparent);
+}
+
+.card:hover::after,
+.card:focus-visible::after {
+  opacity: 1;
+  transform: translate(2px, -2px);
+  color: var(--tint);
+}
+
+.card:focus-visible {
+  border-color: var(--tint);
+  box-shadow: 0 0 0 2px color-mix(in oklch, var(--tint) 40%, transparent);
 }
 
 .cardBull { background: linear-gradient(135deg, color-mix(in oklch, var(--tint) 10%, var(--surface-1)), var(--surface-1) 60%); }
