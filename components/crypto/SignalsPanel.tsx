@@ -200,6 +200,7 @@ function SignalCard({
 }) {
   const tint = COIN_TINT[signal.base] ?? "#64748b";
   const isBull = signal.direction === "BULLISH";
+  const isStrong = signal.strength === "STRONG";
   const typeLabel = TYPE_LABEL[language][signal.type];
   const dirLabel  = isBull ? (language === "ko" ? "상승" : "BULL") : (language === "ko" ? "하락" : "BEAR");
   const description = language === "ko" ? signal.descriptionKo : signal.descriptionEn;
@@ -212,7 +213,7 @@ function SignalCard({
       tabIndex={0}
       onClick={onClick}
       onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onClick(); } }}
-      className={`${styles.card} ${isBull ? styles.cardBull : styles.cardBear}`}
+      className={`${styles.card} ${isBull ? styles.cardBull : styles.cardBear} ${isStrong ? styles.cardStrong : ""}`}
       style={{ "--tint": tint } as React.CSSProperties}
     >
       <span className={styles.cardTintBar} aria-hidden="true" />
@@ -221,6 +222,7 @@ function SignalCard({
           <span className={styles.cardBase}>{signal.base}</span>
           <span className={styles.cardTf}>{tfLabel(signal.timeframe)}</span>
         </div>
+        {isStrong && <span className={styles.strongFlag}>STRONG</span>}
         <span className={`${styles.dirBadge} ${isBull ? styles.dirBull : styles.dirBear}`}>
           {isBull ? "▲" : "▼"} {dirLabel}
         </span>
@@ -233,7 +235,7 @@ function SignalCard({
         {signal.patternName && (
           <span className={styles.patternBadge}>{signal.patternName}</span>
         )}
-        {signal.strength === "STRONG" && (
+        {isStrong && (
           <span className={styles.strongBadge}>★ STRONG</span>
         )}
       </div>
