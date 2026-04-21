@@ -539,12 +539,142 @@
 .tfBtnActive:hover { background: linear-gradient(180deg, rgba(56,189,248,0.28), rgba(56,189,248,0.16)); }
 
 /* ═══════════════════════════════════════════════════════════════════════ */
+/* TA PANEL — Technical Analysis special variant                            */
+/* ═══════════════════════════════════════════════════════════════════════ */
+
+.taPanel {
+  --tint: #38bdf8;
+  border-top: 2px solid color-mix(in srgb, var(--tint) 70%, transparent);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--tint) 12%, transparent),
+    0 0 28px -6px color-mix(in srgb, var(--tint) 18%, transparent);
+}
+
+.taPanel::before {
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--tint) 50%, transparent),
+    color-mix(in srgb, var(--tint) 80%, transparent) 50%,
+    color-mix(in srgb, var(--tint) 50%, transparent)
+  ) !important;
+  opacity: 0.5 !important;
+}
+
+/* AI live badge top-right */
+.taBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.28rem 0.65rem;
+  font-size: 0.6rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  color: color-mix(in srgb, var(--tint) 90%, #fff);
+  background: color-mix(in srgb, var(--tint) 12%, rgba(6,13,31,0.85));
+  border: 1px solid color-mix(in srgb, var(--tint) 35%, transparent);
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+
+.taBadgePulse {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--tint) 100%, transparent);
+  box-shadow: 0 0 0 0 color-mix(in srgb, var(--tint) 60%, transparent);
+  animation: livePulse 1.8s ease-out infinite;
+}
+
+/* Indicator type chips */
+.taChipRow {
+  display: flex;
+  gap: 0.45rem;
+  padding: 0 1.25rem 0.85rem;
+  flex-wrap: wrap;
+}
+
+.taChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.28rem 0.7rem;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  border-radius: 6px;
+  border: 1px solid;
+}
+
+.taChipDot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.taChipOsc {
+  color: #a78bfa;
+  background: rgba(167,139,250,0.08);
+  border-color: rgba(167,139,250,0.25);
+}
+.taChipOsc .taChipDot { background: #a78bfa; box-shadow: 0 0 6px rgba(167,139,250,0.6); }
+
+.taChipMa {
+  color: #34d399;
+  background: rgba(52,211,153,0.08);
+  border-color: rgba(52,211,153,0.25);
+}
+.taChipMa .taChipDot { background: #34d399; box-shadow: 0 0 6px rgba(52,211,153,0.6); }
+
+.taChipPivot {
+  color: #fbbf24;
+  background: rgba(251,191,36,0.08);
+  border-color: rgba(251,191,36,0.25);
+}
+.taChipPivot .taChipDot { background: #fbbf24; box-shadow: 0 0 6px rgba(251,191,36,0.6); }
+
+/* Scan line animation behind the widget */
+.taScanWrap {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.taScanLine {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    color-mix(in srgb, var(--tint) 40%, transparent) 50%,
+    transparent 100%
+  );
+  animation: taScan 5s cubic-bezier(0.4,0,0.6,1) infinite;
+  opacity: 0;
+}
+
+@keyframes taScan {
+  0%   { top: 0%;   opacity: 0; }
+  5%   { opacity: 0.7; }
+  95%  { opacity: 0.4; }
+  100% { top: 100%; opacity: 0; }
+}
+
+.taPanel .panelBody {
+  position: relative;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════ */
 /* ANALYSIS GRID                                                            */
 /* ═══════════════════════════════════════════════════════════════════════ */
 
 .analysisGrid {
   display: grid;
-  grid-template-columns: 1fr 1.35fr;
+  grid-template-columns: 380px 1fr;
   gap: 1rem;
 }
 
