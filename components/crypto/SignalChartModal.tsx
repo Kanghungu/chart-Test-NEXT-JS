@@ -9,10 +9,15 @@ import {
   CrosshairMode,
   LineStyle,
   type IChartApi,
+  type ISeriesApi,
+  type ISeriesPrimitive,
+  type IPrimitivePaneView,
+  type IPrimitivePaneRenderer,
   type UTCTimestamp,
   type SeriesMarker,
   type LineData,
   type CandlestickData,
+  type Time,
 } from "lightweight-charts";
 import { useLanguage } from "@/components/i18n/LanguageProvider";
 import type { CryptoSignal } from "@/lib/cryptoSignals";
@@ -26,6 +31,87 @@ const COIN_TINT: Record<string, string> = {
 
 // Convert ms → seconds for lightweight-charts
 const toTs = (ms: number): UTCTimestamp => Math.floor(ms / 1000) as UTCTimestamp;
+
+// Convert "#rrggbb" → "rgba(r,g,b,a)"
+function hexToRgba(hex: string, alpha: number): string {
+  const h = hex.replace("#", "");
+  const r = parseInt(h.slice(0, 2), 16);
+  const g = parseInt(h.slice(2, 4), 16);
+  const b = parseInt(h.slice(4, 6), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+// ── Rectangle primitive — draws a filled box between two times and two prices
+class RectanglePrimitive implements ISeriesPrimitive<Time> {
+  constructor(
+    private _chart: IChartApi,
+    private _series: ISeriesApi<"Candlestick">,
+    private _t1: UTCTimestamp,
+    private _t2: UTCTimestamp,
+    private _priceLow: number,
+    private _priceHigh: number,
+    private _fillColor: string,
+    private _borderColor: string,
+  ) {}
+
+  paneViews(): readonly IPrimitivePaneView[] {
+    return [new RectPaneView(this._chart, this._series, this._t1, this._t2, this._priceLow, this._priceHigh, this._fillColor, this._borderColor)];
+  }
+}
+
+class RectPaneView implements IPrimitivePaneView {
+  constructor(
+    private _chart: IChartApi,
+    private _series: ISeriesApi<"Candlestick">,
+    private _t1: UTCTimestamp,
+    private _t2: UTCTimestamp,
+    private _priceLow: number,
+    private _priceHigh: number,
+    private _fillColor: string,
+    private _borderColor: string,
+  ) {}
+
+  zOrder() { return "normal" as const; }
+
+  renderer(): IPrimitivePaneRenderer {
+    const chart = this._chart;
+    const series = this._series;
+    const t1 = this._t1, t2 = this._t2;
+    const pLow = this._priceLow, pHigh = this._priceHigh;
+    const fill = this._fillColor, border = this._borderColor;
+
+    return {
+      draw(target) {
+        target.useBitmapCoordinateSpace((scope) => {
+          const ts = chart.timeScale();
+          const x1 = ts.timeToCoordinate(t1);
+          const x2 = ts.timeToCoordinate(t2);
+          const yHi = series.priceToCoordinate(pHigh);
+          const yLo = series.priceToCoordinate(pLow);
+          if (x1 === null || x2 === null || yHi === null || yLo === null) return;
+
+          const ctx = scope.context;
+          const hpr = scope.horizontalPixelRatio;
+          const vpr = scope.verticalPixelRatio;
+
+          const rx = Math.min(x1, x2) * hpr;
+          const rw = Math.abs(x2 - x1) * hpr;
+          const ry = Math.min(yHi, yLo) * vpr;
+          const rh = Math.abs(yLo - yHi) * vpr;
+
+          // Filled semi-transparent body
+          ctx.fillStyle = fill;
+          ctx.fillRect(rx, ry, rw, rh);
+
+          // Crisp border
+          ctx.strokeStyle = border;
+          ctx.lineWidth = Math.max(1, Math.floor(hpr));
+          ctx.strokeRect(rx, ry, rw, rh);
+        });
+      },
+    };
+  }
+}
 
 export default function SignalChartModal({
   signal,
@@ -132,46 +218,41 @@ export default function SignalChartModal({
         title: "PRZ Min",
       });
     } else if (signal.viz.kind === "ZONE_BREAK") {
-      const { zoneLow, zoneHigh, breakoutTime } = signal.viz;
+      const { zoneLow, zoneHigh, breakoutTime, zoneStartTime, zoneEndTime } = signal.viz;
       const zoneColor = signal.direction === "BULLISH" ? "#f87171" : "#4ade80"; // zone was resistance/support respectively
+      const fillColor   = hexToRgba(zoneColor, 0.18);
+      const borderColor = hexToRgba(zoneColor, 0.85);
 
-      // Shade the zone using two area-style band — approximate with 2 horizontal price lines + middle band via area
-      const bandTop = chart.addSeries(LineSeries,{
-        color: zoneColor,
-        lineWidth: 1,
-        lineStyle: LineStyle.Dashed,
-        crosshairMarkerVisible: false,
-        priceLineVisible: false,
-        lastValueVisible: false,
-      });
-      const bandBot = chart.addSeries(LineSeries,{
-        color: zoneColor,
-        lineWidth: 1,
-        lineStyle: LineStyle.Dashed,
-        crosshairMarkerVisible: false,
-        priceLineVisible: false,
-        lastValueVisible: false,
-      });
-      const topData: LineData[] = signal.candles.map((c) => ({ time: toTs(c.time), value: zoneHigh }));
-      const botData: LineData[] = signal.candles.map((c) => ({ time: toTs(c.time), value: zoneLow }));
-      bandTop.setData(topData);
-      bandBot.setData(botData);
+      // Filled rectangle box spanning the historical zone window
+      const rect = new RectanglePrimitive(
+        chart,
+        candleSeries,
+        toTs(zoneStartTime),
+        toTs(zoneEndTime),
+        zoneLow,
+        zoneHigh,
+        fillColor,
+        borderColor,
+      );
+      candleSeries.attachPrimitive(rect);
 
-      // Labels
+      // Axis labels for top/bottom — no line drawn on the chart
       candleSeries.createPriceLine({
         price: zoneHigh,
-        color: zoneColor,
+        color: borderColor,
         lineWidth: 1,
         lineStyle: LineStyle.Solid,
         axisLabelVisible: true,
+        lineVisible: false,
         title: language === "ko" ? "구간 상단" : "Zone High",
       });
       candleSeries.createPriceLine({
         price: zoneLow,
-        color: zoneColor,
+        color: borderColor,
         lineWidth: 1,
         lineStyle: LineStyle.Solid,
         axisLabelVisible: true,
+        lineVisible: false,
         title: language === "ko" ? "구간 하단" : "Zone Low",
       });
 
@@ -365,10 +446,10 @@ function Legend({ signal, language }: { signal: CryptoSignal; language: "ko" | "
         <LegendItem
           color={bull ? "#f87171" : "#4ade80"}
           label={bull
-            ? (language === "ko" ? "저항 매물대" : "Resistance zone")
-            : (language === "ko" ? "지지 매물대" : "Support zone")
+            ? (language === "ko" ? "저항 매물대 (박스)" : "Resistance zone (box)")
+            : (language === "ko" ? "지지 매물대 (박스)" : "Support zone (box)")
           }
-          dashed
+          box
         />
         <LegendItem
           color={bull ? "#4ade80" : "#f87171"}
@@ -390,17 +471,24 @@ function Legend({ signal, language }: { signal: CryptoSignal; language: "ko" | "
   );
 }
 
-function LegendItem({ color, label, dashed, arrow }: { color: string; label: string; dashed?: boolean; arrow?: boolean }) {
+function LegendItem({ color, label, dashed, arrow, box }: { color: string; label: string; dashed?: boolean; arrow?: boolean; box?: boolean }) {
+  const hexToRgbaSafe = (hex: string, a: number) => {
+    try { return hexToRgba(hex, a); } catch { return hex; }
+  };
+  const swatchStyle: React.CSSProperties = box
+    ? {
+        background: hexToRgbaSafe(color, 0.18),
+        border: `1px solid ${hexToRgbaSafe(color, 0.85)}`,
+        color,
+      }
+    : {
+        background: arrow ? "transparent" : color,
+        borderTop: dashed ? `2px dashed ${color}` : undefined,
+        color,
+      };
   return (
     <div className={styles.legendItem}>
-      <span
-        className={styles.legendSwatch}
-        style={{
-          background: arrow ? "transparent" : color,
-          borderTop: dashed ? `2px dashed ${color}` : undefined,
-          color,
-        }}
-      >
+      <span className={styles.legendSwatch} style={swatchStyle}>
         {arrow ? "▲" : ""}
       </span>
       <span>{label}</span>
