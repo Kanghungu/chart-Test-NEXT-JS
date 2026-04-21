@@ -66,6 +66,13 @@
     "Segoe UI",
     Arial,
     sans-serif;
+  --font-mono:
+    "JetBrains Mono",
+    "SF Mono",
+    "Menlo",
+    "Consolas",
+    "Liberation Mono",
+    monospace;
 }
 
 html,
