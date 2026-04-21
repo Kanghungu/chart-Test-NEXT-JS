@@ -296,8 +296,8 @@ function detectDivergence(candles: Candle[], rsi: number[]): DivHit[] {
     if (recent && priceCondition && rsiCondition && oversoldStart && rsiCooled && volCooled) {
       hits.push({
         direction: "BULLISH",
-        // STRONG when the reset is deeper and volume shrink is bigger
-        strength: (prev.r < 25 && last.vol < prev.vol * 0.6) ? "STRONG" : "MEDIUM",
+        // STRONG when RSI reset past 30 and volume shrunk below 80%
+        strength: (prev.r < 30 && last.vol < prev.vol * 0.8) ? "STRONG" : "MEDIUM",
         detectedAt: last.time,
         pricePoints: [
           { time: prev.time, price: prev.price, label: "L1" },
@@ -324,7 +324,8 @@ function detectDivergence(candles: Candle[], rsi: number[]): DivHit[] {
     if (recent && priceCondition && rsiCondition && overboughtStart && rsiCooled && volCooled) {
       hits.push({
         direction: "BEARISH",
-        strength: (prev.r > 75 && last.vol < prev.vol * 0.6) ? "STRONG" : "MEDIUM",
+        // STRONG when RSI reset past 70 and volume shrunk below 80%
+        strength: (prev.r > 70 && last.vol < prev.vol * 0.8) ? "STRONG" : "MEDIUM",
         detectedAt: last.time,
         pricePoints: [
           { time: prev.time, price: prev.price, label: "H1" },
