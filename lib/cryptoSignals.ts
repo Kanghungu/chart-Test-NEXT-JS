@@ -383,8 +383,9 @@ function detectDivergence(candles: Candle[], rsi: number[]): DivHit[] {
   if (len < 35 || rsi.length < len) return hits;
 
   const window = 60;
-  const lows:  Array<{ i: number; price: number; r: number; time: number; vol: number }> = [];
-  const highs: Array<{ i: number; price: number; r: number; time: number; vol: number }> = [];
+  // rsiTime: actual candle where RSI peaked/troughed (may differ from price pivot candle)
+  const lows:  Array<{ i: number; price: number; r: number; time: number; rsiTime: number; vol: number }> = [];
+  const highs: Array<{ i: number; price: number; r: number; time: number; rsiTime: number; vol: number }> = [];
 
   for (let i = Math.max(2, len - window); i < len - 2; i++) {
     const r = rsi[i];
@@ -396,8 +397,28 @@ function detectDivergence(candles: Candle[], rsi: number[]): DivHit[] {
     const isHigh =
       c.high > candles[i-1].high && c.high > candles[i-2].high &&
       c.high > candles[i+1].high && c.high > candles[i+2].high;
-    if (isLow)  lows.push({  i, price: c.low,  r, time: c.time, vol: c.volume });
-    if (isHigh) highs.push({ i, price: c.high, r, time: c.time, vol: c.volume });
+
+    if (isHigh) {
+      // Find the actual RSI peak within ±3 candles of the price peak
+      let rsiPeak = r, rsiPeakTime = c.time;
+      for (let d = -3; d <= 3; d++) {
+        const j = i + d;
+        if (j < 0 || j >= len || isNaN(rsi[j])) continue;
+        if (rsi[j] > rsiPeak) { rsiPeak = rsi[j]; rsiPeakTime = candles[j].time; }
+      }
+      highs.push({ i, price: c.high, r: rsiPeak, time: c.time, rsiTime: rsiPeakTime, vol: c.volume });
+    }
+
+    if (isLow) {
+      // Find the actual RSI trough within ±3 candles of the price trough
+      let rsiTrough = r, rsiTroughTime = c.time;
+      for (let d = -3; d <= 3; d++) {
+        const j = i + d;
+        if (j < 0 || j >= len || isNaN(rsi[j])) continue;
+        if (rsi[j] < rsiTrough) { rsiTrough = rsi[j]; rsiTroughTime = candles[j].time; }
+      }
+      lows.push({ i, price: c.low, r: rsiTrough, time: c.time, rsiTime: rsiTroughTime, vol: c.volume });
+    }
   }
 
   // Volume cool-down check: second pivot's volume must be meaningfully lower than first's.
@@ -426,8 +447,8 @@ function detectDivergence(candles: Candle[], rsi: number[]): DivHit[] {
           { time: last.time, price: last.price, label: "L2" },
         ],
         rsiPoints: [
-          { time: prev.time, price: prev.r, label: "R1" },
-          { time: last.time, price: last.r, label: "R2" },
+          { time: prev.rsiTime, price: prev.r, label: "R1" },
+          { time: last.rsiTime, price: last.r, label: "R2" },
         ],
       });
     }
@@ -455,8 +476,8 @@ function detectDivergence(candles: Candle[], rsi: number[]): DivHit[] {
           { time: last.time, price: last.price, label: "H2" },
         ],
         rsiPoints: [
-          { time: prev.time, price: prev.r, label: "R1" },
-          { time: last.time, price: last.r, label: "R2" },
+          { time: prev.rsiTime, price: prev.r, label: "R1" },
+          { time: last.rsiTime, price: last.r, label: "R2" },
         ],
       });
     }
