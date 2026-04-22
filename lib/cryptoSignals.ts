@@ -441,6 +441,15 @@ function detectDivergence(candles: Candle[], rsi: number[]): DivHit[] {
         if (prev.i >= last.i - 5) continue;         // min 5-candle gap
         if (last.price >= prev.price) continue;      // L2 must be a lower price low
 
+        // L2 must be the LOWEST point in the H1→H2 window.
+        // If any candle between L1 and L2 dips lower than L2, the pattern is invalid:
+        // the "lower low" is not at L2, meaning we're ignoring a worse low in between.
+        let hasLowerLow = false;
+        for (let j = prev.i + 1; j < last.i; j++) {
+          if (candles[j].low < last.price) { hasLowerLow = true; break; }
+        }
+        if (hasLowerLow) continue;
+
         // True RSI minimum in [L1-3, L2) — the actual oversold extreme
         let rsiMinVal = Infinity, rsiMinTime = prev.rsiTime;
         for (let j = Math.max(0, prev.i - 3); j < last.i; j++) {
@@ -489,6 +498,15 @@ function detectDivergence(candles: Candle[], rsi: number[]): DivHit[] {
         const prev = highs[k];
         if (prev.i >= last.i - 5) continue;         // min 5-candle gap
         if (last.price <= prev.price) continue;      // H2 must be a higher price high
+
+        // H2 must be the HIGHEST point in the H1→H2 window.
+        // If any candle between H1 and H2 exceeds H2's price, the pattern is invalid:
+        // the real "higher high" is that intermediate candle, not H2.
+        let hasHigherHigh = false;
+        for (let j = prev.i + 1; j < last.i; j++) {
+          if (candles[j].high > last.price) { hasHigherHigh = true; break; }
+        }
+        if (hasHigherHigh) continue;
 
         // True RSI maximum in [H1-3, H2) — the actual overbought extreme
         let rsiMaxVal = -Infinity, rsiMaxTime = prev.rsiTime;
