@@ -1,11 +1,19 @@
 {
   "permissions": {
     "allow": [
-      "mcp__Claude_in_Chrome__tabs_context_mcp",
-      "mcp__Claude_in_Chrome__navigate",
-      "mcp__Claude_in_Chrome__computer",
-      "Bash(npx tsc *)",
-      "Bash(npx next *)"
-    ]
+      "Bash(*)",
+      "PowerShell(*)",
+      "Edit(*)",
+      "Write(*)",
+      "Read(*)",
+      "Glob(*)",
+      "Grep(*)",
+      "mcp__Claude_in_Chrome__*",
+      "mcp__Claude_Preview__*",
+      "mcp__ff3f382a-96e4-4417-8929-2fd06e440c99__*",
+      "mcp__946e930f-3db0-40fa-a292-aa9fa614168b__*",
+      "mcp__5c4a3d69-e7d7-4383-9999-81e19672466c__*"
+    ],
+    "deny": []
   }
 }
