@@ -425,61 +425,92 @@ function detectDivergence(candles: Candle[], rsi: number[]): DivHit[] {
   // Allow up to ~15% tolerance to avoid missing slight bumps.
   const VOL_COOL_RATIO = 0.85;
 
+  // ── BULLISH divergence ──────────────────────────────────────────────────
+  // Price: lower low (L2 < L1).  RSI: higher low (R2 > R1).
+  // R1 = actual RSI MINIMUM in the entire range [L1 → L2] — catches cases
+  // where RSI dips deeper at a non-pivot candle between the two price lows.
   if (lows.length >= 2) {
     const last = lows[lows.length - 1];
-    const prev = lows[lows.length - 2];
-    const priceCondition = last.price < prev.price;          // lower low
-    const rsiCondition   = last.r > prev.r + 2;              // higher low on RSI (min 2pt gap)
-    const oversoldStart  = prev.r < 30;                      // first low was oversold
-    // R2 must still be depressed (≤45): if RSI recovered to 62 it's a random low, not divergence
-    const rsiCooled      = last.r > prev.r && last.r <= 45 && last.r > 30;
-    const volCooled      = last.vol < prev.vol * VOL_COOL_RATIO;
-    const recent         = last.i >= len - 25;
+    if (last.i >= len - 25) {
+      // Scan back through recent lows to find a valid L1 (oversold anchor)
+      for (let k = lows.length - 2; k >= Math.max(0, lows.length - 8); k--) {
+        const prev = lows[k];
+        if (prev.i >= last.i - 3) continue;           // need gap between pivots
+        if (prev.r >= 30) continue;                    // L1 must be oversold (<30)
+        if (last.price >= prev.price) continue;        // L2 must be a lower low
 
-    if (recent && priceCondition && rsiCondition && oversoldStart && rsiCooled && volCooled) {
-      hits.push({
-        direction: "BULLISH",
-        // STRONG: first RSI < 30, second still depressed (<40) & volume shrunk to 80%
-        strength: (prev.r < 30 && last.r < 40 && last.vol < prev.vol * 0.8) ? "STRONG" : "MEDIUM",
-        detectedAt: last.time,
-        pricePoints: [
-          { time: prev.time, price: prev.price, label: "L1" },
-          { time: last.time, price: last.price, label: "L2" },
-        ],
-        rsiPoints: [
-          { time: prev.rsiTime, price: prev.r, label: "R1" },
-          { time: last.rsiTime, price: last.r, label: "R2" },
-        ],
-      });
+        // Find the actual RSI MINIMUM between L1 and L2 (any candle, not just pivots)
+        let rsiMinVal = prev.r, rsiMinTime = prev.rsiTime;
+        for (let j = prev.i; j < last.i; j++) {
+          if (!isNaN(rsi[j]) && rsi[j] < rsiMinVal) {
+            rsiMinVal = rsi[j]; rsiMinTime = candles[j].time;
+          }
+        }
+
+        // R2 must be a "higher low" vs the true RSI minimum, and still depressed (≤45)
+        if (last.r <= rsiMinVal + 2) break;            // R2 not meaningfully higher
+        if (last.r > 45 || last.r <= 30) break;        // R2 out of depressed zone
+        if (last.vol >= prev.vol * VOL_COOL_RATIO) break; // volume not cooled
+
+        hits.push({
+          direction: "BULLISH",
+          strength: (rsiMinVal < 30 && last.r < 40 && last.vol < prev.vol * 0.8) ? "STRONG" : "MEDIUM",
+          detectedAt: last.time,
+          pricePoints: [
+            { time: prev.time,    price: prev.price, label: "L1" },
+            { time: last.time,    price: last.price, label: "L2" },
+          ],
+          rsiPoints: [
+            { time: rsiMinTime,   price: rsiMinVal,  label: "R1" },
+            { time: last.rsiTime, price: last.r,     label: "R2" },
+          ],
+        });
+        break; // use the most recent valid L1
+      }
     }
   }
 
+  // ── BEARISH divergence ──────────────────────────────────────────────────
+  // Price: higher high (H2 > H1).  RSI: lower high (R2 < R1).
+  // R1 = actual RSI MAXIMUM in the entire range [H1 → H2] — captures the case
+  // where RSI spikes even higher between H1 and H2 (at pivot OR non-pivot candles).
   if (highs.length >= 2) {
     const last = highs[highs.length - 1];
-    const prev = highs[highs.length - 2];
-    const priceCondition  = last.price > prev.price;         // higher high
-    const rsiCondition    = last.r < prev.r - 2;             // lower high on RSI (min 2pt gap)
-    const overboughtStart = prev.r > 70;                     // first high was overbought
-    // R2 must still be elevated (≥55): if RSI dropped to 38, that's just a random local high
-    const rsiCooled       = last.r < prev.r && last.r >= 55 && last.r < 70;
-    const volCooled       = last.vol < prev.vol * VOL_COOL_RATIO;
-    const recent          = last.i >= len - 25;
+    if (last.i >= len - 25) {
+      for (let k = highs.length - 2; k >= Math.max(0, highs.length - 8); k--) {
+        const prev = highs[k];
+        if (prev.i >= last.i - 3) continue;           // need gap
+        if (prev.r <= 70) continue;                    // H1 must be overbought (>70)
+        if (last.price <= prev.price) continue;        // H2 must be a higher high
 
-    if (recent && priceCondition && rsiCondition && overboughtStart && rsiCooled && volCooled) {
-      hits.push({
-        direction: "BEARISH",
-        // STRONG: first RSI > 70, second still elevated (>60) & volume shrunk to 80%
-        strength: (prev.r > 70 && last.r > 60 && last.vol < prev.vol * 0.8) ? "STRONG" : "MEDIUM",
-        detectedAt: last.time,
-        pricePoints: [
-          { time: prev.time, price: prev.price, label: "H1" },
-          { time: last.time, price: last.price, label: "H2" },
-        ],
-        rsiPoints: [
-          { time: prev.rsiTime, price: prev.r, label: "R1" },
-          { time: last.rsiTime, price: last.r, label: "R2" },
-        ],
-      });
+        // Find the actual RSI MAXIMUM between H1 and H2 (any candle, not just pivots)
+        let rsiMaxVal = prev.r, rsiMaxTime = prev.rsiTime;
+        for (let j = prev.i; j < last.i; j++) {
+          if (!isNaN(rsi[j]) && rsi[j] > rsiMaxVal) {
+            rsiMaxVal = rsi[j]; rsiMaxTime = candles[j].time;
+          }
+        }
+
+        // R2 must be a "lower high" vs the true RSI maximum, and still elevated (55~70)
+        if (last.r >= rsiMaxVal - 2) break;            // R2 not meaningfully lower
+        if (last.r < 55 || last.r >= 70) break;        // R2 out of elevated zone
+        if (last.vol >= prev.vol * VOL_COOL_RATIO) break; // volume not cooled
+
+        hits.push({
+          direction: "BEARISH",
+          strength: (rsiMaxVal > 70 && last.r > 60 && last.vol < prev.vol * 0.8) ? "STRONG" : "MEDIUM",
+          detectedAt: last.time,
+          pricePoints: [
+            { time: prev.time,    price: prev.price, label: "H1" },
+            { time: last.time,    price: last.price, label: "H2" },
+          ],
+          rsiPoints: [
+            { time: rsiMaxTime,   price: rsiMaxVal,  label: "R1" },
+            { time: last.rsiTime, price: last.r,     label: "R2" },
+          ],
+        });
+        break; // use the most recent valid H1
+      }
     }
   }
 
