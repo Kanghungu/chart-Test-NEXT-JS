@@ -408,17 +408,18 @@ function detectDivergence(candles: Candle[], rsi: number[]): DivHit[] {
     const last = lows[lows.length - 1];
     const prev = lows[lows.length - 2];
     const priceCondition = last.price < prev.price;          // lower low
-    const rsiCondition   = last.r > prev.r + 0.8;            // higher low on RSI
+    const rsiCondition   = last.r > prev.r + 2;              // higher low on RSI (min 2pt gap)
     const oversoldStart  = prev.r < 30;                      // first low was oversold
-    const rsiCooled      = last.r > prev.r && last.r > 32;   // RSI came back up (no longer oversold territory)
+    // R2 must still be depressed (≤45): if RSI recovered to 62 it's a random low, not divergence
+    const rsiCooled      = last.r > prev.r && last.r <= 45 && last.r > 30;
     const volCooled      = last.vol < prev.vol * VOL_COOL_RATIO;
     const recent         = last.i >= len - 25;
 
     if (recent && priceCondition && rsiCondition && oversoldStart && rsiCooled && volCooled) {
       hits.push({
         direction: "BULLISH",
-        // STRONG when RSI reset past 30 and volume shrunk below 80%
-        strength: (prev.r < 30 && last.vol < prev.vol * 0.8) ? "STRONG" : "MEDIUM",
+        // STRONG: first RSI < 30, second still depressed (<40) & volume shrunk to 80%
+        strength: (prev.r < 30 && last.r < 40 && last.vol < prev.vol * 0.8) ? "STRONG" : "MEDIUM",
         detectedAt: last.time,
         pricePoints: [
           { time: prev.time, price: prev.price, label: "L1" },
@@ -436,17 +437,18 @@ function detectDivergence(candles: Candle[], rsi: number[]): DivHit[] {
     const last = highs[highs.length - 1];
     const prev = highs[highs.length - 2];
     const priceCondition  = last.price > prev.price;         // higher high
-    const rsiCondition    = last.r < prev.r - 0.8;           // lower high on RSI
+    const rsiCondition    = last.r < prev.r - 2;             // lower high on RSI (min 2pt gap)
     const overboughtStart = prev.r > 70;                     // first high was overbought
-    const rsiCooled       = last.r < prev.r && last.r < 68;  // RSI came back down
+    // R2 must still be elevated (≥55): if RSI dropped to 38, that's just a random local high
+    const rsiCooled       = last.r < prev.r && last.r >= 55 && last.r < 70;
     const volCooled       = last.vol < prev.vol * VOL_COOL_RATIO;
     const recent          = last.i >= len - 25;
 
     if (recent && priceCondition && rsiCondition && overboughtStart && rsiCooled && volCooled) {
       hits.push({
         direction: "BEARISH",
-        // STRONG when RSI reset past 70 and volume shrunk below 80%
-        strength: (prev.r > 70 && last.vol < prev.vol * 0.8) ? "STRONG" : "MEDIUM",
+        // STRONG: first RSI > 70, second still elevated (>60) & volume shrunk to 80%
+        strength: (prev.r > 70 && last.r > 60 && last.vol < prev.vol * 0.8) ? "STRONG" : "MEDIUM",
         detectedAt: last.time,
         pricePoints: [
           { time: prev.time, price: prev.price, label: "H1" },
