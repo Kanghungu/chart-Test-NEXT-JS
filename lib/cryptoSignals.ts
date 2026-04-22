@@ -439,13 +439,15 @@ function detectDivergence(candles: Candle[], rsi: number[]): DivHit[] {
         if (prev.r >= 30) continue;                    // L1 must be oversold (<30)
         if (last.price >= prev.price) continue;        // L2 must be a lower low
 
-        // Find the actual RSI MINIMUM between L1 and L2 (any candle, not just pivots)
-        let rsiMinVal = prev.r, rsiMinTime = prev.rsiTime;
-        for (let j = prev.i; j < last.i; j++) {
+        // Find the actual RSI MINIMUM between L1 and L2 (any candle, not just pivots).
+        // Start 3 candles before L1 to catch RSI troughs slightly before the price pivot.
+        let rsiMinVal = Infinity, rsiMinTime = prev.rsiTime;
+        for (let j = Math.max(0, prev.i - 3); j < last.i; j++) {
           if (!isNaN(rsi[j]) && rsi[j] < rsiMinVal) {
             rsiMinVal = rsi[j]; rsiMinTime = candles[j].time;
           }
         }
+        if (rsiMinVal >= 30) break; // true RSI trough must be oversold
 
         // R2 must be a "higher low" vs the true RSI minimum, and still depressed (≤45)
         if (last.r <= rsiMinVal + 2) break;            // R2 not meaningfully higher
@@ -483,13 +485,15 @@ function detectDivergence(candles: Candle[], rsi: number[]): DivHit[] {
         if (prev.r <= 70) continue;                    // H1 must be overbought (>70)
         if (last.price <= prev.price) continue;        // H2 must be a higher high
 
-        // Find the actual RSI MAXIMUM between H1 and H2 (any candle, not just pivots)
-        let rsiMaxVal = prev.r, rsiMaxTime = prev.rsiTime;
-        for (let j = prev.i; j < last.i; j++) {
+        // Find the actual RSI MAXIMUM between H1 and H2 (any candle, not just pivots).
+        // Start 3 candles before H1 to catch cases where RSI peaks slightly before the price pivot.
+        let rsiMaxVal = -Infinity, rsiMaxTime = prev.rsiTime;
+        for (let j = Math.max(0, prev.i - 3); j < last.i; j++) {
           if (!isNaN(rsi[j]) && rsi[j] > rsiMaxVal) {
             rsiMaxVal = rsi[j]; rsiMaxTime = candles[j].time;
           }
         }
+        if (rsiMaxVal <= 70) break; // true RSI peak must be overbought
 
         // R2 must be a "lower high" vs the true RSI maximum, and still elevated (55~70)
         if (last.r >= rsiMaxVal - 2) break;            // R2 not meaningfully lower
