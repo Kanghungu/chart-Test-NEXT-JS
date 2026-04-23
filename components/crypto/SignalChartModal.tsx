@@ -511,6 +511,18 @@ function LegendItem({ color, label, dashed, arrow, box }: { color: string; label
 }
 
 const TYPE_LABEL: Record<"ko" | "en", Record<CryptoSignal["type"], string>> = {
-  ko: { HARMONIC: "하모닉", DIVERGENCE: "다이버전스", ZONE_BREAK: "매물대 돌파" },
-  en: { HARMONIC: "Harmonic", DIVERGENCE: "Divergence", ZONE_BREAK: "Zone Break" },
+  ko: {
+    HARMONIC:      "하모닉",
+    DIVERGENCE:    "다이버전스",
+    ZONE_BREAK:    "매물대 돌파",
+    HARMONIC_PRZ:  "⏳ PRZ 접근",
+    ZONE_APPROACH: "⏳ 돌파 임박",
+  },
+  en: {
+    HARMONIC:      "Harmonic",
+    DIVERGENCE:    "Divergence",
+    ZONE_BREAK:    "Zone Break",
+    HARMONIC_PRZ:  "⏳ PRZ Watch",
+    ZONE_APPROACH: "⏳ Breakout Soon",
+  },
 };

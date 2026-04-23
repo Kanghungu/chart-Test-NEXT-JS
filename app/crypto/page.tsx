@@ -347,42 +347,37 @@ export default function CryptoPage() {
                 height={220}
                 src="https://s3.tradingview.com/external-embedding/embed-widget-symbol-overview.js"
                 config={{
-                  symbols:                   [[TV_SYMBOL[coin], TV_SYMBOL[coin] + "|1D"]],
-                  chartOnly:                 false,
-                  width:                     "100%",
-                  height:                    210,
+                  symbols:          [[TV_SYMBOL[coin], TV_SYMBOL[coin] + "|1D"]],
+                  chartOnly:        false,
+                  width:            "100%",
+                  height:           210,
                   locale,
-                  colorTheme:                "dark",
-                  autosize:                  false,
-                  showVolume:                false,
-                  showMA:                    false,
-                  hideDateRanges:            false,
-                  hideMarketStatus:          false,
-                  hideSymbolLogo:            false,
-                  scalePosition:             "right",
-                  scaleMode:                 "Normal",
-                  fontFamily:                "-apple-system, BlinkMacSystemFont, Inter, Roboto, sans-serif",
-                  fontSize:                  "10",
-                  noTimeScale:               false,
-                  valuesTracking:            "1",
-                  changeMode:                "price-and-percent",
-                  isTransparent:             true,
-                  // Dark color overrides — widget defaults to white plot area
-                  backgroundColor:           "rgba(0, 0, 0, 0)",
-                  widgetFontColor:           "#cbd5e1",
-                  lineColor:                 "#38bdf8",
-                  topColor:                  "rgba(56, 189, 248, 0.28)",
-                  bottomColor:               "rgba(56, 189, 248, 0.0)",
-                  gridLineColor:             "rgba(51, 65, 85, 0.3)",
-                  scaleFontColor:            "#94a3b8",
-                  belowLineFillColorGrowing: "rgba(74, 222, 128, 0.12)",
-                  belowLineFillColorFalling: "rgba(248, 113, 113, 0.12)",
-                  upColor:                   "#4ade80",
-                  downColor:                 "#f87171",
-                  borderUpColor:             "#4ade80",
-                  borderDownColor:           "#f87171",
-                  wickUpColor:               "#4ade80",
-                  wickDownColor:             "#f87171",
+                  colorTheme:       "dark",
+                  autosize:         false,
+                  showVolume:       false,
+                  showMA:           false,
+                  hideDateRanges:   false,
+                  hideMarketStatus: false,
+                  hideSymbolLogo:   false,
+                  scalePosition:    "right",
+                  scaleMode:        "Normal",
+                  fontFamily:       "-apple-system, BlinkMacSystemFont, Inter, Roboto, sans-serif",
+                  fontSize:         "10",
+                  noTimeScale:      false,
+                  valuesTracking:   "1",
+                  changeMode:       "price-and-percent",
+                  isTransparent:    false,
+                  backgroundColor:  "#060d1f",
+                  lineColor:        "#38bdf8",
+                  topColor:         "rgba(56,189,248,0.22)",
+                  bottomColor:      "rgba(56,189,248,0.0)",
+                  gridLineColor:    "rgba(51,65,85,0.25)",
+                  upColor:          "#4ade80",
+                  downColor:        "#f87171",
+                  borderUpColor:    "#4ade80",
+                  borderDownColor:  "#f87171",
+                  wickUpColor:      "#4ade80",
+                  wickDownColor:    "#f87171",
                 }}
               />
             </div>
@@ -390,7 +385,10 @@ export default function CryptoPage() {
 
           {/* Analysis + Chart grid */}
           <div className={styles.analysisGrid}>
-            <div className={styles.panel}>
+            <div
+              className={`${styles.panel} ${styles.taPanel}`}
+              style={{ "--tint": COIN_INFO[coin].tint } as React.CSSProperties}
+            >
               <div className={styles.panelHeader}>
                 <div>
                   <p className={styles.panelKicker}>{c.analysis}</p>
@@ -399,15 +397,40 @@ export default function CryptoPage() {
                   </h3>
                   <p className={styles.panelHint}>{c.analysisHint}</p>
                 </div>
+                <div className={styles.taBadge}>
+                  <span className={styles.taBadgePulse} />
+                  AI
+                </div>
               </div>
+
+              {/* Indicator type chips */}
+              <div className={styles.taChipRow}>
+                <span className={`${styles.taChip} ${styles.taChipOsc}`}>
+                  <span className={styles.taChipDot} />
+                  오실레이터
+                </span>
+                <span className={`${styles.taChip} ${styles.taChipMa}`}>
+                  <span className={styles.taChipDot} />
+                  이동평균
+                </span>
+                <span className={`${styles.taChip} ${styles.taChipPivot}`}>
+                  <span className={styles.taChipDot} />
+                  피벗 포인트
+                </span>
+              </div>
+
               <div className={styles.panelBody}>
+                {/* Decorative scan line */}
+                <div className={styles.taScanWrap} aria-hidden="true">
+                  <div className={styles.taScanLine} />
+                </div>
                 <TVWidget
-                  height={460}
+                  height={480}
                   src="https://s3.tradingview.com/external-embedding/embed-widget-technical-analysis.js"
                   config={{
                     interval:         TA_INTERVAL[tf],
                     width:            "100%",
-                    height:           450,
+                    height:           470,
                     symbol:           TV_SYMBOL[coin],
                     showIntervalTabs: false,
                     displayMode:      "single",

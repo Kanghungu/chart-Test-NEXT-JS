@@ -226,6 +226,19 @@
   box-shadow: 0 0 12px rgba(248, 113, 113, 0.18);
 }
 
+/* Predictive pill — teal accent + dashed border */
+.pillPredict {
+  border-style: dashed;
+  color: #2dd4bf;
+}
+.pillPredict.pillActive {
+  background: rgba(45, 212, 191, 0.1);
+  color: #2dd4bf;
+  border-color: #2dd4bf;
+  border-style: dashed;
+  box-shadow: 0 0 12px rgba(45, 212, 191, 0.2);
+}
+
 /* ── Body / states ─────────────────────────────────────────────────────── */
 .body {
   padding: 1.25rem 1.75rem 1.75rem;
@@ -322,6 +335,24 @@
 .cardBull { background: linear-gradient(135deg, color-mix(in oklch, var(--tint) 10%, var(--surface-1)), var(--surface-1) 60%); }
 .cardBear { background: linear-gradient(135deg, color-mix(in oklch, var(--tint) 10%, var(--surface-1)), var(--surface-1) 60%); }
 
+.cardStrong {
+  border-color: color-mix(in oklch, var(--accent-amber) 72%, var(--tint));
+  background:
+    linear-gradient(135deg, rgba(251, 191, 36, 0.18), transparent 42%),
+    linear-gradient(135deg, color-mix(in oklch, var(--tint) 12%, var(--surface-1)), var(--surface-1) 62%);
+  box-shadow:
+    inset 0 0 0 1px rgba(251, 191, 36, 0.24),
+    0 0 28px rgba(251, 191, 36, 0.12);
+}
+
+.cardStrong:hover {
+  border-color: var(--accent-amber);
+  box-shadow:
+    inset 0 0 0 1px rgba(251, 191, 36, 0.38),
+    0 16px 36px -10px rgba(0, 0, 0, 0.55),
+    0 0 28px rgba(251, 191, 36, 0.22);
+}
+
 .cardTintBar {
   position: absolute;
   top: 0;
@@ -332,10 +363,33 @@
   box-shadow: 0 0 12px var(--tint);
 }
 
+.cardStrong .cardTintBar {
+  width: 5px;
+  background: linear-gradient(180deg, var(--accent-amber), var(--tint));
+  box-shadow: 0 0 18px var(--accent-amber);
+}
+
+/* Predictive signal cards — dashed border, subtler background */
+.cardPredict {
+  border-style: dashed;
+  border-color: rgba(45, 212, 191, 0.35);
+  background: linear-gradient(
+    135deg,
+    rgba(45, 212, 191, 0.06) 0%,
+    var(--surface-1) 55%
+  );
+}
+.cardPredict::after { content: "→"; }
+.cardPredict .cardTintBar {
+  background: linear-gradient(180deg, #2dd4bf, var(--tint));
+  box-shadow: 0 0 10px rgba(45, 212, 191, 0.4);
+}
+
 .cardHeader {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 0.5rem;
   margin-bottom: 0.6rem;
 }
 
@@ -361,6 +415,23 @@
   padding: 0.12rem 0.45rem;
   border-radius: 4px;
   letter-spacing: 0.05em;
+}
+
+.strongFlag {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  font-weight: 800;
+  color: #111827;
+  background: var(--accent-amber);
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  border-radius: 4px;
+  padding: 0.22rem 0.46rem;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  box-shadow:
+    0 0 0 1px rgba(251, 191, 36, 0.22),
+    0 0 18px rgba(251, 191, 36, 0.32);
 }
 
 .dirBadge {
@@ -400,9 +471,12 @@
   border: 1px solid currentColor;
 }
 
-.type_HARMONIC   { color: var(--accent-purple); }
-.type_DIVERGENCE { color: var(--accent-blue); }
-.type_ZONE_BREAK { color: var(--accent-amber); }
+.type_HARMONIC      { color: var(--accent-purple); }
+.type_DIVERGENCE    { color: var(--accent-blue); }
+.type_ZONE_BREAK    { color: var(--accent-amber); }
+/* Predictive signals — teal/cyan tones, dashed border to signal "not yet confirmed" */
+.type_HARMONIC_PRZ  { color: #2dd4bf; border-style: dashed; }
+.type_ZONE_APPROACH { color: #38bdf8; border-style: dashed; }
 
 .patternBadge {
   font-family: var(--font-mono);
@@ -417,13 +491,16 @@
 
 .strongBadge {
   font-family: var(--font-mono);
-  font-size: 0.65rem;
-  font-weight: 700;
-  padding: 0.2rem 0.5rem;
+  font-size: 0.68rem;
+  font-weight: 800;
+  padding: 0.24rem 0.58rem;
   border-radius: 4px;
-  color: var(--accent-amber);
-  background: var(--accent-amber-dim);
-  letter-spacing: 0.08em;
+  color: #111827;
+  background: var(--accent-amber);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  box-shadow: 0 0 18px rgba(251, 191, 36, 0.26);
 }
 
 /* 형성 중 다이버전스 등 — ⏳ 예측 필터와 매칭 */
