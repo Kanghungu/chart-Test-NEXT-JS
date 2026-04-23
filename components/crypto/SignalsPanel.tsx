@@ -57,14 +57,9 @@ export default function SignalsPanel() {
 
   const filtered = useMemo(() => {
     return signals.filter((s) => {
+      // ⏳ 예측: 하모닉 PRZ 접근 + 다이버전스 형성 중만 (매물대 돌파 임박 ZONE_APPROACH는 제외)
       if (typeFilter === "PREDICTIVE") {
-        if (
-          s.type !== "HARMONIC_PRZ" &&
-          s.type !== "ZONE_APPROACH" &&
-          !s.isPrediction
-        ) {
-          return false;
-        }
+        if (s.type !== "HARMONIC_PRZ" && !s.isPrediction) return false;
       } else if (typeFilter !== "ALL" && s.type !== typeFilter) return false;
       if (dirFilter !== "ALL" && s.direction !== dirFilter) return false;
       return true;
