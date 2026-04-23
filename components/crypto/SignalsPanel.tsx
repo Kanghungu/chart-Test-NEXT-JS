@@ -13,11 +13,15 @@ import styles from "./SignalsPanel.module.css";
 
 type TypeFilter = "ALL" | "HARMONIC" | "DIVERGENCE" | "ZONE_BREAK" | "HARMONIC_PRZ" | "ZONE_APPROACH" | "PREDICTIVE";
 type DirFilter  = "ALL" | "BULLISH" | "BEARISH";
+/** 카드 정렬 기준 (계획: 정렬·그룹핑) */
+type SortKey = "recent" | "strength" | "symbol" | "timeframe";
 
 /** localStorage 키 — 보기 토글 상태 유지 */
 const LS_VIEW_DESC = "signalsPanel_view_description";
 const LS_VIEW_PRZ  = "signalsPanel_view_prz";
 const LS_VIEW_COMPACT = "signalsPanel_view_compact";
+const LS_SORT = "signalsPanel_sort";
+const LS_GROUP = "signalsPanel_group_by_symbol";
 
 const COIN_TINT: Record<string, string> = {
   BTC:  "#f7931a",
@@ -41,10 +45,12 @@ export default function SignalsPanel() {
   const [viewShowDescription, setViewShowDescription] = useState(true);
   const [viewShowPrz, setViewShowPrz] = useState(true);
   const [viewCompact, setViewCompact] = useState(false);
+  const [sortKey, setSortKey] = useState<SortKey>("recent");
+  const [groupBySymbol, setGroupBySymbol] = useState(false);
 
   const C = COPY[language];
 
-  // 브라우저에서 저장된 보기 옵션 복원 (SSR 이후)
+  // 브라우저에서 저장된 보기·정렬·그룹 옵션 복원 (SSR 이후)
   useEffect(() => {
     try {
       const d = localStorage.getItem(LS_VIEW_DESC);
@@ -53,6 +59,10 @@ export default function SignalsPanel() {
       if (d !== null) setViewShowDescription(d === "1");
       if (p !== null) setViewShowPrz(p === "1");
       if (c !== null) setViewCompact(c === "1");
+      const sk = localStorage.getItem(LS_SORT) as SortKey | null;
+      if (sk === "recent" || sk === "strength" || sk === "symbol" || sk === "timeframe") setSortKey(sk);
+      const g = localStorage.getItem(LS_GROUP);
+      if (g !== null) setGroupBySymbol(g === "1");
     } catch {
       /* 저장소 비가용 시 기본값 유지 */
     }
@@ -87,6 +97,26 @@ export default function SignalsPanel() {
       return true;
     });
   }, [signals, typeFilter, dirFilter]);
+
+  /** 필터 후 사용자 정렬 */
+  const sortedFiltered = useMemo(
+    () => sortSignals(filtered, sortKey),
+    [filtered, sortKey],
+  );
+
+  /** 심볼별 그룹 (베이스 알파벳 순) */
+  const groupedByBase = useMemo(() => {
+    if (!groupBySymbol) return null;
+    const map = new Map<string, CryptoSignal[]>();
+    for (const s of sortedFiltered) {
+      const list = map.get(s.base);
+      if (list) list.push(s);
+      else map.set(s.base, [s]);
+    }
+    return [...map.keys()]
+      .sort((a, b) => a.localeCompare(b))
+      .map((base) => [base, map.get(base)!] as const);
+  }, [sortedFiltered, groupBySymbol]);
 
   const stats = useMemo(() => {
     const bullish = signals.filter((s) => s.direction === "BULLISH").length;
@@ -212,6 +242,45 @@ export default function SignalsPanel() {
         </div>
       </div>
 
+      {/* 정렬·심볼 그룹 (localStorage 유지) */}
+      <div className={styles.sortRow}>
+        <span className={styles.filterLabel}>{C.fSort}</span>
+        <div className={styles.sortPills}>
+          {(["recent", "strength", "symbol", "timeframe"] as const).map((k) => (
+            <button
+              key={k}
+              type="button"
+              className={`${styles.pill} ${sortKey === k ? styles.pillActive : ""}`}
+              onClick={() => {
+                setSortKey(k);
+                try {
+                  localStorage.setItem(LS_SORT, k);
+                } catch { /* ignore */ }
+              }}
+            >
+              {C.sortLabels[k]}
+            </button>
+          ))}
+        </div>
+        <button
+          type="button"
+          role="switch"
+          aria-checked={groupBySymbol}
+          className={`${styles.togglePill} ${groupBySymbol ? styles.togglePillOn : ""} ${styles.groupToggle}`}
+          onClick={() => {
+            setGroupBySymbol((v) => {
+              const next = !v;
+              try {
+                localStorage.setItem(LS_GROUP, next ? "1" : "0");
+              } catch { /* ignore */ }
+              return next;
+            });
+          }}
+        >
+          {C.groupBySymbol}
+        </button>
+      </div>
+
       {/* Body */}
       <div className={styles.body}>
         {loading && signals.length === 0 && (
@@ -226,15 +295,15 @@ export default function SignalsPanel() {
             <p className={styles.hintSm}>{C.errorHint}</p>
           </div>
         )}
-        {!loading && !error && filtered.length === 0 && (
+        {!loading && !error && sortedFiltered.length === 0 && (
           <div className={styles.stateBox}>
             <p>{C.empty}</p>
             <p className={styles.hintSm}>{C.emptyHint}</p>
           </div>
         )}
-        {filtered.length > 0 && (
+        {sortedFiltered.length > 0 && !groupBySymbol && (
           <div className={`${styles.cardGrid} ${viewCompact ? styles.cardGridCompact : ""}`}>
-            {filtered.map((s) => (
+            {sortedFiltered.map((s) => (
               <SignalCard
                 key={s.id}
                 signal={s}
@@ -245,6 +314,37 @@ export default function SignalsPanel() {
                 onClick={() => setSelected(s)}
               />
             ))}
+          </div>
+        )}
+        {sortedFiltered.length > 0 && groupBySymbol && groupedByBase && (
+          <div className={styles.groupedWrap}>
+            {groupedByBase.map(([base, list]) => {
+              const tint = COIN_TINT[base] ?? "#64748b";
+              return (
+                <section key={base} className={styles.signalGroup}>
+                  <div
+                    className={styles.groupHeader}
+                    style={{ "--tint": tint } as React.CSSProperties}
+                  >
+                    <span className={styles.groupTitle}>{base}</span>
+                    <span className={styles.groupCount}>{list.length}</span>
+                  </div>
+                  <div className={`${styles.cardGrid} ${viewCompact ? styles.cardGridCompact : ""}`}>
+                    {list.map((s) => (
+                      <SignalCard
+                        key={s.id}
+                        signal={s}
+                        language={language}
+                        compact={viewCompact}
+                        showDescription={viewShowDescription}
+                        showPrz={viewShowPrz}
+                        onClick={() => setSelected(s)}
+                      />
+                    ))}
+                  </div>
+                </section>
+              );
+            })}
           </div>
         )}
       </div>
@@ -366,6 +466,50 @@ function SignalCard({
 }
 
 // ── helpers ───────────────────────────────────────────────────────────────
+const TF_ORDER: Record<TF, number> = { "15m": 0, "1h": 1, "4h": 2 };
+
+/** 필터된 시그널 배열을 사용자 선택 기준으로 정렬 (원본 배열 변경 없음) */
+function sortSignals(list: CryptoSignal[], key: SortKey): CryptoSignal[] {
+  const arr = [...list];
+  switch (key) {
+    case "recent":
+      arr.sort((a, b) => {
+        if (b.detectedAt !== a.detectedAt) return b.detectedAt - a.detectedAt;
+        if (a.strength !== b.strength) return a.strength === "STRONG" ? -1 : 1;
+        return a.base.localeCompare(b.base) || a.id.localeCompare(b.id);
+      });
+      break;
+    case "strength":
+      arr.sort((a, b) => {
+        if (a.strength !== b.strength) return a.strength === "STRONG" ? -1 : 1;
+        if (b.detectedAt !== a.detectedAt) return b.detectedAt - a.detectedAt;
+        return a.base.localeCompare(b.base);
+      });
+      break;
+    case "symbol":
+      arr.sort((a, b) => {
+        const cmp = a.base.localeCompare(b.base);
+        if (cmp !== 0) return cmp;
+        if (TF_ORDER[a.timeframe] !== TF_ORDER[b.timeframe]) {
+          return TF_ORDER[a.timeframe] - TF_ORDER[b.timeframe];
+        }
+        return b.detectedAt - a.detectedAt;
+      });
+      break;
+    case "timeframe":
+      arr.sort((a, b) => {
+        if (TF_ORDER[a.timeframe] !== TF_ORDER[b.timeframe]) {
+          return TF_ORDER[a.timeframe] - TF_ORDER[b.timeframe];
+        }
+        return b.detectedAt - a.detectedAt;
+      });
+      break;
+    default:
+      break;
+  }
+  return arr;
+}
+
 function tfLabel(tf: TF): string {
   return tf;
 }
@@ -415,6 +559,14 @@ const COPY = {
     viewDesc: "설명",
     viewPrz:  "PRZ",
     viewCompact: "밀집",
+    fSort: "정렬",
+    sortLabels: {
+      recent:    "최신",
+      strength:  "강도",
+      symbol:    "심볼",
+      timeframe: "타임프레임",
+    },
+    groupBySymbol: "심볼별 그룹",
     typeLabels: {
       ALL:           "전체",
       PREDICTIVE:    "⏳ 예측",
@@ -450,6 +602,14 @@ const COPY = {
     viewDesc: "Desc",
     viewPrz:  "PRZ",
     viewCompact: "Dense",
+    fSort: "Sort",
+    sortLabels: {
+      recent:    "Recent",
+      strength:  "Strength",
+      symbol:    "Symbol",
+      timeframe: "Timeframe",
+    },
+    groupBySymbol: "Group by coin",
     typeLabels: {
       ALL:           "All",
       PREDICTIVE:    "⏳ Predict",
