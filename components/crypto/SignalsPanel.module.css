@@ -426,6 +426,19 @@
   letter-spacing: 0.08em;
 }
 
+/* 형성 중 다이버전스 등 — ⏳ 예측 필터와 매칭 */
+.predictionBadge {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  color: #22d3ee;
+  background: color-mix(in oklch, #22d3ee 14%, var(--surface-2));
+  border: 1px solid color-mix(in oklch, #22d3ee 45%, transparent);
+  letter-spacing: 0.04em;
+}
+
 .cardDesc {
   font-size: 0.82rem;
   line-height: 1.5;

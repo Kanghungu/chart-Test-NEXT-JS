@@ -114,7 +114,7 @@
   flex-wrap: wrap;
 }
 
-.typeTag, .patternTag, .strongTag {
+.typeTag, .patternTag, .strongTag, .predictionTag {
   font-family: var(--font-mono);
   font-size: 0.68rem;
   font-weight: 600;
@@ -127,6 +127,12 @@
 .typeTag    { color: var(--accent-blue);   border: 1px solid var(--accent-blue); }
 .patternTag { color: var(--muted-strong);  background: var(--surface-2); }
 .strongTag  { color: var(--accent-amber);  background: var(--accent-amber-dim); }
+.predictionTag {
+  text-transform: none;
+  color: var(--accent-cyan, #22d3ee);
+  border: 1px solid color-mix(in oklch, var(--accent-cyan, #22d3ee) 55%, transparent);
+  background: color-mix(in oklch, var(--accent-cyan, #22d3ee) 12%, var(--surface-2));
+}
 
 .desc {
   font-size: 0.85rem;

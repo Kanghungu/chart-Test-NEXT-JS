@@ -11,7 +11,7 @@ import {
 import SignalChartModal from "./SignalChartModal";
 import styles from "./SignalsPanel.module.css";
 
-type TypeFilter = "ALL" | "HARMONIC" | "DIVERGENCE" | "ZONE_BREAK";
+type TypeFilter = "ALL" | "PREDICTION" | "HARMONIC" | "DIVERGENCE" | "ZONE_BREAK";
 type DirFilter  = "ALL" | "BULLISH" | "BEARISH";
 
 const COIN_TINT: Record<string, string> = {
@@ -57,7 +57,9 @@ export default function SignalsPanel() {
 
   const filtered = useMemo(() => {
     return signals.filter((s) => {
-      if (typeFilter !== "ALL" && s.type !== typeFilter) return false;
+      if (typeFilter === "PREDICTION") {
+        if (!s.isPrediction) return false;
+      } else if (typeFilter !== "ALL" && s.type !== typeFilter) return false;
       if (dirFilter !== "ALL" && s.direction !== dirFilter) return false;
       return true;
     });
@@ -105,7 +107,7 @@ export default function SignalsPanel() {
       <div className={styles.filterRow}>
         <div className={styles.filterGroup}>
           <span className={styles.filterLabel}>{C.fType}</span>
-          {(["ALL","HARMONIC","DIVERGENCE","ZONE_BREAK"] as const).map((v) => (
+          {(["ALL","PREDICTION","HARMONIC","DIVERGENCE","ZONE_BREAK"] as const).map((v) => (
             <button
               key={v}
               className={`${styles.pill} ${typeFilter === v ? styles.pillActive : ""}`}
@@ -236,6 +238,9 @@ function SignalCard({
         {signal.strength === "STRONG" && (
           <span className={styles.strongBadge}>★ STRONG</span>
         )}
+        {signal.isPrediction && (
+          <span className={styles.predictionBadge}>⏳ {language === "ko" ? "예측" : "FCST"}</span>
+        )}
       </div>
 
       <p className={styles.cardDesc}>{description}</p>
@@ -305,10 +310,11 @@ const COPY = {
     fType:    "유형",
     fDir:     "방향",
     typeLabels: {
-      ALL:        "전체",
-      HARMONIC:   "하모닉",
-      DIVERGENCE: "다이버전스",
-      ZONE_BREAK: "매물대",
+      ALL:         "전체",
+      PREDICTION:  "⏳ 예측",
+      HARMONIC:    "하모닉",
+      DIVERGENCE:  "다이버전스",
+      ZONE_BREAK:  "매물대",
     },
     dirLabels: {
       ALL:     "전체",
@@ -333,10 +339,11 @@ const COPY = {
     fType:    "Type",
     fDir:     "Direction",
     typeLabels: {
-      ALL:        "All",
-      HARMONIC:   "Harmonic",
-      DIVERGENCE: "Divergence",
-      ZONE_BREAK: "Zone",
+      ALL:         "All",
+      PREDICTION:  "⏳ Forecast",
+      HARMONIC:    "Harmonic",
+      DIVERGENCE:  "Divergence",
+      ZONE_BREAK:  "Zone",
     },
     dirLabels: {
       ALL:     "All",

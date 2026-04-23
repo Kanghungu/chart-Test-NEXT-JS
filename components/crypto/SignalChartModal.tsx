@@ -268,12 +268,14 @@ export default function SignalChartModal({
     } else if (signal.viz.kind === "DIVERGENCE") {
       const { pricePoints } = signal.viz;
       const divColor = signal.direction === "BULLISH" ? "#4ade80" : "#f87171";
+      const isPred = Boolean(signal.isPrediction);
+      const priceLineColor = isPred ? hexToRgba(divColor, 0.55) : divColor;
 
-      // Trend line connecting the two price pivots
+      // 확정: 점선 굵게 / 예측: 점선 얇고 투명 (형성 중)
       const priceLine = chart.addSeries(LineSeries,{
-        color: divColor,
-        lineWidth: 2,
-        lineStyle: LineStyle.Dashed,
+        color: priceLineColor,
+        lineWidth: isPred ? 1 : 2,
+        lineStyle: isPred ? LineStyle.Dotted : LineStyle.Dashed,
         crosshairMarkerVisible: false,
         priceLineVisible: false,
         lastValueVisible: false,
@@ -286,10 +288,10 @@ export default function SignalChartModal({
       createSeriesMarkers(candleSeries, pricePoints.map((p) => ({
         time: toTs(p.time),
         position: signal.direction === "BULLISH" ? "belowBar" as const : "aboveBar" as const,
-        color: divColor,
+        color: isPred ? hexToRgba(divColor, 0.65) : divColor,
         shape: "circle" as const,
         text: p.label ?? "",
-        size: 2,
+        size: isPred ? 1 : 2,
       })));
     }
 
@@ -328,10 +330,12 @@ export default function SignalChartModal({
 
       // Divergence trend line on RSI
       const divColor = signal.direction === "BULLISH" ? "#4ade80" : "#f87171";
+      const isPred = Boolean(signal.isPrediction);
+      const rsiLineColor = isPred ? hexToRgba(divColor, 0.55) : divColor;
       const divLine = rsiChart.addSeries(LineSeries,{
-        color: divColor,
-        lineWidth: 2,
-        lineStyle: LineStyle.Dashed,
+        color: rsiLineColor,
+        lineWidth: isPred ? 1 : 2,
+        lineStyle: isPred ? LineStyle.Dotted : LineStyle.Dashed,
         crosshairMarkerVisible: false,
         priceLineVisible: false,
         lastValueVisible: false,
@@ -345,10 +349,10 @@ export default function SignalChartModal({
       createSeriesMarkers(rsiSeries, rsiPoints.map((p) => ({
         time: toTs(p.time),
         position: signal.direction === "BULLISH" ? "aboveBar" as const : "belowBar" as const,
-        color: divColor,
+        color: isPred ? hexToRgba(divColor, 0.65) : divColor,
         shape: "circle" as const,
         text: p.label ?? "",
-        size: 2,
+        size: isPred ? 1 : 2,
       })));
 
       rsiChart.timeScale().fitContent();
@@ -404,6 +408,9 @@ export default function SignalChartModal({
               <p className={styles.subtitle}>
                 <span className={styles.typeTag}>{typeLabel}</span>
                 {signal.patternName && <span className={styles.patternTag}>{signal.patternName}</span>}
+                {signal.isPrediction && (
+                  <span className={styles.predictionTag}>{language === "ko" ? "⏳ 예측" : "⏳ Forecast"}</span>
+                )}
                 {signal.strength === "STRONG" && <span className={styles.strongTag}>★ STRONG</span>}
               </p>
               <p className={styles.desc}>{description}</p>
@@ -416,7 +423,10 @@ export default function SignalChartModal({
           <div ref={priceRef} className={styles.priceChart} />
           {signal.viz.kind === "DIVERGENCE" && (
             <>
-              <div className={styles.rsiLabel}>RSI (14) · {language === "ko" ? "다이버전스" : "Divergence"}</div>
+              <div className={styles.rsiLabel}>
+                RSI (14) · {language === "ko" ? "다이버전스" : "Divergence"}
+                {signal.isPrediction ? (language === "ko" ? " (예측)" : " (forming)") : ""}
+              </div>
               <div ref={rsiRef} className={styles.rsiChart} />
             </>
           )}
@@ -459,12 +469,16 @@ function Legend({ signal, language }: { signal: CryptoSignal; language: "ko" | "
       </div>
     );
   }
+  const divLegendLabel =
+    signal.isPrediction
+      ? (language === "ko" ? "다이버전스 추세선 (예측·점선)" : "Divergence trendline (forecast)")
+      : (language === "ko" ? "다이버전스 추세선" : "Divergence trendline");
   return (
     <div className={styles.legendGrid}>
       <LegendItem color="#818cf8" label="RSI (14)" />
       <LegendItem
         color={signal.direction === "BULLISH" ? "#4ade80" : "#f87171"}
-        label={language === "ko" ? "다이버전스 추세선" : "Divergence trendline"}
+        label={divLegendLabel}
         dashed
       />
     </div>
