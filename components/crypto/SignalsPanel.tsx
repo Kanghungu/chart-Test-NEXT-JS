@@ -11,7 +11,7 @@ import {
 import SignalChartModal from "./SignalChartModal";
 import styles from "./SignalsPanel.module.css";
 
-type TypeFilter = "ALL" | "HARMONIC" | "DIVERGENCE" | "ZONE_BREAK";
+type TypeFilter = "ALL" | "HARMONIC" | "DIVERGENCE" | "ZONE_BREAK" | "HARMONIC_PRZ" | "ZONE_APPROACH" | "PREDICTIVE";
 type DirFilter  = "ALL" | "BULLISH" | "BEARISH";
 
 const COIN_TINT: Record<string, string> = {
@@ -57,7 +57,9 @@ export default function SignalsPanel() {
 
   const filtered = useMemo(() => {
     return signals.filter((s) => {
-      if (typeFilter !== "ALL" && s.type !== typeFilter) return false;
+      if (typeFilter === "PREDICTIVE") {
+        if (s.type !== "HARMONIC_PRZ" && s.type !== "ZONE_APPROACH") return false;
+      } else if (typeFilter !== "ALL" && s.type !== typeFilter) return false;
       if (dirFilter !== "ALL" && s.direction !== dirFilter) return false;
       return true;
     });
@@ -105,10 +107,10 @@ export default function SignalsPanel() {
       <div className={styles.filterRow}>
         <div className={styles.filterGroup}>
           <span className={styles.filterLabel}>{C.fType}</span>
-          {(["ALL","HARMONIC","DIVERGENCE","ZONE_BREAK"] as const).map((v) => (
+          {(["ALL","PREDICTIVE","HARMONIC","DIVERGENCE","ZONE_BREAK"] as const).map((v) => (
             <button
               key={v}
-              className={`${styles.pill} ${typeFilter === v ? styles.pillActive : ""}`}
+              className={`${styles.pill} ${typeFilter === v ? styles.pillActive : ""} ${v === "PREDICTIVE" ? styles.pillPredict : ""}`}
               onClick={() => setTypeFilter(v)}
             >
               {C.typeLabels[v]}
@@ -201,6 +203,7 @@ function SignalCard({
   const tint = COIN_TINT[signal.base] ?? "#64748b";
   const isBull = signal.direction === "BULLISH";
   const isStrong = signal.strength === "STRONG";
+  const isPredict = signal.type === "HARMONIC_PRZ" || signal.type === "ZONE_APPROACH";
   const typeLabel = TYPE_LABEL[language][signal.type];
   const dirLabel  = isBull ? (language === "ko" ? "상승" : "BULL") : (language === "ko" ? "하락" : "BEAR");
   const description = language === "ko" ? signal.descriptionKo : signal.descriptionEn;
@@ -213,7 +216,7 @@ function SignalCard({
       tabIndex={0}
       onClick={onClick}
       onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onClick(); } }}
-      className={`${styles.card} ${isBull ? styles.cardBull : styles.cardBear} ${isStrong ? styles.cardStrong : ""}`}
+      className={`${styles.card} ${isBull ? styles.cardBull : styles.cardBear} ${isStrong ? styles.cardStrong : ""} ${isPredict ? styles.cardPredict : ""}`}
       style={{ "--tint": tint } as React.CSSProperties}
     >
       <span className={styles.cardTintBar} aria-hidden="true" />
@@ -278,14 +281,18 @@ function formatPrice(p: number): string {
 
 const TYPE_LABEL: Record<"ko" | "en", Record<CryptoSignal["type"], string>> = {
   ko: {
-    HARMONIC:   "하모닉",
-    DIVERGENCE: "다이버전스",
-    ZONE_BREAK: "매물대 돌파",
+    HARMONIC:      "하모닉",
+    DIVERGENCE:    "다이버전스",
+    ZONE_BREAK:    "매물대 돌파",
+    HARMONIC_PRZ:  "⏳ PRZ 접근",
+    ZONE_APPROACH: "⏳ 돌파 임박",
   },
   en: {
-    HARMONIC:   "Harmonic",
-    DIVERGENCE: "Divergence",
-    ZONE_BREAK: "Zone Break",
+    HARMONIC:      "Harmonic",
+    DIVERGENCE:    "Divergence",
+    ZONE_BREAK:    "Zone Break",
+    HARMONIC_PRZ:  "⏳ PRZ Watch",
+    ZONE_APPROACH: "⏳ Breakout Soon",
   },
 };
 
@@ -307,10 +314,13 @@ const COPY = {
     fType:    "유형",
     fDir:     "방향",
     typeLabels: {
-      ALL:        "전체",
-      HARMONIC:   "하모닉",
-      DIVERGENCE: "다이버전스",
-      ZONE_BREAK: "매물대",
+      ALL:          "전체",
+      PREDICTIVE:   "⏳ 예측",
+      HARMONIC:     "하모닉",
+      DIVERGENCE:   "다이버전스",
+      ZONE_BREAK:   "매물대",
+      HARMONIC_PRZ: "PRZ 접근",
+      ZONE_APPROACH:"돌파 임박",
     },
     dirLabels: {
       ALL:     "전체",
@@ -335,10 +345,13 @@ const COPY = {
     fType:    "Type",
     fDir:     "Direction",
     typeLabels: {
-      ALL:        "All",
-      HARMONIC:   "Harmonic",
-      DIVERGENCE: "Divergence",
-      ZONE_BREAK: "Zone",
+      ALL:          "All",
+      PREDICTIVE:   "⏳ Predict",
+      HARMONIC:     "Harmonic",
+      DIVERGENCE:   "Divergence",
+      ZONE_BREAK:   "Zone",
+      HARMONIC_PRZ: "PRZ Watch",
+      ZONE_APPROACH:"Breakout Soon",
     },
     dirLabels: {
       ALL:     "All",

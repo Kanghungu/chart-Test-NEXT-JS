@@ -39,7 +39,9 @@ export type CryptoSignal = {
   symbol: string;
   base: string;
   timeframe: TF;
-  type: "HARMONIC" | "DIVERGENCE" | "ZONE_BREAK";
+  /** Confirmed signals: HARMONIC, DIVERGENCE, ZONE_BREAK
+   *  Predictive signals: HARMONIC_PRZ (D not yet formed), ZONE_APPROACH (breakout imminent) */
+  type: "HARMONIC" | "DIVERGENCE" | "ZONE_BREAK" | "HARMONIC_PRZ" | "ZONE_APPROACH";
   direction: "BULLISH" | "BEARISH";
   patternName?: string;
   currentPrice: number;
@@ -627,6 +629,217 @@ function detectZoneBreak(candles: Candle[]): ZoneHit[] {
   return result;
 }
 
+// ── Harmonic PRZ Approach ─────────────────────────────────────────────────
+// Detects XABC patterns where D has NOT yet formed, and current price is
+// within ~3% of the projected D completion zone.
+type HarmonicPRZHit = {
+  name: string;
+  direction: "BULLISH" | "BEARISH";
+  przMin: number;
+  przMax: number;
+  detectedAt: number;
+  points: VizPoint[];  // X, A, B, C only (no D yet)
+};
+
+function detectHarmonicPRZ(pivots: Pivot[], candles: Candle[], recency: number): HarmonicPRZHit[] {
+  const hits: HarmonicPRZHit[] = [];
+  if (pivots.length < 4) return hits;
+
+  const recent      = pivots.slice(-14);
+  const candleLen   = candles.length;
+  const currentClose = candles[candleLen - 1].close;
+  const PRZ_WINDOW  = 0.03; // within 3% of projected D
+
+  for (let i = 0; i <= recent.length - 4; i++) {
+    const [X, A, B, C] = recent.slice(i, i + 4);
+
+    if (X.type === A.type || A.type === B.type || B.type === C.type) continue;
+
+    // Bullish: X=low, A=high, B=low, C=high → D will be a LOW (buy zone)
+    // Bearish: X=high, A=low, B=high, C=low → D will be a HIGH (sell zone)
+    const bullish = X.type === "low"  && C.type === "high";
+    const bearish = X.type === "high" && C.type === "low";
+    if (!bullish && !bearish) continue;
+
+    // C must be recent (last recency + 10 candles)
+    if (C.index < candleLen - recency - 10) continue;
+
+    // After C forms, price must be moving toward projected D
+    // Bullish: price falling after C high (currentClose < C.price)
+    // Bearish: price rising after C low  (currentClose > C.price)
+    if (bullish && currentClose >= C.price) continue;
+    if (bearish && currentClose <= C.price) continue;
+
+    const XA = Math.abs(A.price - X.price);
+    const AB = Math.abs(B.price - A.price);
+    const BC = Math.abs(C.price - B.price);
+    const XB = Math.abs(B.price - X.price);
+    const XC = Math.abs(C.price - X.price);
+    if (XA < 1e-10 || AB < 1e-10 || BC < 1e-10) continue;
+
+    const direction: "BULLISH" | "BEARISH" = bullish ? "BULLISH" : "BEARISH";
+
+    for (const def of HARMONIC_DEFS) {
+      // ① B/XA check
+      if (!inRange(AB / XA, def.b_xa[0], def.b_xa[1], H_TOL_BC)) continue;
+
+      // ② C check
+      let cOk = false;
+      const cc = def.c_check;
+      if (cc.type === "c_ab")  cOk = inRange(BC / AB, cc.range[0], cc.range[1], H_TOL_BC);
+      if (cc.type === "bc_xb") cOk = XB > 1e-10 && inRange(BC / XB, cc.range[0], cc.range[1], H_TOL_BC);
+      if (cc.type === "xc_xa") cOk = inRange(XC / XA, cc.range[0], cc.range[1], H_TOL_BC);
+      if (!cOk) continue;
+
+      // ③ Project D zone from d_check ratios
+      let przMin: number, przMax: number;
+      const dc = def.d_check;
+      if (dc.type === "ad_xa") {
+        if (bullish) {
+          // D = A - XA * ratio  (D is below A in bullish)
+          przMax = A.price - XA * (dc.range[0] - H_TOL_D);
+          przMin = A.price - XA * (dc.range[1] + H_TOL_D);
+        } else {
+          // D = A + XA * ratio  (D is above A in bearish)
+          przMin = A.price + XA * (dc.range[0] - H_TOL_D);
+          przMax = A.price + XA * (dc.range[1] + H_TOL_D);
+        }
+      } else {
+        // cd_xc (Cypher): D retraces XC leg from C
+        if (bullish) {
+          przMax = C.price - XC * (dc.range[0] - H_TOL_D);
+          przMin = C.price - XC * (dc.range[1] + H_TOL_D);
+        } else {
+          przMin = C.price + XC * (dc.range[0] - H_TOL_D);
+          przMax = C.price + XC * (dc.range[1] + H_TOL_D);
+        }
+      }
+      if (przMin > przMax) [przMin, przMax] = [przMax, przMin];
+
+      // ④ Is current price inside PRZ or approaching it (within PRZ_WINDOW)?
+      const inOrNear =
+        bullish
+          ? currentClose <= przMax * (1 + PRZ_WINDOW) && currentClose >= przMin * (1 - PRZ_WINDOW * 0.5)
+          : currentClose >= przMin * (1 - PRZ_WINDOW) && currentClose <= przMax * (1 + PRZ_WINDOW * 0.5);
+      if (!inOrNear) continue;
+
+      hits.push({
+        name: def.name,
+        direction,
+        przMin, przMax,
+        detectedAt: C.time,
+        points: [
+          { time: X.time, price: X.price, label: "X" },
+          { time: A.time, price: A.price, label: "A" },
+          { time: B.time, price: B.price, label: "B" },
+          { time: C.time, price: C.price, label: "C" },
+        ],
+      });
+      break;
+    }
+  }
+
+  // Keep most-recent per name+direction
+  const seen = new Map<string, HarmonicPRZHit>();
+  for (const h of hits) {
+    const k = `${h.name}-${h.direction}`;
+    if (!seen.has(k) || h.detectedAt > seen.get(k)!.detectedAt) seen.set(k, h);
+  }
+  return Array.from(seen.values());
+}
+
+// ── Zone Approach ─────────────────────────────────────────────────────────
+// Detects when price is within ~1.5% of a key resistance/support zone
+// BEFORE breaking through — early warning for an imminent breakout.
+type ZoneApproachHit = {
+  direction: "BULLISH" | "BEARISH";
+  strength: "STRONG" | "MEDIUM";
+  detectedAt: number;
+  zoneLow: number;
+  zoneHigh: number;
+  distancePct: number;
+};
+
+function detectZoneApproach(candles: Candle[], rsi: number[]): ZoneApproachHit[] {
+  if (candles.length < 70) return [];
+
+  const hist = candles.slice(-70, -20);
+  if (hist.length < 20) return [];
+
+  const sortedMid = [...hist].map((c) => (c.high + c.low) / 2).sort((a, b) => a - b);
+  const p80 = sortedMid[Math.floor(sortedMid.length * 0.80)];
+  const p20 = sortedMid[Math.floor(sortedMid.length * 0.20)];
+
+  const vwap = (cs: Candle[]) => {
+    const totalVol = cs.reduce((s, c) => s + c.volume, 0);
+    if (totalVol < 1e-10) return (cs[0]?.high + cs[0]?.low) / 2 || 0;
+    return cs.reduce((s, c) => s + (c.high + c.low) / 2 * c.volume, 0) / totalVol;
+  };
+
+  const resHist = hist.filter((c) => (c.high + c.low) / 2 >= p80);
+  const supHist = hist.filter((c) => (c.high + c.low) / 2 <= p20);
+  const resistance = vwap(resHist);
+  const support    = vwap(supHist);
+
+  const resBand: [number, number] = resHist.length > 0
+    ? [Math.min(...resHist.map((c) => c.low)), Math.max(...resHist.map((c) => c.high))]
+    : [resistance * 0.995, resistance * 1.005];
+  const supBand: [number, number] = supHist.length > 0
+    ? [Math.min(...supHist.map((c) => c.low)), Math.max(...supHist.map((c) => c.high))]
+    : [support * 0.995, support * 1.005];
+
+  const histVol      = hist.reduce((s, c) => s + c.volume, 0) / hist.length;
+  const recent       = candles.slice(-20);
+  const cur          = recent[recent.length - 1];
+  const currentClose = cur.close;
+  const currentRSI   = rsi[rsi.length - 1];
+  const BREAK_BUFFER = 0.0025;
+  const APPROACH     = 0.015; // 1.5% threshold
+
+  // Skip if zone has already been broken recently
+  const alreadyBullBroken = recent.some((c) => c.close > resistance * (1 + BREAK_BUFFER));
+  const alreadyBearBroken = recent.some((c) => c.close < support   * (1 - BREAK_BUFFER));
+
+  const last3Vol = recent.slice(-3).reduce((s, c) => s + c.volume, 0) / 3;
+  const hits: ZoneApproachHit[] = [];
+
+  // Bullish approach: price within APPROACH% below resistance, not yet broken
+  if (!alreadyBullBroken) {
+    const dist = (resistance - currentClose) / resistance;
+    if (dist >= 0 && dist <= APPROACH) {
+      const rsiOk    = !isNaN(currentRSI) && currentRSI > 45;
+      const volOk    = last3Vol > histVol * 1.1;
+      const isStrong = rsiOk && volOk && dist < 0.008;
+      hits.push({
+        direction: "BULLISH",
+        strength: isStrong ? "STRONG" : "MEDIUM",
+        detectedAt: cur.time,
+        zoneLow: resBand[0], zoneHigh: resBand[1],
+        distancePct: dist,
+      });
+    }
+  }
+
+  // Bearish approach: price within APPROACH% above support, not yet broken
+  if (!alreadyBearBroken) {
+    const dist = (currentClose - support) / support;
+    if (dist >= 0 && dist <= APPROACH) {
+      const rsiOk    = !isNaN(currentRSI) && currentRSI < 55;
+      const volOk    = last3Vol > histVol * 1.1;
+      const isStrong = rsiOk && volOk && dist < 0.008;
+      hits.push({
+        direction: "BEARISH",
+        strength: isStrong ? "STRONG" : "MEDIUM",
+        detectedAt: cur.time,
+        zoneLow: supBand[0], zoneHigh: supBand[1],
+        distancePct: dist,
+      });
+    }
+  }
+
+  return hits;
+}
+
 // ── Description builders ──────────────────────────────────────────────────
 function buildDesc(
   base: string,
@@ -634,6 +847,7 @@ function buildDesc(
   type: CryptoSignal["type"],
   dir: CryptoSignal["direction"],
   pat?: string,
+  extra?: string,
 ): { ko: string; en: string } {
   const tf_ko  = tf === "15m" ? "15분봉" : tf === "1h" ? "1시간봉" : "4시간봉";
   const dir_ko = dir === "BULLISH" ? "상승" : "하락";
@@ -641,10 +855,21 @@ function buildDesc(
     ko: `${base} ${tf_ko} — ${dir_ko} ${pat} 하모닉 패턴. PRZ 구간 반전 주시`,
     en: `${base} ${tf} — ${dir} ${pat} harmonic pattern. Watch PRZ for reversal`,
   };
+  if (type === "HARMONIC_PRZ") return {
+    ko: `${base} ${tf_ko} — ${dir_ko} ${pat} 패턴 완성 임박. D 포인트 PRZ 접근 중${extra ? ` (현재가 ${extra}% 이내)` : ""}`,
+    en: `${base} ${tf} — ${dir} ${pat} nearing completion. Price approaching D-point PRZ${extra ? ` (within ${extra}%)` : ""}`,
+  };
   if (type === "DIVERGENCE") return {
     ko: `${base} ${tf_ko} — RSI ${dir_ko} 다이버전스. 추세 전환 가능성`,
     en: `${base} ${tf} — RSI ${dir} divergence. Potential trend reversal`,
   };
+  if (type === "ZONE_APPROACH") {
+    const zone_ko = dir === "BULLISH" ? "저항대" : "지지대";
+    return {
+      ko: `${base} ${tf_ko} — ${zone_ko} 돌파 임박${extra ? ` (${extra}% 이내 접근)` : ""}. 거래량·RSI 모멘텀 확인`,
+      en: `${base} ${tf} — ${dir === "BULLISH" ? "Resistance" : "Support"} breakout imminent${extra ? ` (within ${extra}%)` : ""}. RSI & volume momentum building`,
+    };
+  }
   const zone_ko = dir === "BULLISH" ? "저항대" : "지지대";
   return {
     ko: `${base} ${tf_ko} — ${zone_ko} 돌파. ${dir_ko} 모멘텀 확인`,
@@ -710,7 +935,46 @@ async function processCell(symbol: string, tf: TF): Promise<CryptoSignal[]> {
         zoneLow: z.zoneLow,
         zoneHigh: z.zoneHigh,
         breakoutTime: z.detectedAt,
-        // Zone historical window was candles.slice(-70, -20); box spans from there to last candle
+        zoneStartTime: candles[Math.max(0, candles.length - 70)].time,
+        zoneEndTime:   candles[candles.length - 1].time,
+      },
+    });
+  }
+
+  // ── Predictive: Harmonic PRZ approach (D not yet formed) ─────────────────
+  for (const h of detectHarmonicPRZ(pivots, candles, recency)) {
+    const distPct = (Math.abs(price - (h.przMin + h.przMax) / 2) / price * 100).toFixed(1);
+    const { ko, en } = buildDesc(base, tf, "HARMONIC_PRZ", h.direction, h.name, distPct);
+    out.push({
+      id: `${symbol}-${tf}-prz-${h.name}-${h.direction}`,
+      symbol, base, timeframe: tf,
+      type: "HARMONIC_PRZ", direction: h.direction, patternName: h.name,
+      currentPrice: price, przMin: h.przMin, przMax: h.przMax,
+      strength: "MEDIUM",
+      descriptionKo: ko, descriptionEn: en, detectedAt: h.detectedAt,
+      candles: vizCandles,
+      // Reuse HARMONIC viz kind — modal renders XABC points + PRZ box (no D point shown)
+      viz: { kind: "HARMONIC", points: h.points, przMin: h.przMin, przMax: h.przMax },
+    });
+  }
+
+  // ── Predictive: Zone approach (breakout imminent) ─────────────────────────
+  for (const z of detectZoneApproach(candles, rsi)) {
+    const distStr = (z.distancePct * 100).toFixed(2);
+    const { ko, en } = buildDesc(base, tf, "ZONE_APPROACH", z.direction, undefined, distStr);
+    out.push({
+      id: `${symbol}-${tf}-zappr-${z.direction}`,
+      symbol, base, timeframe: tf,
+      type: "ZONE_APPROACH", direction: z.direction,
+      currentPrice: price, strength: z.strength,
+      descriptionKo: ko, descriptionEn: en, detectedAt: z.detectedAt,
+      candles: vizCandles,
+      // Reuse ZONE_BREAK viz kind — modal shows the same zone box
+      viz: {
+        kind: "ZONE_BREAK",
+        zoneLow: z.zoneLow,
+        zoneHigh: z.zoneHigh,
+        breakoutTime: z.detectedAt,
         zoneStartTime: candles[Math.max(0, candles.length - 70)].time,
         zoneEndTime:   candles[candles.length - 1].time,
       },
@@ -729,7 +993,9 @@ export async function scanAllCryptoSignals(
   const nested = await Promise.all(tasks);
   const signals = nested.flat();
 
-  const typeScore = { HARMONIC: 2, DIVERGENCE: 1, ZONE_BREAK: 0 };
+  const typeScore: Record<CryptoSignal["type"], number> = {
+    HARMONIC: 2, DIVERGENCE: 1, ZONE_BREAK: 0, HARMONIC_PRZ: 3, ZONE_APPROACH: 2,
+  };
   signals.sort((a, b) => {
     if (a.strength !== b.strength) return a.strength === "STRONG" ? -1 : 1;
     if (b.detectedAt !== a.detectedAt) return b.detectedAt - a.detectedAt;

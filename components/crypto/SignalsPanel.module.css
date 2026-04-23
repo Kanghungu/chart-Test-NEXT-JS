@@ -226,6 +226,19 @@
   box-shadow: 0 0 12px rgba(248, 113, 113, 0.18);
 }
 
+/* Predictive pill — teal accent + dashed border */
+.pillPredict {
+  border-style: dashed;
+  color: #2dd4bf;
+}
+.pillPredict.pillActive {
+  background: rgba(45, 212, 191, 0.1);
+  color: #2dd4bf;
+  border-color: #2dd4bf;
+  border-style: dashed;
+  box-shadow: 0 0 12px rgba(45, 212, 191, 0.2);
+}
+
 /* ── Body / states ─────────────────────────────────────────────────────── */
 .body {
   padding: 1.25rem 1.75rem 1.75rem;
@@ -356,6 +369,22 @@
   box-shadow: 0 0 18px var(--accent-amber);
 }
 
+/* Predictive signal cards — dashed border, subtler background */
+.cardPredict {
+  border-style: dashed;
+  border-color: rgba(45, 212, 191, 0.35);
+  background: linear-gradient(
+    135deg,
+    rgba(45, 212, 191, 0.06) 0%,
+    var(--surface-1) 55%
+  );
+}
+.cardPredict::after { content: "→"; }
+.cardPredict .cardTintBar {
+  background: linear-gradient(180deg, #2dd4bf, var(--tint));
+  box-shadow: 0 0 10px rgba(45, 212, 191, 0.4);
+}
+
 .cardHeader {
   display: flex;
   justify-content: space-between;
@@ -442,9 +471,12 @@
   border: 1px solid currentColor;
 }
 
-.type_HARMONIC   { color: var(--accent-purple); }
-.type_DIVERGENCE { color: var(--accent-blue); }
-.type_ZONE_BREAK { color: var(--accent-amber); }
+.type_HARMONIC      { color: var(--accent-purple); }
+.type_DIVERGENCE    { color: var(--accent-blue); }
+.type_ZONE_BREAK    { color: var(--accent-amber); }
+/* Predictive signals — teal/cyan tones, dashed border to signal "not yet confirmed" */
+.type_HARMONIC_PRZ  { color: #2dd4bf; border-style: dashed; }
+.type_ZONE_APPROACH { color: #38bdf8; border-style: dashed; }
 
 .patternBadge {
   font-family: var(--font-mono);
