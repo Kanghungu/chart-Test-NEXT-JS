@@ -14,6 +14,11 @@ import styles from "./SignalsPanel.module.css";
 type TypeFilter = "ALL" | "HARMONIC" | "DIVERGENCE" | "ZONE_BREAK" | "HARMONIC_PRZ" | "ZONE_APPROACH" | "PREDICTIVE";
 type DirFilter  = "ALL" | "BULLISH" | "BEARISH";
 
+/** localStorage 키 — 보기 토글 상태 유지 */
+const LS_VIEW_DESC = "signalsPanel_view_description";
+const LS_VIEW_PRZ  = "signalsPanel_view_prz";
+const LS_VIEW_COMPACT = "signalsPanel_view_compact";
+
 const COIN_TINT: Record<string, string> = {
   BTC:  "#f7931a",
   ETH:  "#627eea",
@@ -33,8 +38,25 @@ export default function SignalsPanel() {
   const [typeFilter, setTypeFilter] = useState<TypeFilter>("ALL");
   const [dirFilter, setDirFilter]   = useState<DirFilter>("ALL");
   const [selected,   setSelected]   = useState<CryptoSignal | null>(null);
+  const [viewShowDescription, setViewShowDescription] = useState(true);
+  const [viewShowPrz, setViewShowPrz] = useState(true);
+  const [viewCompact, setViewCompact] = useState(false);
 
   const C = COPY[language];
+
+  // 브라우저에서 저장된 보기 옵션 복원 (SSR 이후)
+  useEffect(() => {
+    try {
+      const d = localStorage.getItem(LS_VIEW_DESC);
+      const p = localStorage.getItem(LS_VIEW_PRZ);
+      const c = localStorage.getItem(LS_VIEW_COMPACT);
+      if (d !== null) setViewShowDescription(d === "1");
+      if (p !== null) setViewShowPrz(p === "1");
+      if (c !== null) setViewCompact(c === "1");
+    } catch {
+      /* 저장소 비가용 시 기본값 유지 */
+    }
+  }, []);
 
   async function scan() {
     try {
@@ -132,6 +154,64 @@ export default function SignalsPanel() {
         </div>
       </div>
 
+      {/* 보기: 설명 / PRZ / 밀집 레이아웃 — 온오프 필터 (localStorage 유지) */}
+      <div className={styles.viewRow}>
+        <span className={styles.filterLabel}>{C.fView}</span>
+        <div className={styles.viewToggles}>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={viewShowDescription}
+            className={`${styles.togglePill} ${viewShowDescription ? styles.togglePillOn : ""}`}
+            onClick={() => {
+              setViewShowDescription((v) => {
+                const next = !v;
+                try {
+                  localStorage.setItem(LS_VIEW_DESC, next ? "1" : "0");
+                } catch { /* ignore */ }
+                return next;
+              });
+            }}
+          >
+            {C.viewDesc}
+          </button>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={viewShowPrz}
+            className={`${styles.togglePill} ${viewShowPrz ? styles.togglePillOn : ""}`}
+            onClick={() => {
+              setViewShowPrz((v) => {
+                const next = !v;
+                try {
+                  localStorage.setItem(LS_VIEW_PRZ, next ? "1" : "0");
+                } catch { /* ignore */ }
+                return next;
+              });
+            }}
+          >
+            {C.viewPrz}
+          </button>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={viewCompact}
+            className={`${styles.togglePill} ${viewCompact ? styles.togglePillOn : ""}`}
+            onClick={() => {
+              setViewCompact((v) => {
+                const next = !v;
+                try {
+                  localStorage.setItem(LS_VIEW_COMPACT, next ? "1" : "0");
+                } catch { /* ignore */ }
+                return next;
+              });
+            }}
+          >
+            {C.viewCompact}
+          </button>
+        </div>
+      </div>
+
       {/* Body */}
       <div className={styles.body}>
         {loading && signals.length === 0 && (
@@ -153,12 +233,15 @@ export default function SignalsPanel() {
           </div>
         )}
         {filtered.length > 0 && (
-          <div className={styles.cardGrid}>
+          <div className={`${styles.cardGrid} ${viewCompact ? styles.cardGridCompact : ""}`}>
             {filtered.map((s) => (
               <SignalCard
                 key={s.id}
                 signal={s}
                 language={language}
+                compact={viewCompact}
+                showDescription={viewShowDescription}
+                showPrz={viewShowPrz}
                 onClick={() => setSelected(s)}
               />
             ))}
@@ -195,10 +278,16 @@ function SummaryCard({
 function SignalCard({
   signal,
   language,
+  compact,
+  showDescription,
+  showPrz,
   onClick,
 }: {
   signal: CryptoSignal;
   language: "ko" | "en";
+  compact: boolean;
+  showDescription: boolean;
+  showPrz: boolean;
   onClick: () => void;
 }) {
   const tint = COIN_TINT[signal.base] ?? "#64748b";
@@ -220,7 +309,7 @@ function SignalCard({
       tabIndex={0}
       onClick={onClick}
       onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onClick(); } }}
-      className={`${styles.card} ${isBull ? styles.cardBull : styles.cardBear} ${isStrong ? styles.cardStrong : ""} ${isPredict ? styles.cardPredict : ""}`}
+      className={`${styles.card} ${compact ? styles.cardCompact : ""} ${isBull ? styles.cardBull : styles.cardBear} ${isStrong ? styles.cardStrong : ""} ${isPredict ? styles.cardPredict : ""}`}
       style={{ "--tint": tint } as React.CSSProperties}
     >
       <span className={styles.cardTintBar} aria-hidden="true" />
@@ -250,14 +339,16 @@ function SignalCard({
         )}
       </div>
 
-      <p className={styles.cardDesc}>{description}</p>
+      {showDescription && (
+        <p className={styles.cardDesc}>{description}</p>
+      )}
 
       <dl className={styles.cardMeta}>
         <div className={styles.metaRow}>
           <dt>{language === "ko" ? "현재가" : "Price"}</dt>
           <dd className={styles.priceValue}>${priceFmt}</dd>
         </div>
-        {signal.przMin !== undefined && signal.przMax !== undefined && (
+        {showPrz && signal.przMin !== undefined && signal.przMax !== undefined && (
           <div className={styles.metaRow}>
             <dt>PRZ</dt>
             <dd className={styles.przValue}>
@@ -320,6 +411,10 @@ const COPY = {
     sStrong:  "강력",
     fType:    "유형",
     fDir:     "방향",
+    fView:    "보기",
+    viewDesc: "설명",
+    viewPrz:  "PRZ",
+    viewCompact: "밀집",
     typeLabels: {
       ALL:           "전체",
       PREDICTIVE:    "⏳ 예측",
@@ -351,6 +446,10 @@ const COPY = {
     sStrong:  "Strong",
     fType:    "Type",
     fDir:     "Direction",
+    fView:    "View",
+    viewDesc: "Desc",
+    viewPrz:  "PRZ",
+    viewCompact: "Dense",
     typeLabels: {
       ALL:           "All",
       PREDICTIVE:    "⏳ Predict",
