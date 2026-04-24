@@ -64,7 +64,7 @@ export const CRYPTO_SYMBOLS = [
   "BTCUSDT", "ETHUSDT", "SOLUSDT", "XRPUSDT", "BNBUSDT", "ADAUSDT", "DOGEUSDT",
   "VIRTUALUSDT", "TAOUSDT", "WLDUSDT", "MAGICUSDT", "LTCUSDT", "ENAUSDT", "TURBOUSDT",
 ];
-export const CRYPTO_TFS: TF[] = ["15m", "1h", "4h"];
+export const CRYPTO_TFS: TF[] = ["1h", "4h"];
 
 const PIVOT_N:  Record<TF, number> = { "15m": 3,  "1h": 4,  "4h": 5  };
 /** D 피벗이 최근 N봉 안에 있어야 함 — 15m는 긴 XABCD 허용 */
@@ -179,9 +179,9 @@ function findPivots(candles: Candle[], n: number): Pivot[] {
 }
 
 // ── Harmonic ──────────────────────────────────────────────────────────────
-// Tolerance: ±5% for B/XA, C ratios; ±6% for D ratios
-const H_TOL_BC = 0.05;
-const H_TOL_D  = 0.06;
+// Tolerance: ±4% for B/XA, C ratios; ±5% for D ratios (tightened for quality)
+const H_TOL_BC = 0.04;
+const H_TOL_D  = 0.05;
 
 function inRange(v: number, lo: number, hi: number, tol: number): boolean {
   return v >= lo - tol && v <= hi + tol;
@@ -747,7 +747,7 @@ function detectHarmonicPRZ(pivots: Pivot[], candles: Candle[], recency: number):
   const recent      = pivots.slice(-14);
   const candleLen   = candles.length;
   const currentClose = candles[candleLen - 1].close;
-  const PRZ_WINDOW  = 0.03; // within 3% of projected D
+  const PRZ_WINDOW  = 0.02; // within 2% of projected D (tightened)
 
   for (let i = 0; i <= recent.length - 4; i++) {
     const [X, A, B, C] = recent.slice(i, i + 4);
@@ -893,7 +893,7 @@ function detectZoneApproach(candles: Candle[], rsi: number[]): ZoneApproachHit[]
   const currentClose = cur.close;
   const currentRSI   = rsi[rsi.length - 1];
   const BREAK_BUFFER = 0.0025;
-  const APPROACH     = 0.015; // 1.5% threshold
+  const APPROACH     = 0.010; // 1.0% threshold (tightened for quality)
 
   // Skip if zone has already been broken recently
   const alreadyBullBroken = recent.some((c) => c.close > resistance * (1 + BREAK_BUFFER));
@@ -1025,21 +1025,13 @@ async function processCell(symbol: string, tf: TF): Promise<CryptoSignal[]> {
     });
   }
 
-  for (const d of detectDivergencePrediction(candles, rsi, confirmedDir)) {
-    const { ko, en } = buildDesc(base, tf, "DIVERGENCE", d.direction, undefined, { isPrediction: true });
-    out.push({
-      id: `${symbol}-${tf}-div-pred-${d.direction}`,
-      symbol, base, timeframe: tf,
-      type: "DIVERGENCE", direction: d.direction,
-      currentPrice: price, strength: "MEDIUM",
-      isPrediction: true,
-      descriptionKo: ko, descriptionEn: en, detectedAt: d.detectedAt,
-      candles: vizCandles,
-      viz: { kind: "DIVERGENCE", pricePoints: d.pricePoints, rsiPoints: d.rsiPoints, rsi: rsiSeries },
-    });
-  }
+  // Divergence predictions (forming, not yet confirmed) are too speculative — skipped.
 
   for (const h of detectHarmonics(pivots, candles, recency, pivotTail)) {
+    // Only keep harmonic if current price is within 3% of PRZ midpoint (actionable)
+    const przMid = (h.przMin + h.przMax) / 2;
+    const distFromPRZ = Math.abs(price - przMid) / price;
+    if (distFromPRZ > 0.03) continue;
     const { ko, en } = buildDesc(base, tf, "HARMONIC", h.direction, h.name);
     out.push({
       id: `${symbol}-${tf}-har-${h.name}-${h.direction}`,
@@ -1092,8 +1084,9 @@ async function processCell(symbol: string, tf: TF): Promise<CryptoSignal[]> {
     });
   }
 
-  // ── Predictive: Zone approach (breakout imminent) ─────────────────────────
+  // ── Predictive: Zone approach (breakout imminent) — STRONG only ──────────
   for (const z of detectZoneApproach(candles, rsi)) {
+    if (z.strength !== "STRONG") continue; // skip weak approaches
     const distStr = (z.distancePct * 100).toFixed(2);
     const { ko, en } = buildDesc(base, tf, "ZONE_APPROACH", z.direction, undefined, { extra: distStr });
     out.push({
@@ -1128,7 +1121,7 @@ export async function scanAllCryptoSignals(
   const signals = nested.flat();
 
   const typeScore: Record<CryptoSignal["type"], number> = {
-    HARMONIC: 2, DIVERGENCE: 1, ZONE_BREAK: 0, HARMONIC_PRZ: 3, ZONE_APPROACH: 2,
+    DIVERGENCE: 3, ZONE_BREAK: 2, HARMONIC: 2, HARMONIC_PRZ: 1, ZONE_APPROACH: 1,
   };
   signals.sort((a, b) => {
     const predA = a.isPrediction ? 1 : 0;
