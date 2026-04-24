@@ -10,10 +10,14 @@
 }
 
 .eyebrow {
-  color: #7dd3fc;
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   font-weight: 800;
   letter-spacing: 0.18em;
+  text-transform: uppercase;
+  background: var(--gradient-accent);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .title {
@@ -36,13 +40,13 @@
 }
 
 .panel {
-  border: 1px solid var(--panel-border);
+  border: 1px solid var(--border-subtle);
   border-radius: var(--radius-lg);
-  background:
-    radial-gradient(circle at top right, rgb(14 165 233 / 0.12), transparent 30%),
-    var(--panel-bg);
+  background: var(--gradient-card);
   box-shadow: var(--panel-shadow);
   padding: 0.9rem;
+  position: relative;
+  overflow: hidden;
 }
 
 .panelHeader {
@@ -80,10 +84,16 @@
 .sessionCard,
 .metricCard,
 .eventCard {
-  border: 1px solid rgb(51 65 85 / 0.9);
-  border-radius: 0.9rem;
-  background: rgb(15 23 42 / 0.74);
+  border: 1px solid var(--border-subtle);
+  border-radius: 0.75rem;
+  background: rgba(15, 23, 42, 0.55);
   padding: 0.85rem;
+  transition: border-color 0.2s ease;
+}
+
+.sessionCard:hover,
+.eventCard:hover {
+  border-color: var(--border-accent);
 }
 
 .sessionCard {
@@ -203,11 +213,9 @@
 
 .riskStrip {
   margin-top: 0.25rem;
-  border: 1px solid var(--panel-border);
+  border: 1px solid var(--border-subtle);
   border-radius: var(--radius-lg);
-  background:
-    radial-gradient(circle at 10% 20%, rgb(99 102 241 / 0.12), transparent 42%),
-    var(--panel-bg);
+  background: var(--gradient-card);
   box-shadow: var(--panel-shadow);
   padding: 0.85rem 0.95rem;
 }
@@ -229,13 +237,18 @@
 }
 
 .riskCell {
-  border: 1px solid rgb(51 65 85 / 0.85);
-  border-radius: 0.85rem;
-  background: rgb(15 23 42 / 0.72);
+  border: 1px solid var(--border-subtle);
+  border-radius: 0.75rem;
+  background: rgba(15, 23, 42, 0.55);
   padding: 0.65rem 0.7rem;
   display: flex;
   flex-direction: column;
   gap: 0.2rem;
+  transition: border-color 0.2s ease;
+}
+
+.riskCell:hover {
+  border-color: var(--border-accent);
 }
 
 .riskLabel {

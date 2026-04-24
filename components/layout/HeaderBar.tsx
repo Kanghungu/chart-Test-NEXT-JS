@@ -71,7 +71,7 @@ export default function HeaderBar() {
       <div className={styles.headerInner}>
         <div className={styles.brand}>
           <Link href="/" className={styles.brandLink}>
-            Market Pulse Korea
+            Market Pulse <span className={styles.brandAccent}>Korea</span>
           </Link>
           <p className={styles.brandDescription}>{copy.description}</p>
         </div>

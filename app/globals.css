@@ -87,12 +87,22 @@ html {
 
 body {
   color: var(--foreground);
-  background: var(--background);
+  background:
+    radial-gradient(circle at top right, rgb(34 197 94 / 0.13), transparent 26%),
+    radial-gradient(circle at top left,  rgb(59 130 246 / 0.20), transparent 32%),
+    linear-gradient(180deg, rgb(2 6 23) 0%, rgb(3 7 18) 44%, rgb(10 15 28) 100%);
+  background-attachment: fixed;
   font-family: var(--font-sans);
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(51,65,85,0.6); border-radius: 9999px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(56,189,248,0.45); }
 
 * {
   box-sizing: border-box;
