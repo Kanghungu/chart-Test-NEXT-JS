@@ -3,6 +3,8 @@
 import { useState, useEffect, useRef } from "react";
 import { useLanguage } from "@/components/i18n/LanguageProvider";
 import SignalsPanel from "@/components/crypto/SignalsPanel";
+import FundingPanel from "@/components/crypto/FundingPanel";
+import TechnicalsPanel from "@/components/crypto/TechnicalsPanel";
 import styles from "./page.module.css";
 
 // ── Types ─────────────────────────────────────────────────────────────────
@@ -100,10 +102,13 @@ function useClock() {
 }
 
 // ── Page ──────────────────────────────────────────────────────────────────
+type PanelTab = "signals" | "futures" | "technicals";
+
 export default function CryptoPage() {
   const { language } = useLanguage();
   const [coin, setCoin] = useState<Coin>("BTC");
   const [tf,   setTf]   = useState<TF>("60");
+  const [panelTab, setPanelTab] = useState<PanelTab>("signals");
 
   const detailRef = useRef<HTMLDivElement>(null);
   const clock = useClock();
@@ -121,6 +126,9 @@ export default function CryptoPage() {
       tapeTitle:   "MARKET TAPE",
       screener:    "전체 시그널 스크리너",
       screenerHint:"모든 암호화폐에 대한 종합 매수/매도 시그널 — 컬럼별 정렬 가능",
+      tabSignals:  "시그널",
+      tabFutures:  "선물 지표",
+      tabTech:     "테크니컬",
       picker:      "코인 선택",
       pickerHint:  "카드를 클릭하면 상세 분석 섹션으로 이동합니다",
       detailKicker:"DETAIL",
@@ -141,6 +149,9 @@ export default function CryptoPage() {
       tapeTitle:   "MARKET TAPE",
       screener:    "Signal Screener",
       screenerHint:"Aggregate buy/sell signals across all cryptocurrencies — sortable by column",
+      tabSignals:  "Signals",
+      tabFutures:  "Futures",
+      tabTech:     "Technicals",
       picker:      "Select Coin",
       pickerHint:  "Click a card to jump to detailed analysis",
       detailKicker:"DETAIL",
@@ -258,9 +269,33 @@ export default function CryptoPage() {
         </section>
 
         {/* ═══════════════════════════════════════════════════════════════ */}
-        {/* SIGNALS (harmonic / divergence / zone-break)                     */}
+        {/* PANEL TABS: 시그널 / 선물 지표 / 테크니컬                        */}
         {/* ═══════════════════════════════════════════════════════════════ */}
-        <SignalsPanel />
+        <div className={styles.panelTabWrap}>
+          <div className={styles.panelTabBar}>
+            {([
+              { key: "signals",    label: c.tabSignals  },
+              { key: "futures",    label: c.tabFutures  },
+              { key: "technicals", label: c.tabTech     },
+            ] as const).map(({ key, label }) => (
+              <button
+                key={key}
+                type="button"
+                className={`${styles.panelTabBtn} ${panelTab === key ? styles.panelTabBtnActive : ""} ${key === "technicals" ? styles.panelTabBtnPersonal : ""}`}
+                onClick={() => setPanelTab(key)}
+              >
+                {key === "futures"    && <span className={styles.tabIcon}>📊</span>}
+                {key === "technicals" && <span className={styles.tabIcon}>🔬</span>}
+                {label}
+              </button>
+            ))}
+          </div>
+          <div className={styles.panelTabContent}>
+            {panelTab === "signals"    && <SignalsPanel />}
+            {panelTab === "futures"    && <FundingPanel />}
+            {panelTab === "technicals" && <TechnicalsPanel />}
+          </div>
+        </div>
 
         {/* ═══════════════════════════════════════════════════════════════ */}
         {/* COIN PICKER                                                       */}

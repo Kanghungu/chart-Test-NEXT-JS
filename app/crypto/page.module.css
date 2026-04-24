@@ -2,6 +2,83 @@
 /* CRYPTO TERMINAL — Premium Bloomberg-style dark theme                     */
 /* ═══════════════════════════════════════════════════════════════════════ */
 
+/* ── Panel Tab Bar ──────────────────────────────────────────────────────── */
+.panelTabWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.panelTabBar {
+  display: flex;
+  gap: 0.25rem;
+  padding: 0 0.1rem;
+}
+
+.panelTabBtn {
+  position: relative;
+  border: 1px solid var(--border-subtle);
+  border-bottom: none;
+  border-radius: 0.6rem 0.6rem 0 0;
+  background: rgba(6, 13, 31, 0.8);
+  color: rgb(100 116 139);
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0.5rem 1.1rem;
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s, border-color 0.15s;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.panelTabBtn:hover {
+  color: #f8fafc;
+  background: rgba(56, 189, 248, 0.05);
+  border-color: rgba(56, 189, 248, 0.2);
+}
+
+.panelTabBtnActive {
+  background: rgba(13, 26, 46, 0.95);
+  color: #38bdf8;
+  border-color: rgba(56, 189, 248, 0.3);
+  z-index: 1;
+}
+
+/* Personal tab — purple accent */
+.panelTabBtnPersonal {
+  color: rgb(148 163 184);
+}
+.panelTabBtnPersonal.panelTabBtnActive {
+  color: #a78bfa;
+  border-color: rgba(167, 139, 250, 0.35);
+  background: rgba(13, 8, 32, 0.95);
+}
+
+.tabIcon {
+  font-size: 0.85rem;
+  line-height: 1;
+}
+
+.panelTabContent {
+  border: 1px solid var(--border-subtle);
+  border-radius: 0 0.6rem 0.6rem 0.6rem;
+  /* SignalsPanel has its own border/bg — we just provide the container frame */
+  /* Panels inside render their own full styling */
+}
+
+/* Override inner panel top border-radius when inside tab content */
+.panelTabContent > * {
+  border-radius: 0 0.6rem 0.6rem 0.6rem;
+}
+
+@media (max-width: 640px) {
+  .panelTabBtn {
+    font-size: 0.72rem;
+    padding: 0.45rem 0.7rem;
+  }
+}
+
 .page {
   position: relative;
   min-height: 100vh;
