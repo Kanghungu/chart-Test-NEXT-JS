@@ -126,6 +126,7 @@ export default function CryptoPage() {
       tapeTitle:   "MARKET TAPE",
       screener:    "전체 시그널 스크리너",
       screenerHint:"모든 암호화폐에 대한 종합 매수/매도 시그널 — 컬럼별 정렬 가능",
+      screenerStats:["217 매치", "USD 기준", "실시간 정렬"],
       tabSignals:  "시그널",
       tabFutures:  "선물 지표",
       tabTech:     "테크니컬",
@@ -149,6 +150,7 @@ export default function CryptoPage() {
       tapeTitle:   "MARKET TAPE",
       screener:    "Signal Screener",
       screenerHint:"Aggregate buy/sell signals across all cryptocurrencies — sortable by column",
+      screenerStats:["217 matches", "USD view", "Live sort"],
       tabSignals:  "Signals",
       tabFutures:  "Futures",
       tabTech:     "Technicals",
@@ -241,30 +243,43 @@ export default function CryptoPage() {
         {/* ═══════════════════════════════════════════════════════════════ */}
         {/* SCREENER                                                         */}
         {/* ═══════════════════════════════════════════════════════════════ */}
-        <section className={styles.panel}>
-          <div className={styles.panelHeader}>
+        <section className={`${styles.panel} ${styles.screenerPanel}`}>
+          <div className={`${styles.panelHeader} ${styles.screenerHeader}`}>
             <div>
               <p className={styles.panelKicker}>01 · SCREENER</p>
               <h2 className={styles.panelTitle}>{c.screener}</h2>
               <p className={styles.panelHint}>{c.screenerHint}</p>
             </div>
+            <div className={styles.screenerStats} aria-label="Screener status">
+              {c.screenerStats.map((stat) => (
+                <span key={stat} className={styles.screenerStat}>
+                  {stat}
+                </span>
+              ))}
+            </div>
           </div>
-          <div className={styles.panelBody}>
-            <TVWidget
-              height={500}
-              src="https://s3.tradingview.com/external-embedding/embed-widget-screener.js"
-              config={{
-                width:           "100%",
-                height:          490,
-                defaultColumn:   "overview",
-                screener_type:   "crypto_mkt",
-                displayCurrency: "USD",
-                colorTheme:      "dark",
-                backgroundColor: "#060d1f",
-                locale,
-                isTransparent:   false,
-              }}
-            />
+          <div className={`${styles.panelBody} ${styles.screenerBody}`}>
+            <div className={styles.screenerChrome}>
+              <span className={styles.screenerCornerTl} aria-hidden="true" />
+              <span className={styles.screenerCornerBr} aria-hidden="true" />
+              <div className={styles.screenerWidgetFrame}>
+                <TVWidget
+                  height={500}
+                  src="https://s3.tradingview.com/external-embedding/embed-widget-screener.js"
+                  config={{
+                    width:           "100%",
+                    height:          490,
+                    defaultColumn:   "overview",
+                    screener_type:   "crypto_mkt",
+                    displayCurrency: "USD",
+                    colorTheme:      "dark",
+                    backgroundColor: "#07111f",
+                    locale,
+                    isTransparent:   false,
+                  }}
+                />
+              </div>
+            </div>
           </div>
         </section>
 
@@ -455,31 +470,45 @@ export default function CryptoPage() {
               </div>
 
               <div className={styles.panelBody}>
-                {/* Decorative scan line */}
-                <div className={styles.taScanWrap} aria-hidden="true">
-                  <div className={styles.taScanLine} />
+                <div className={`${styles.widgetShell} ${styles.taWidgetShell}`}>
+                  <div className={styles.widgetToolbar} aria-hidden="true">
+                    <span className={styles.widgetToolbarLabel}>SIGNAL MATRIX</span>
+                    <span className={styles.widgetToolbarChip}>OSC</span>
+                    <span className={styles.widgetToolbarChip}>MA</span>
+                    <span className={styles.widgetToolbarChip}>PIVOT</span>
+                  </div>
+                  <span className={styles.widgetCornerTl} aria-hidden="true" />
+                  <span className={styles.widgetCornerBr} aria-hidden="true" />
+                  <div className={styles.taScanWrap} aria-hidden="true">
+                    <div className={styles.taScanLine} />
+                  </div>
+                  <div className={styles.widgetViewport}>
+                    <TVWidget
+                      height={480}
+                      src="https://s3.tradingview.com/external-embedding/embed-widget-technical-analysis.js"
+                      config={{
+                        interval:         TA_INTERVAL[tf],
+                        width:            "100%",
+                        height:           470,
+                        symbol:           TV_SYMBOL[coin],
+                        showIntervalTabs: false,
+                        displayMode:      "single",
+                        colorTheme:       "dark",
+                        backgroundColor:  "#060d1f",
+                        locale,
+                        isTransparent:    false,
+                      }}
+                    />
+                  </div>
                 </div>
-                <TVWidget
-                  height={480}
-                  src="https://s3.tradingview.com/external-embedding/embed-widget-technical-analysis.js"
-                  config={{
-                    interval:         TA_INTERVAL[tf],
-                    width:            "100%",
-                    height:           470,
-                    symbol:           TV_SYMBOL[coin],
-                    showIntervalTabs: false,
-                    displayMode:      "single",
-                    colorTheme:       "dark",
-                    backgroundColor:  "#060d1f",
-                    locale,
-                    isTransparent:    false,
-                  }}
-                />
               </div>
             </div>
 
-            <div className={styles.panel}>
-              <div className={styles.panelHeader}>
+            <div
+              className={`${styles.panel} ${styles.chartPanel}`}
+              style={{ "--tint": COIN_INFO[coin].tint } as React.CSSProperties}
+            >
+              <div className={`${styles.panelHeader} ${styles.chartHeader}`}>
                 <div>
                   <p className={styles.panelKicker}>{c.chart}</p>
                   <h3 className={styles.panelTitleSm}>
@@ -487,28 +516,44 @@ export default function CryptoPage() {
                   </h3>
                   <p className={styles.panelHint}>{c.chartHint}</p>
                 </div>
+                <div className={styles.chartHeaderStats}>
+                  <span>{tfLabel}</span>
+                  <span>RSI</span>
+                  <span>MACD</span>
+                </div>
               </div>
               <div className={styles.panelBody}>
-                <TVWidget
-                  height={460}
-                  src="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js"
-                  config={{
-                    autosize:            false,
-                    width:               "100%",
-                    height:              450,
-                    symbol:              TV_SYMBOL[coin],
-                    interval:            tf,
-                    timezone:            "Asia/Seoul",
-                    theme:               "dark",
-                    style:               "1",
-                    locale,
-                    allow_symbol_change: false,
-                    hide_side_toolbar:   true,
-                    calendar:            false,
-                    studies:             ["STD;RSI", "STD;MACD"],
-                    support_host:        "https://www.tradingview.com",
-                  }}
-                />
+                <div className={`${styles.widgetShell} ${styles.chartWidgetShell}`}>
+                  <div className={styles.chartRail} aria-hidden="true">
+                    <span />
+                    <span />
+                    <span />
+                  </div>
+                  <span className={styles.widgetCornerTl} aria-hidden="true" />
+                  <span className={styles.widgetCornerBr} aria-hidden="true" />
+                  <div className={styles.widgetViewport}>
+                    <TVWidget
+                      height={460}
+                      src="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js"
+                      config={{
+                        autosize:            false,
+                        width:               "100%",
+                        height:              450,
+                        symbol:              TV_SYMBOL[coin],
+                        interval:            tf,
+                        timezone:            "Asia/Seoul",
+                        theme:               "dark",
+                        style:               "1",
+                        locale,
+                        allow_symbol_change: false,
+                        hide_side_toolbar:   true,
+                        calendar:            false,
+                        studies:             ["STD;RSI", "STD;MACD"],
+                        support_host:        "https://www.tradingview.com",
+                      }}
+                    />
+                  </div>
+                </div>
               </div>
             </div>
           </div>

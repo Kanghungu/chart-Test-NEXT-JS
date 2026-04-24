@@ -98,6 +98,7 @@ export default function TechnicalsPanel() {
   const [lastScan, setLastScan] = useState(0);
   const [typeFilter, setTypeFilter] = useState<TypeFilter>("ALL");
   const [dirFilter,  setDirFilter]  = useState<DirFilter>("ALL");
+  const [expandedTechId, setExpandedTechId] = useState<string | null>(null);
 
   async function scan() {
     const result = await scanTechnicalSignals();
@@ -207,7 +208,13 @@ export default function TechnicalsPanel() {
         {filtered.length > 0 && (
           <div className={styles.cardGrid}>
             {filtered.map((s) => (
-              <TechCard key={s.id} signal={s} language={language} />
+              <TechCard
+                key={s.id}
+                signal={s}
+                language={language}
+                expanded={expandedTechId === s.id}
+                onToggle={() => setExpandedTechId((current) => current === s.id ? null : s.id)}
+              />
             ))}
           </div>
         )}
@@ -217,12 +224,23 @@ export default function TechnicalsPanel() {
 }
 
 // ── Tech Signal Card ──────────────────────────────────────────────────────
-function TechCard({ signal, language }: { signal: TechSignal; language: "ko" | "en" }) {
+function TechCard({
+  signal,
+  language,
+  expanded,
+  onToggle,
+}: {
+  signal: TechSignal;
+  language: "ko" | "en";
+  expanded: boolean;
+  onToggle: () => void;
+}) {
   const tint    = COIN_TINT[signal.base] ?? "#64748b";
   const isBull  = signal.direction === "BULLISH";
   const isStrong = signal.strength === "STRONG";
   const desc    = language === "ko" ? signal.descKo : signal.descEn;
   const relTime = formatRelativeTimeTech(signal.detectedAt, language);
+  const detail = buildTechDetail(signal, language);
 
   const TYPE_LABEL: Record<TechSignalType, string> = {
     EMA_CROSS:  language === "ko" ? "EMA 크로스" : "EMA Cross",
@@ -233,7 +251,12 @@ function TechCard({ signal, language }: { signal: TechSignal; language: "ko" | "
 
   return (
     <article
-      className={`${styles.card} ${isBull ? styles.cardBull : signal.direction === "BEARISH" ? styles.cardBear : ""} ${isStrong ? styles.cardStrong : ""}`}
+      role="button"
+      tabIndex={0}
+      aria-expanded={expanded}
+      onClick={onToggle}
+      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onToggle(); } }}
+      className={`${styles.card} ${expanded ? styles.cardExpanded : ""} ${isBull ? styles.cardBull : signal.direction === "BEARISH" ? styles.cardBear : ""} ${isStrong ? styles.cardStrong : ""}`}
       style={{ "--tint": tint } as React.CSSProperties}
     >
       <span className={styles.cardTintBar} aria-hidden="true" />
@@ -282,6 +305,179 @@ function TechCard({ signal, language }: { signal: TechSignal; language: "ko" | "
           <dd>{relTime}</dd>
         </div>
       </dl>
+
+      {expanded && (
+        <div className={styles.detailPanel}>
+          <div className={styles.detailTop}>
+            <div>
+              <p className={styles.detailKicker}>{language === "ko" ? "상세 조회" : "Signal Lookup"}</p>
+              <h3 className={styles.detailTitle}>{signal.base}/USDT · {TYPE_LABEL[signal.type]}</h3>
+            </div>
+            <span className={`${styles.detailBias} ${isBull ? styles.biasBull : signal.direction === "BEARISH" ? styles.biasBear : styles.biasNeutral}`}>
+              {detail.bias}
+            </span>
+          </div>
+
+          <div className={styles.detailSnapshot}>
+            <div>
+              <span>{language === "ko" ? "현재가" : "Last Price"}</span>
+              <strong>${formatPrice(signal.currentPrice)}</strong>
+            </div>
+            <div>
+              <span>{language === "ko" ? "신뢰도" : "Conviction"}</span>
+              <strong>{signal.strength}</strong>
+            </div>
+            <div>
+              <span>{language === "ko" ? "타임프레임" : "Timeframe"}</span>
+              <strong>{signal.timeframe}</strong>
+            </div>
+          </div>
+
+          <div className={styles.detailSections}>
+            <section className={styles.detailSection}>
+              <span className={styles.sectionLabel}>{language === "ko" ? "핵심 지표" : "Key Metrics"}</span>
+              <div className={styles.metricList}>
+                {detail.metrics.map((item) => (
+                  <div key={item.label} className={styles.metricItem}>
+                    <span>{item.label}</span>
+                    <strong>{item.value}</strong>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            <section className={styles.detailSection}>
+              <span className={styles.sectionLabel}>{language === "ko" ? "판단 포인트" : "Decision Points"}</span>
+              <ul className={styles.checkList}>
+                {detail.checks.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+            </section>
+          </div>
+
+          <div className={styles.playbook}>
+            <div>
+              <span>{language === "ko" ? "트리거" : "Trigger"}</span>
+              <p>{detail.trigger}</p>
+            </div>
+            <div>
+              <span>{language === "ko" ? "무효화" : "Invalidation"}</span>
+              <p>{detail.invalidation}</p>
+            </div>
+          </div>
+        </div>
+      )}
     </article>
   );
+}
+
+function buildTechDetail(signal: TechSignal, language: "ko" | "en") {
+  const isKo = language === "ko";
+  const isBull = signal.direction === "BULLISH";
+  const extra = signal.extra ?? {};
+  const read = (key: string, fallback = "-") => extra[key] === undefined ? fallback : String(extra[key]);
+  const bias = signal.direction === "NEUTRAL"
+    ? (isKo ? "중립 관찰" : "Neutral Watch")
+    : isBull
+      ? (isKo ? "상방 우위" : "Bullish Bias")
+      : (isKo ? "하방 우위" : "Bearish Bias");
+
+  const baseMetrics = [
+    { label: isKo ? "감지 시각" : "Detected", value: formatRelativeTimeTech(signal.detectedAt, language) },
+    { label: isKo ? "방향" : "Direction", value: bias },
+  ];
+
+  if (signal.type === "EMA_CROSS") {
+    const emaKeys = Object.keys(extra).filter((key) => key.startsWith("ema"));
+    return {
+      bias,
+      metrics: [
+        ...baseMetrics,
+        ...emaKeys.map((key) => ({ label: key.toUpperCase(), value: `$${formatPrice(Number(extra[key]))}` })),
+      ],
+      checks: [
+        isKo ? "크로스 이후 종가가 느린 EMA 위/아래에서 유지되는지 확인" : "Check whether closes hold beyond the slow EMA after the cross",
+        isKo ? "다음 캔들 거래량이 평균보다 증가하면 신뢰도 상승" : "Rising follow-through volume improves conviction",
+        isKo ? "상위 타임프레임 추세와 같은 방향이면 우선순위 높음" : "Higher-timeframe alignment increases priority",
+      ],
+      trigger: isBull
+        ? (isKo ? "가격이 느린 EMA 위에서 재테스트를 지키면 추세 전환 후보" : "A held retest above the slow EMA favors a trend-shift setup")
+        : (isKo ? "가격이 느린 EMA 아래에서 반등 실패하면 조정 지속 후보" : "A failed retest below the slow EMA favors downside continuation"),
+      invalidation: isBull
+        ? (isKo ? "종가가 다시 느린 EMA 아래로 내려가면 신호 약화" : "A close back below the slow EMA weakens the signal")
+        : (isKo ? "종가가 다시 느린 EMA 위로 회복하면 신호 약화" : "A close back above the slow EMA weakens the signal"),
+    };
+  }
+
+  if (signal.type === "BB_SQUEEZE") {
+    const widthNow = Number(extra.widthNow);
+    const widthMin = Number(extra.widthMin);
+    const expansion = Number.isFinite(widthNow) && Number.isFinite(widthMin) && widthMin > 0
+      ? `${((widthNow / widthMin - 1) * 100).toFixed(1)}%`
+      : "-";
+    return {
+      bias,
+      metrics: [
+        ...baseMetrics,
+        { label: isKo ? "현재 밴드폭" : "Width Now", value: read("widthNow") },
+        { label: isKo ? "저점 밴드폭" : "Width Low", value: read("widthMin") },
+        { label: isKo ? "확장률" : "Expansion", value: expansion },
+      ],
+      checks: [
+        isKo ? "밴드폭이 최저 구간에서 벗어나는 첫 구간인지 확인" : "Verify this is an early expansion out of compressed bandwidth",
+        isKo ? "중심선 위/아래 종가 유지가 방향 판단의 핵심" : "Closes holding above or below the midline define the bias",
+        isKo ? "돌파 캔들에 거래량이 붙으면 추적 가치 상승" : "Breakout volume makes the setup more actionable",
+      ],
+      trigger: isBull
+        ? (isKo ? "상단 밴드 돌파 후 중심선 위 종가 유지" : "Upper-band breakout with closes holding above the midline")
+        : signal.direction === "BEARISH"
+          ? (isKo ? "하단 밴드 이탈 후 중심선 아래 종가 유지" : "Lower-band break with closes holding below the midline")
+          : (isKo ? "방향 확정 전까지 상하단 밴드 돌파를 대기" : "Wait for a clean upper or lower band break"),
+      invalidation: isKo ? "밴드폭이 다시 수축하고 가격이 중심선으로 회귀하면 관찰 모드" : "If bandwidth contracts again and price returns to the midline, downgrade to watch mode",
+    };
+  }
+
+  if (signal.type === "VOL_SPIKE") {
+    return {
+      bias,
+      metrics: [
+        ...baseMetrics,
+        { label: isKo ? "평균 대비 거래량" : "Volume Ratio", value: `${read("ratio")}x` },
+        { label: isKo ? "압력" : "Pressure", value: isBull ? (isKo ? "매수 우세" : "Buying") : (isKo ? "매도 우세" : "Selling") },
+      ],
+      checks: [
+        isKo ? "거래량 급등 캔들의 고가/저가가 다음 캔들에서 지켜지는지 확인" : "Check whether the spike candle high or low is respected next",
+        isKo ? "꼬리가 길면 흡수 가능성이 있어 종가 위치가 중요" : "Long wicks can imply absorption, so close location matters",
+        isKo ? "급등 거래량 이후 같은 방향 후속 캔들이 나오면 강도 상승" : "Same-direction follow-through after the spike raises conviction",
+      ],
+      trigger: isBull
+        ? (isKo ? "급등 캔들 고가 돌파 또는 눌림 후 고가 재돌파" : "Break above the spike candle high, or reclaim it after a pullback")
+        : (isKo ? "급등 캔들 저가 이탈 또는 반등 실패" : "Break below the spike candle low, or fail a reclaim attempt"),
+      invalidation: isBull
+        ? (isKo ? "급등 캔들 저가를 종가로 이탈하면 매수 압력 훼손" : "A close below the spike candle low invalidates buying pressure")
+        : (isKo ? "급등 캔들 고가를 종가로 회복하면 매도 압력 훼손" : "A close above the spike candle high invalidates selling pressure"),
+    };
+  }
+
+  return {
+    bias,
+    metrics: [
+      ...baseMetrics,
+      { label: "Stoch K", value: read("k") },
+      { label: "Stoch D", value: read("d") },
+      { label: isKo ? "구간" : "Zone", value: isBull ? (isKo ? "과매도 반등" : "Oversold Bounce") : (isKo ? "과매수 조정" : "Overbought Pullback") },
+    ],
+    checks: [
+      isKo ? "K/D 교차 뒤 20/80 구간 밖으로 빠져나오는지 확인" : "Confirm K/D moves out of the 20/80 extreme after the cross",
+      isKo ? "가격이 직전 스윙 고점/저점을 회복 또는 이탈해야 신뢰도 상승" : "Price needs to reclaim or lose the prior swing for confirmation",
+      isKo ? "횡보장에서는 짧은 반응, 추세장에서는 되돌림 신호로 해석" : "In ranges it is a short reaction; in trends it is a pullback signal",
+    ],
+    trigger: isBull
+      ? (isKo ? "K가 D 위에서 유지되고 가격이 직전 고점을 회복" : "K holds above D while price reclaims the prior swing high")
+      : (isKo ? "K가 D 아래에서 유지되고 가격이 직전 저점을 이탈" : "K holds below D while price loses the prior swing low"),
+    invalidation: isBull
+      ? (isKo ? "K가 다시 D 아래로 내려가면 반등 신호 약화" : "K crossing back below D weakens the bounce setup")
+      : (isKo ? "K가 다시 D 위로 올라오면 조정 신호 약화" : "K crossing back above D weakens the pullback setup"),
+  };
 }

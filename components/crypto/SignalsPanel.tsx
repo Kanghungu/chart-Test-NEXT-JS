@@ -42,6 +42,7 @@ export default function SignalsPanel() {
   const [typeFilter, setTypeFilter] = useState<TypeFilter>("ALL");
   const [dirFilter, setDirFilter]   = useState<DirFilter>("ALL");
   const [selected,   setSelected]   = useState<CryptoSignal | null>(null);
+  const [expandedSignalId, setExpandedSignalId] = useState<string | null>(null);
   const [viewShowDescription, setViewShowDescription] = useState(true);
   const [viewShowPrz, setViewShowPrz] = useState(true);
   const [viewCompact, setViewCompact] = useState(false);
@@ -311,7 +312,9 @@ export default function SignalsPanel() {
                 compact={viewCompact}
                 showDescription={viewShowDescription}
                 showPrz={viewShowPrz}
-                onClick={() => setSelected(s)}
+                expanded={expandedSignalId === s.id}
+                onToggle={() => setExpandedSignalId((current) => current === s.id ? null : s.id)}
+                onOpenChart={() => setSelected(s)}
               />
             ))}
           </div>
@@ -338,7 +341,9 @@ export default function SignalsPanel() {
                         compact={viewCompact}
                         showDescription={viewShowDescription}
                         showPrz={viewShowPrz}
-                        onClick={() => setSelected(s)}
+                        expanded={expandedSignalId === s.id}
+                        onToggle={() => setExpandedSignalId((current) => current === s.id ? null : s.id)}
+                        onOpenChart={() => setSelected(s)}
                       />
                     ))}
                   </div>
@@ -381,14 +386,18 @@ function SignalCard({
   compact,
   showDescription,
   showPrz,
-  onClick,
+  expanded,
+  onToggle,
+  onOpenChart,
 }: {
   signal: CryptoSignal;
   language: "ko" | "en";
   compact: boolean;
   showDescription: boolean;
   showPrz: boolean;
-  onClick: () => void;
+  expanded: boolean;
+  onToggle: () => void;
+  onOpenChart: () => void;
 }) {
   const tint = COIN_TINT[signal.base] ?? "#64748b";
   const isBull = signal.direction === "BULLISH";
@@ -402,14 +411,17 @@ function SignalCard({
   const description = language === "ko" ? signal.descriptionKo : signal.descriptionEn;
   const priceFmt = formatPrice(signal.currentPrice);
   const relTime = formatRelativeTime(signal.detectedAt, language);
+  const detail = SIGNAL_DETAIL_COPY[language];
+  const metricRows = buildSignalMetrics(signal, language);
 
   return (
     <article
       role="button"
       tabIndex={0}
-      onClick={onClick}
-      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onClick(); } }}
-      className={`${styles.card} ${compact ? styles.cardCompact : ""} ${isBull ? styles.cardBull : styles.cardBear} ${isStrong ? styles.cardStrong : ""} ${isPredict ? styles.cardPredict : ""}`}
+      onClick={onToggle}
+      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onToggle(); } }}
+      aria-expanded={expanded}
+      className={`${styles.card} ${compact ? styles.cardCompact : ""} ${expanded ? styles.cardExpanded : ""} ${isBull ? styles.cardBull : styles.cardBear} ${isStrong ? styles.cardStrong : ""} ${isPredict ? styles.cardPredict : ""}`}
       style={{ "--tint": tint } as React.CSSProperties}
     >
       <span className={styles.cardTintBar} aria-hidden="true" />
@@ -461,6 +473,42 @@ function SignalCard({
           <dd>{relTime}</dd>
         </div>
       </dl>
+
+      {expanded && (
+        <div className={styles.detailPanel}>
+          <div className={styles.detailHeader}>
+            <div>
+              <p className={styles.detailKicker}>{detail.kicker}</p>
+              <h3 className={styles.detailTitle}>
+                {signal.base}/USDT · {typeLabel}
+              </h3>
+            </div>
+            <button
+              type="button"
+              className={styles.chartBtn}
+              onClick={(event) => {
+                event.stopPropagation();
+                onOpenChart();
+              }}
+            >
+              {detail.chart}
+            </button>
+          </div>
+          <p className={styles.detailDesc}>{description}</p>
+          <div className={styles.detailMetrics}>
+            {metricRows.map((row) => (
+              <div key={row.label} className={styles.detailMetric}>
+                <span>{row.label}</span>
+                <strong>{row.value}</strong>
+              </div>
+            ))}
+          </div>
+          <div className={styles.detailNote}>
+            <span>{detail.noteLabel}</span>
+            <p>{detailNotes(signal, language)}</p>
+          </div>
+        </div>
+      )}
     </article>
   );
 }
@@ -521,6 +569,62 @@ function formatPrice(p: number): string {
   return p.toFixed(6);
 }
 
+function directionLabel(direction: CryptoSignal["direction"], language: "ko" | "en"): string {
+  if (language === "ko") return direction === "BULLISH" ? "상승" : "하락";
+  return direction === "BULLISH" ? "Bullish" : "Bearish";
+}
+
+function buildSignalMetrics(signal: CryptoSignal, language: "ko" | "en") {
+  const copy = SIGNAL_DETAIL_COPY[language].metrics;
+  const rows: Array<{ label: string; value: string }> = [
+    { label: copy.symbol, value: `${signal.base}/USDT` },
+    { label: copy.timeframe, value: signal.timeframe },
+    { label: copy.direction, value: directionLabel(signal.direction, language) },
+    { label: copy.strength, value: signal.strength },
+    { label: copy.price, value: `$${formatPrice(signal.currentPrice)}` },
+    { label: copy.detected, value: formatRelativeTime(signal.detectedAt, language) },
+  ];
+
+  if (signal.patternName) rows.splice(3, 0, { label: copy.pattern, value: signal.patternName });
+  if (signal.przMin !== undefined && signal.przMax !== undefined) {
+    rows.push({
+      label: "PRZ",
+      value: `$${formatPrice(signal.przMin)} - $${formatPrice(signal.przMax)}`,
+    });
+  }
+
+  if (signal.viz.kind === "ZONE_BREAK") {
+    rows.push({
+      label: copy.zone,
+      value: `$${formatPrice(signal.viz.zoneLow)} - $${formatPrice(signal.viz.zoneHigh)}`,
+    });
+  }
+
+  if (signal.viz.kind === "DIVERGENCE") {
+    const latestRsi = signal.viz.rsi.at(-1)?.value;
+    if (latestRsi !== undefined) rows.push({ label: "RSI", value: latestRsi.toFixed(1) });
+  }
+
+  return rows;
+}
+
+function detailNotes(signal: CryptoSignal, language: "ko" | "en"): string {
+  const isKo = language === "ko";
+  if (signal.type === "HARMONIC" || signal.type === "HARMONIC_PRZ") {
+    return isKo
+      ? "PRZ 구간 근처의 반전 반응과 캔들 확인이 핵심입니다. 예측 신호는 아직 완성 전 구간입니다."
+      : "Watch price reaction near the PRZ. Predictive signals are not confirmed yet.";
+  }
+  if (signal.type === "DIVERGENCE") {
+    return isKo
+      ? "가격 고점/저점과 RSI 방향이 엇갈린 구간입니다. 추세 전환 가능성을 보조 신호와 함께 확인하세요."
+      : "Price and RSI are diverging. Confirm with trend and volume before acting.";
+  }
+  return isKo
+    ? "주요 매물대 돌파 또는 돌파 임박 구간입니다. 거래량과 종가 유지 여부가 중요합니다."
+    : "This is a zone breakout or approach setup. Volume and close retention matter most.";
+}
+
 const TYPE_LABEL: Record<"ko" | "en", Record<CryptoSignal["type"], string>> = {
   ko: {
     HARMONIC:      "하모닉",
@@ -537,6 +641,39 @@ const TYPE_LABEL: Record<"ko" | "en", Record<CryptoSignal["type"], string>> = {
     ZONE_APPROACH: "⏳ Breakout Soon",
   },
 };
+
+const SIGNAL_DETAIL_COPY = {
+  ko: {
+    kicker: "DETAIL",
+    chart: "차트 보기",
+    noteLabel: "체크포인트",
+    metrics: {
+      symbol: "심볼",
+      timeframe: "타임프레임",
+      direction: "방향",
+      strength: "강도",
+      price: "현재가",
+      detected: "탐지",
+      pattern: "패턴",
+      zone: "구간",
+    },
+  },
+  en: {
+    kicker: "DETAIL",
+    chart: "Open Chart",
+    noteLabel: "Checkpoint",
+    metrics: {
+      symbol: "Symbol",
+      timeframe: "Timeframe",
+      direction: "Direction",
+      strength: "Strength",
+      price: "Price",
+      detected: "Detected",
+      pattern: "Pattern",
+      zone: "Zone",
+    },
+  },
+} as const;
 
 const COPY = {
   ko: {
