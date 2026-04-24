@@ -42,7 +42,6 @@ export default function SignalsPanel() {
   const [typeFilter, setTypeFilter] = useState<TypeFilter>("ALL");
   const [dirFilter, setDirFilter]   = useState<DirFilter>("ALL");
   const [selected,   setSelected]   = useState<CryptoSignal | null>(null);
-  const [expandedSignalId, setExpandedSignalId] = useState<string | null>(null);
   const [viewShowDescription, setViewShowDescription] = useState(true);
   const [viewShowPrz, setViewShowPrz] = useState(true);
   const [viewCompact, setViewCompact] = useState(false);
@@ -312,8 +311,6 @@ export default function SignalsPanel() {
                 compact={viewCompact}
                 showDescription={viewShowDescription}
                 showPrz={viewShowPrz}
-                expanded={expandedSignalId === s.id}
-                onToggle={() => setExpandedSignalId((current) => current === s.id ? null : s.id)}
                 onOpenChart={() => setSelected(s)}
               />
             ))}
@@ -341,8 +338,6 @@ export default function SignalsPanel() {
                         compact={viewCompact}
                         showDescription={viewShowDescription}
                         showPrz={viewShowPrz}
-                        expanded={expandedSignalId === s.id}
-                        onToggle={() => setExpandedSignalId((current) => current === s.id ? null : s.id)}
                         onOpenChart={() => setSelected(s)}
                       />
                     ))}
@@ -386,8 +381,6 @@ function SignalCard({
   compact,
   showDescription,
   showPrz,
-  expanded,
-  onToggle,
   onOpenChart,
 }: {
   signal: CryptoSignal;
@@ -395,8 +388,6 @@ function SignalCard({
   compact: boolean;
   showDescription: boolean;
   showPrz: boolean;
-  expanded: boolean;
-  onToggle: () => void;
   onOpenChart: () => void;
 }) {
   const tint = COIN_TINT[signal.base] ?? "#64748b";
@@ -411,17 +402,14 @@ function SignalCard({
   const description = language === "ko" ? signal.descriptionKo : signal.descriptionEn;
   const priceFmt = formatPrice(signal.currentPrice);
   const relTime = formatRelativeTime(signal.detectedAt, language);
-  const detail = SIGNAL_DETAIL_COPY[language];
-  const metricRows = buildSignalMetrics(signal, language);
 
   return (
     <article
       role="button"
       tabIndex={0}
-      onClick={onToggle}
-      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onToggle(); } }}
-      aria-expanded={expanded}
-      className={`${styles.card} ${compact ? styles.cardCompact : ""} ${expanded ? styles.cardExpanded : ""} ${isBull ? styles.cardBull : styles.cardBear} ${isStrong ? styles.cardStrong : ""} ${isPredict ? styles.cardPredict : ""}`}
+      onClick={onOpenChart}
+      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onOpenChart(); } }}
+      className={`${styles.card} ${compact ? styles.cardCompact : ""} ${isBull ? styles.cardBull : styles.cardBear} ${isStrong ? styles.cardStrong : ""} ${isPredict ? styles.cardPredict : ""}`}
       style={{ "--tint": tint } as React.CSSProperties}
     >
       <span className={styles.cardTintBar} aria-hidden="true" />
@@ -474,41 +462,6 @@ function SignalCard({
         </div>
       </dl>
 
-      {expanded && (
-        <div className={styles.detailPanel}>
-          <div className={styles.detailHeader}>
-            <div>
-              <p className={styles.detailKicker}>{detail.kicker}</p>
-              <h3 className={styles.detailTitle}>
-                {signal.base}/USDT · {typeLabel}
-              </h3>
-            </div>
-            <button
-              type="button"
-              className={styles.chartBtn}
-              onClick={(event) => {
-                event.stopPropagation();
-                onOpenChart();
-              }}
-            >
-              {detail.chart}
-            </button>
-          </div>
-          <p className={styles.detailDesc}>{description}</p>
-          <div className={styles.detailMetrics}>
-            {metricRows.map((row) => (
-              <div key={row.label} className={styles.detailMetric}>
-                <span>{row.label}</span>
-                <strong>{row.value}</strong>
-              </div>
-            ))}
-          </div>
-          <div className={styles.detailNote}>
-            <span>{detail.noteLabel}</span>
-            <p>{detailNotes(signal, language)}</p>
-          </div>
-        </div>
-      )}
     </article>
   );
 }
