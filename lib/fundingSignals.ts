@@ -299,14 +299,15 @@ async function fetchFundingRow(symbol: string): Promise<FundingRow | null> {
   };
 }
 
-/** Fetch all rows; sort by absolute average funding so extremes appear first. */
+/** Fetch all rows; sort by market-cap rank (FUTURES_SYMBOLS order). */
 export async function scanFunding(
   symbols: string[] = FUTURES_SYMBOLS,
 ): Promise<FundingRow[]> {
+  const rankMap = new Map(symbols.map((s, i) => [s, i]));
   const results = await Promise.all(symbols.map(fetchFundingRow));
   return results
     .filter((row): row is FundingRow => row !== null)
-    .sort((a, b) => Math.abs(b.fundingRate) - Math.abs(a.fundingRate));
+    .sort((a, b) => (rankMap.get(a.symbol) ?? 999) - (rankMap.get(b.symbol) ?? 999));
 }
 
 export function formatFR(fr: number): string {
