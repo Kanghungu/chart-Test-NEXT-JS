@@ -71,8 +71,8 @@ function renderHeatmap(canvas: HTMLCanvasElement, data: HeatmapResult) {
   const toX = (ts: number)    => PAD_L + ((ts - timeStart) / timeRange) * CW;
   const toY = (price: number) => PAD_T + (1 - (price - pMin) / pRange) * CH;
 
-  // Background
-  ctx.fillStyle = "#050c1a";
+  // Background — very dark like Coinglass
+  ctx.fillStyle = "#08040f";
   ctx.fillRect(0, 0, cssW, cssH);
 
   // ── Heatmap cells ─────────────────────────────────────────────────────
@@ -84,13 +84,15 @@ function renderHeatmap(canvas: HTMLCanvasElement, data: HeatmapResult) {
 
   const cellW = CW / TIME_BUCKETS;
   const cellH = CH / PRICE_BUCKETS;
-  const THRESHOLD = maxVal * 0.01;
+  // High contrast: dark background (like Coinglass), bright only at peaks
+  const THRESHOLD = maxVal * 0.04; // cut bottom 4% → dark gaps between bands
 
   for (let tx = 0; tx < TIME_BUCKETS; tx++) {
     for (let py = 0; py < PRICE_BUCKETS; py++) {
       const v = grid[tx * PRICE_BUCKETS + py];
       if (v < THRESHOLD) continue;
-      const t = Math.pow(v / maxVal, 0.45); // 대비: 0에 가까운 값은 더 어둡게
+      const norm = (v - THRESHOLD) / (maxVal - THRESHOLD); // re-normalize above threshold
+      const t = Math.pow(norm, 1.6); // steep curve → dark→bright jump
       ctx.fillStyle = heatColor(t);
       ctx.fillRect(
         PAD_L + Math.floor(tx * cellW),
