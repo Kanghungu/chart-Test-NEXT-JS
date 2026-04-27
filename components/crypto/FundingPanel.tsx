@@ -16,13 +16,13 @@ import {
 } from "@/lib/fundingSignals";
 import styles from "./FundingPanel.module.css";
 
-const EXCHANGE_ORDER: ExchangeId[] = ["binance", "bybit", "okx"];
+const EXCHANGE_ORDER: ExchangeId[] = ["binance", "bybit", "okx", "bitget", "gate", "mexc", "htx"];
 
 const COPY = {
   ko: {
     kicker: "03 / FUTURES",
     title: "선물 지표 대시보드",
-    hint: "펀딩비 · 미결제약정 — Binance, Bybit, OKX 통합 조회 (60초 갱신)",
+    hint: "펀딩비 · 미결제약정 — Binance, Bybit, OKX, Bitget, Gate.io, MEXC, HTX 통합 조회 · OI 가중평균 (60초 갱신)",
     scanning: "스캔 중",
     updated: "업데이트",
     refresh: "새로고침",
@@ -65,13 +65,13 @@ const COPY = {
       FALLING: "감소",
       FALLING_FAST: "급감",
     } as Record<OITrend, string>,
-    info: "요약 행은 조회 가능한 거래소의 평균 펀딩비와 통합 OI를 보여줍니다. 상세보기에서 Binance, Bybit, OKX 값을 거래소별로 비교할 수 있습니다.",
+    info: "요약 행은 OI(미결제약정) 가중평균 펀딩비와 통합 OI를 보여줍니다. OI가 큰 거래소일수록 평균값에 더 많은 영향을 미칩니다. 상세보기에서 거래소별 값을 비교할 수 있습니다.",
     extremeTitle: "극단 펀딩비 감지",
   },
   en: {
     kicker: "03 / FUTURES",
     title: "Futures Dashboard",
-    hint: "Funding Rate · Open Interest — Binance, Bybit, OKX aggregate (60s refresh)",
+    hint: "Funding Rate · Open Interest — Binance, Bybit, OKX, Bitget, Gate.io, MEXC, HTX · OI-weighted avg (60s refresh)",
     scanning: "Scanning",
     updated: "Updated",
     refresh: "Refresh",
@@ -114,7 +114,7 @@ const COPY = {
       FALLING: "Falling",
       FALLING_FAST: "Dropping",
     } as Record<OITrend, string>,
-    info: "Summary rows use average funding from available exchanges and combined open interest. Open Details to compare Binance, Bybit, and OKX side by side.",
+    info: "Summary rows use OI-weighted average funding rate — exchanges with higher open interest have proportionally more weight. Open Details to compare all exchanges side by side.",
     extremeTitle: "Extreme Funding Detected",
   },
 } as const;
