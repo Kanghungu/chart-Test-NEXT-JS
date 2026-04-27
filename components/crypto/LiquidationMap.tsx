@@ -137,11 +137,45 @@ function renderHeatmap(canvas: HTMLCanvasElement, data: HeatmapResult) {
     }
   }
 
+  // ── Leverage liquidation level markers (현재가 기준) ─────────────────
+  if (isFinite(currentPrice)) {
+    const levMarkers = [
+      { lev: 100, color: "rgba(253,231,37,0.5)"  },
+      { lev: 50,  color: "rgba(122,209,81,0.4)"  },
+      { lev: 20,  color: "rgba(42,170,158,0.3)"  },
+      { lev: 10,  color: "rgba(33,99,133,0.25)"  },
+    ];
+    ctx.font         = "9px ui-monospace, monospace";
+    ctx.textBaseline = "middle";
+
+    for (const { lev, color } of levMarkers) {
+      const longPrice  = currentPrice * (1 - 1 / lev);
+      const shortPrice = currentPrice * (1 + 1 / lev);
+
+      for (const [price, side] of [[longPrice, "L"], [shortPrice, "S"]] as const) {
+        if (price < pMin || price > pMax) continue;
+        const y = toY(price);
+        ctx.strokeStyle = color;
+        ctx.lineWidth   = 0.8;
+        ctx.setLineDash([3, 3]);
+        ctx.beginPath();
+        ctx.moveTo(PAD_L, y);
+        ctx.lineTo(PAD_L + CW, y);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        ctx.fillStyle  = color;
+        ctx.textAlign  = "right";
+        ctx.fillText(`${lev}x${side}`, PAD_L + CW - 2, y);
+      }
+    }
+  }
+
   // ── Current price line ────────────────────────────────────────────────
   if (isFinite(currentPrice) && currentPrice >= pMin && currentPrice <= pMax) {
     const py = toY(currentPrice);
 
-    ctx.strokeStyle = "rgba(56,189,248,0.85)";
+    ctx.strokeStyle = "rgba(56,189,248,0.9)";
     ctx.lineWidth   = 1.5;
     ctx.setLineDash([6, 4]);
     ctx.beginPath();
