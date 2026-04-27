@@ -316,7 +316,7 @@
   color: rgb(148 163 184);
 }
 
-/* ── Empty state ─────────────────────────────────────────────────────────── */
+/* ── Empty / waiting states ──────────────────────────────────────────────── */
 .empty {
   padding: 3rem 1rem;
   text-align: center;
@@ -324,6 +324,15 @@
   font-size: 0.85rem;
   border: 1px dashed rgba(51 65 85 / 0.5);
   border-radius: 8px;
+}
+
+.waitingOverlay {
+  text-align: center;
+  padding: 0.5rem 0;
+  font-size: 0.72rem;
+  color: rgb(100 116 139);
+  letter-spacing: 0.03em;
+  margin-bottom: 0.25rem;
 }
 
 /* ── Info note ───────────────────────────────────────────────────────────── */

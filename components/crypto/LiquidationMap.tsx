@@ -47,7 +47,6 @@ function buildBuckets(
 
   const cutoff    = Date.now() - windowMs;
   const filtered  = events.filter((e) => e.symbol === symbol && e.ts >= cutoff);
-  if (filtered.length === 0) return [];
 
   const minPrice  = currentPrice * (1 - RANGE_PCT);
   const maxPrice  = currentPrice * (1 + RANGE_PCT);
@@ -101,7 +100,8 @@ const COPY = {
     live:        "LIVE",
     connecting:  "연결 중",
     error:       "연결 실패 — 재시도 중",
-    noData:      "청산 이벤트 수집 중입니다. 잠시 기다려주세요.",
+    noData:      "현재가 로딩 중입니다. 잠시 기다려주세요.",
+    waiting:     "청산 이벤트 대기 중 — 시장이 움직이면 자동으로 채워집니다",
     info:        "SELL 주문이 체결되면 롱 포지션이 청산된 것(가격 하락 방향). BUY 주문 체결은 숏 포지션 청산.",
   },
   en: {
@@ -119,7 +119,8 @@ const COPY = {
     live:        "LIVE",
     connecting:  "Connecting",
     error:       "Reconnecting",
-    noData:      "Collecting liquidation events — please wait a moment.",
+    noData:      "Loading current price...",
+    waiting:     "Waiting for liquidation events — chart fills automatically as the market moves",
     info:        "SELL forced orders = long positions liquidated. BUY forced orders = short positions liquidated.",
   },
 } as const;
@@ -294,7 +295,7 @@ export default function LiquidationMap() {
       </div>
 
       {/* Map */}
-      {buckets.length === 0 ? (
+      {!Number.isFinite(currentPrice) ? (
         <div className={styles.empty}>{C.noData}</div>
       ) : (
         <div className={styles.mapWrap}>
@@ -305,6 +306,9 @@ export default function LiquidationMap() {
           </div>
 
           {/* Chart: [long bar] [price] [short bar] */}
+          {eventCount === 0 && (
+            <div className={styles.waitingOverlay}>{C.waiting}</div>
+          )}
           <div className={styles.chart}>
             {buckets.map((bucket, i) => {
               const longPct  = (bucket.longUSD  / maxUSD) * 100;
