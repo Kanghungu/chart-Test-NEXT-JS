@@ -84,13 +84,13 @@ function renderHeatmap(canvas: HTMLCanvasElement, data: HeatmapResult) {
 
   const cellW = CW / TIME_BUCKETS;
   const cellH = CH / PRICE_BUCKETS;
-  const THRESHOLD = maxVal * 0.004;
+  const THRESHOLD = maxVal * 0.008; // 노이즈 더 강하게 컷
 
   for (let tx = 0; tx < TIME_BUCKETS; tx++) {
     for (let py = 0; py < PRICE_BUCKETS; py++) {
       const v = grid[tx * PRICE_BUCKETS + py];
       if (v < THRESHOLD) continue;
-      const t = Math.pow(v / maxVal, 0.26);
+      const t = Math.pow(v / maxVal, 0.38); // 파워 올려서 밝은부분/어두운부분 대비 강화
       ctx.fillStyle = heatColor(t);
       ctx.fillRect(
         PAD_L + Math.floor(tx * cellW),

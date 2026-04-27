@@ -28,20 +28,20 @@ export type HeatmapResult = {
   priceBuckets: number;
 };
 
-export const TIME_BUCKETS  = 240;
-export const PRICE_BUCKETS = 160;
+export const TIME_BUCKETS  = 280;
+export const PRICE_BUCKETS = 320; // 많을수록 밴드가 얇아짐
 
 // Leverage distribution — must sum to 1.0
 const LEV_DIST = [
-  { lev: 10,  w: 0.25 },
-  { lev: 20,  w: 0.28 },
-  { lev: 50,  w: 0.27 },
+  { lev: 10,  w: 0.22 },
+  { lev: 20,  w: 0.30 },
+  { lev: 50,  w: 0.28 },
   { lev: 100, w: 0.20 },
 ];
 
-// Gaussian kernel for price-axis smoothing
-const GAUSS_R  = 3;     // radius (cells)
-const GAUSS_SIG = 1.4;  // σ
+// Gaussian kernel — σ 최소화로 얇은 밴드
+const GAUSS_R   = 1;    // 반경 1 (3셀 폭)
+const GAUSS_SIG = 0.45;
 const gaussKernel: number[] = [];
 let gaussSum = 0;
 for (let d = -GAUSS_R; d <= GAUSS_R; d++) {
@@ -51,12 +51,12 @@ for (let d = -GAUSS_R; d <= GAUSS_R; d++) {
 }
 const gaussNorm = gaussKernel.map(v => v / gaussSum);
 
-// Window config
+// Window config — 캔들 수 대폭 증가
 export const WINDOW_CFG = {
   "1h":  { oiPeriod: "5m",  oiLimit: 12,  cInterval: "1m",  cLimit: 60  },
-  "4h":  { oiPeriod: "5m",  oiLimit: 48,  cInterval: "5m",  cLimit: 48  },
-  "12h": { oiPeriod: "15m", oiLimit: 48,  cInterval: "15m", cLimit: 48  },
-  "24h": { oiPeriod: "30m", oiLimit: 48,  cInterval: "30m", cLimit: 48  },
+  "4h":  { oiPeriod: "5m",  oiLimit: 48,  cInterval: "1m",  cLimit: 240 },
+  "12h": { oiPeriod: "5m",  oiLimit: 144, cInterval: "5m",  cLimit: 144 },
+  "24h": { oiPeriod: "15m", oiLimit: 96,  cInterval: "15m", cLimit: 96  },
 } as const;
 export type WindowKey = keyof typeof WINDOW_CFG;
 
@@ -146,7 +146,7 @@ export async function buildLiqHeatmap(
     }
   }
 
-  // ── Step 2: Gaussian price-axis smoothing (thick bands) ───────────────
+  // ── Step 2: Gaussian price-axis smoothing (얇은 밴드) ──────────────────
   const smoothed = new Float32Array(TB * PB);
   for (let tx = 0; tx < TB; tx++) {
     for (let py = 0; py < PB; py++) {
@@ -160,8 +160,7 @@ export async function buildLiqHeatmap(
     }
   }
 
-  // ── Step 3: Global profile (Coinglass-style uniform time distribution) ─
-  // Sum across time → each price level gets its "total heat" regardless of when
+  // ── Step 3: Global profile — 전체 시간 합산으로 균일한 배경 밴드 ─────────
   const profile = new Float32Array(PB);
   for (let tx = 0; tx < TB; tx++) {
     for (let py = 0; py < PB; py++) {
@@ -169,13 +168,23 @@ export async function buildLiqHeatmap(
     }
   }
 
-  // ── Step 4: Blend profile (uniform background) + local (time peaks) ───
+  // profile 정규화 (최대값 기준)
+  let maxProfile = 0;
+  for (let py = 0; py < PB; py++) if (profile[py] > maxProfile) maxProfile = profile[py];
+  if (maxProfile > 0) for (let py = 0; py < PB; py++) profile[py] /= maxProfile;
+
+  // ── Step 4: Blend — 배경(얇은밴드) 58% + 로컬(시간대별집중) 42% ──────────
+  // 배경 비율을 줄여서 밴드 구분이 잘 되도록
   const grid = new Float32Array(TB * PB);
+  let maxSmoothed = 0;
+  for (let i = 0; i < smoothed.length; i++) if (smoothed[i] > maxSmoothed) maxSmoothed = smoothed[i];
+  if (maxSmoothed === 0) maxSmoothed = 1;
+
   for (let tx = 0; tx < TB; tx++) {
     for (let py = 0; py < PB; py++) {
-      const bg    = profile[py];               // same value across all time → uniform band
-      const local = smoothed[tx * PB + py] * TB; // scaled up to be comparable to bg
-      grid[tx * PB + py] = bg * 0.72 + local * 0.28;
+      const bg    = profile[py];                         // 0~1 정규화된 배경
+      const local = smoothed[tx * PB + py] / maxSmoothed; // 0~1 정규화된 로컬
+      grid[tx * PB + py] = bg * 0.58 + local * 0.42;
     }
   }
 
