@@ -8,6 +8,10 @@ import styles from "./LiquidationMap.module.css";
 type LiqSide = "LONG" | "SHORT";
 type LiqEvent = { symbol: string; price: number; usd: number; side: LiqSide; ts: number };
 type Candle   = { openTime: number; open: number; high: number; low: number; close: number };
+type LiquidationContextResponse = {
+  candles?: Candle[];
+  currentPrice?: number | null;
+};
 
 // ── Constants ─────────────────────────────────────────────────────────────
 const COINS = ["BTC", "ETH", "SOL", "XRP", "BNB"] as const;
@@ -321,17 +325,18 @@ export default function LiquidationMap() {
     let cancelled = false;
     async function load() {
       try {
-        const url = `https://fapi.binance.com/fapi/v1/klines?symbol=${coin}USDT&interval=${win.interval}&limit=${win.limit}`;
+        const params = new URLSearchParams({
+          symbol: `${coin}USDT`,
+          interval: win.interval,
+          limit: String(win.limit),
+        });
+        const url = `/api/liquidations/crypto?${params.toString()}`;
         const res = await fetch(url, { cache: "no-store" });
-        const raw = await res.json() as Array<Array<string | number>>;
+        const data = (await res.json()) as LiquidationContextResponse;
+        if (!res.ok) throw new Error("Failed to load liquidation context");
         if (!cancelled) {
-          setCandles(raw.map(k => ({
-            openTime: Number(k[0]),
-            open:  parseFloat(k[1] as string),
-            high:  parseFloat(k[2] as string),
-            low:   parseFloat(k[3] as string),
-            close: parseFloat(k[4] as string),
-          })));
+          setCandles(Array.isArray(data.candles) ? data.candles : []);
+          if (typeof data.currentPrice === "number") setCurrentPrice(data.currentPrice);
         }
       } catch { /* silent */ }
     }
@@ -340,21 +345,6 @@ export default function LiquidationMap() {
     const t = setInterval(load, 60_000);
     return () => { cancelled = true; clearInterval(t); };
   }, [coin, win.interval, win.limit]);
-
-  // ── Current price ─────────────────────────────────────────────────────────
-  useEffect(() => {
-    let cancelled = false;
-    async function load() {
-      try {
-        const res = await fetch(`https://fapi.binance.com/fapi/v1/premiumIndex?symbol=${coin}USDT`, { cache: "no-store" });
-        const d   = await res.json();
-        if (!cancelled) setCurrentPrice(parseFloat(d.markPrice));
-      } catch { /* silent */ }
-    }
-    load();
-    const t = setInterval(load, 10_000);
-    return () => { cancelled = true; clearInterval(t); };
-  }, [coin]);
 
   // ── WebSocket ─────────────────────────────────────────────────────────────
   useEffect(() => {
