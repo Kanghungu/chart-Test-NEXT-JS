@@ -5,6 +5,7 @@ import { useLanguage } from "@/components/i18n/LanguageProvider";
 import SignalsPanel from "@/components/crypto/SignalsPanel";
 import FundingPanel from "@/components/crypto/FundingPanel";
 import TechnicalsPanel from "@/components/crypto/TechnicalsPanel";
+import LiquidationMap from "@/components/crypto/LiquidationMap";
 import styles from "./page.module.css";
 
 // ── Types ─────────────────────────────────────────────────────────────────
@@ -102,7 +103,7 @@ function useClock() {
 }
 
 // ── Page ──────────────────────────────────────────────────────────────────
-type PanelTab = "signals" | "futures" | "technicals";
+type PanelTab = "signals" | "futures" | "liquidations" | "technicals";
 
 export default function CryptoPage() {
   const { language } = useLanguage();
@@ -129,6 +130,7 @@ export default function CryptoPage() {
       screenerStats:["217 매치", "USD 기준", "실시간 정렬"],
       tabSignals:  "시그널",
       tabFutures:  "선물 지표",
+      tabLiq:      "청산 맵",
       tabTech:     "테크니컬",
       picker:      "코인 선택",
       pickerHint:  "카드를 클릭하면 상세 분석 섹션으로 이동합니다",
@@ -153,6 +155,7 @@ export default function CryptoPage() {
       screenerStats:["217 matches", "USD view", "Live sort"],
       tabSignals:  "Signals",
       tabFutures:  "Futures",
+      tabLiq:      "Liq Map",
       tabTech:     "Technicals",
       picker:      "Select Coin",
       pickerHint:  "Click a card to jump to detailed analysis",
@@ -289,9 +292,10 @@ export default function CryptoPage() {
         <div className={styles.panelTabWrap}>
           <div className={styles.panelTabBar}>
             {([
-              { key: "signals",    label: c.tabSignals  },
-              { key: "futures",    label: c.tabFutures  },
-              { key: "technicals", label: c.tabTech     },
+              { key: "signals",      label: c.tabSignals },
+              { key: "futures",      label: c.tabFutures },
+              { key: "liquidations", label: c.tabLiq     },
+              { key: "technicals",   label: c.tabTech    },
             ] as const).map(({ key, label }) => (
               <button
                 key={key}
@@ -299,16 +303,18 @@ export default function CryptoPage() {
                 className={`${styles.panelTabBtn} ${panelTab === key ? styles.panelTabBtnActive : ""} ${key === "technicals" ? styles.panelTabBtnPersonal : ""}`}
                 onClick={() => setPanelTab(key)}
               >
-                {key === "futures"    && <span className={styles.tabIcon}>📊</span>}
-                {key === "technicals" && <span className={styles.tabIcon}>🔬</span>}
+                {key === "futures"      && <span className={styles.tabIcon}>📊</span>}
+                {key === "liquidations" && <span className={styles.tabIcon}>💥</span>}
+                {key === "technicals"   && <span className={styles.tabIcon}>🔬</span>}
                 {label}
               </button>
             ))}
           </div>
           <div className={styles.panelTabContent}>
-            {panelTab === "signals"    && <SignalsPanel />}
-            {panelTab === "futures"    && <FundingPanel />}
-            {panelTab === "technicals" && <TechnicalsPanel />}
+            {panelTab === "signals"      && <SignalsPanel />}
+            {panelTab === "futures"      && <FundingPanel />}
+            {panelTab === "liquidations" && <LiquidationMap />}
+            {panelTab === "technicals"   && <TechnicalsPanel />}
           </div>
         </div>
 
