@@ -48,7 +48,7 @@ function cleanInterval(value: string | null): string {
 function cleanLimit(value: string | null): number {
   const parsed = Number(value ?? 48);
   if (!Number.isFinite(parsed)) return 48;
-  return Math.max(1, Math.min(120, Math.trunc(parsed)));
+  return Math.max(1, Math.min(300, Math.trunc(parsed)));
 }
 
 async function fetchBinanceContext(

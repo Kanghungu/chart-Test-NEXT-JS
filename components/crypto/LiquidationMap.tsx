@@ -18,15 +18,16 @@ const COINS = ["BTC", "ETH", "SOL", "XRP", "BNB"] as const;
 type Coin = (typeof COINS)[number];
 
 const WINDOWS = [
-  { label: "1h",  ms: 60 * 60_000,       interval: "1m",  limit: 60  },
-  { label: "4h",  ms: 4  * 60 * 60_000,  interval: "5m",  limit: 48  },
-  { label: "12h", ms: 12 * 60 * 60_000,  interval: "15m", limit: 48  },
-  { label: "24h", ms: 24 * 60 * 60_000,  interval: "30m", limit: 48  },
+  { label: "1h",  ms: 60 * 60_000,       interval: "1m",  limit: 90  },
+  { label: "4h",  ms: 4  * 60 * 60_000,  interval: "1m",  limit: 240 },
+  { label: "12h", ms: 12 * 60 * 60_000,  interval: "5m",  limit: 180 },
+  { label: "24h", ms: 24 * 60 * 60_000,  interval: "5m",  limit: 300 },
 ] as const;
 
-const PRICE_BUCKETS = 120;
-const TIME_BUCKETS  = 200;
+const PRICE_BUCKETS = 180;
+const TIME_BUCKETS  = 260;
 const MAX_AGE_MS    = 24 * 60 * 60_000;
+const LEVERAGE_LEVELS = [100, 75, 50, 25, 10, 5] as const;
 
 // ── Viridis-like color scale ───────────────────────────────────────────────
 const COLOR_STOPS: [number, [number, number, number]][] = [
@@ -246,6 +247,266 @@ function drawChart(
 }
 
 // ── Color legend bar ───────────────────────────────────────────────────────
+function drawLeverageChart(
+  canvas: HTMLCanvasElement,
+  events: LiqEvent[],
+  candles: Candle[],
+  symbol: string,
+  windowMs: number,
+  currentPrice: number,
+) {
+  const cssW = canvas.clientWidth;
+  const cssH = canvas.clientHeight;
+  if (cssW <= 0 || cssH <= 0) return;
+
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = cssW * dpr;
+  canvas.height = cssH * dpr;
+
+  const ctx = canvas.getContext("2d")!;
+  ctx.scale(dpr, dpr);
+
+  const PAD_L = 10;
+  const PAD_R = 74;
+  const PAD_T = 34;
+  const PAD_B = 58;
+  const CW = cssW - PAD_L - PAD_R;
+  const CH = cssH - PAD_T - PAD_B;
+  const now = Date.now();
+  const timeStart = now - windowMs;
+  const visibleCandles = candles.filter((c) => c.openTime >= timeStart - windowMs / 20);
+  const visibleEvents = events.filter((e) => e.symbol === symbol && e.ts >= timeStart);
+  const anchor = Number.isFinite(currentPrice)
+    ? currentPrice
+    : visibleCandles[visibleCandles.length - 1]?.close;
+
+  const allPrices = [
+    ...visibleCandles.flatMap((c) => [c.high, c.low]),
+    ...visibleEvents.map((e) => e.price),
+    ...(Number.isFinite(anchor) ? [anchor] : []),
+  ];
+
+  ctx.fillStyle = "#020610";
+  ctx.fillRect(0, 0, cssW, cssH);
+  if (allPrices.length === 0) return;
+
+  const low = Math.min(...allPrices);
+  const high = Math.max(...allPrices);
+  const center = Number.isFinite(anchor) ? anchor : (low + high) / 2;
+  const pMin = Math.min(low, center * 0.955) * 0.985;
+  const pMax = Math.max(high, center * 1.055) * 1.015;
+  const pRange = pMax - pMin;
+  if (pRange <= 0) return;
+
+  const toX = (ts: number) => PAD_L + ((ts - timeStart) / windowMs) * CW;
+  const toY = (price: number) => PAD_T + (1 - (price - pMin) / pRange) * CH;
+
+  const bg = ctx.createLinearGradient(0, PAD_T, 0, PAD_T + CH);
+  bg.addColorStop(0, "#310640");
+  bg.addColorStop(0.5, "#3c0651");
+  bg.addColorStop(1, "#210331");
+  ctx.fillStyle = bg;
+  ctx.fillRect(PAD_L, PAD_T, CW, CH);
+
+  const grid = Array.from({ length: TIME_BUCKETS }, () => new Array(PRICE_BUCKETS).fill(0));
+  const maxRange = Math.max(
+    ...visibleCandles.map((c) => Math.max(c.high - c.low, c.close * 0.0008)),
+    1,
+  );
+
+  visibleCandles.forEach((c, index) => {
+    const txStart = Math.max(0, Math.floor(((c.openTime - timeStart) / windowMs) * TIME_BUCKETS));
+    if (txStart >= TIME_BUCKETS) return;
+
+    const range = Math.max(c.high - c.low, c.close * 0.0008);
+    const body = Math.abs(c.close - c.open);
+    const impulse = 0.55 + Math.min(1.8, (range + body * 1.3) / maxRange);
+    const ageBias = 0.48 + (index / Math.max(1, visibleCandles.length - 1)) * 0.7;
+
+    for (const leverage of LEVERAGE_LEVELS) {
+      const distance = 1 / leverage;
+      const bandHalf = Math.max(1, Math.round(PRICE_BUCKETS * (0.0009 + distance * 0.016)));
+      const reach = Math.max(
+        18,
+        Math.round(TIME_BUCKETS * (0.16 + (1 / Math.sqrt(leverage)) * 0.95) * ageBias),
+      );
+      const baseWeight = impulse * Math.pow(120 / leverage, 0.82);
+      const levels = [
+        { price: c.close * (1 + distance), weight: c.close < c.open ? 1.32 : 0.92 },
+        { price: c.close * (1 - distance), weight: c.close >= c.open ? 1.32 : 0.92 },
+      ];
+
+      for (const level of levels) {
+        if (level.price < pMin || level.price > pMax) continue;
+        const pyCenter = Math.round((1 - (level.price - pMin) / pRange) * (PRICE_BUCKETS - 1));
+        const txEnd = Math.min(TIME_BUCKETS, txStart + reach);
+
+        for (let tx = txStart; tx < txEnd; tx++) {
+          const fade = 0.34 + 0.66 * Math.pow(1 - (tx - txStart) / Math.max(1, reach), 0.26);
+          const pulse = 0.87 + 0.13 * Math.sin((tx + index * 9 + leverage) * 0.17);
+          for (let dy = -bandHalf; dy <= bandHalf; dy++) {
+            const py = pyCenter + dy;
+            if (py < 0 || py >= PRICE_BUCKETS) continue;
+            const softness = 1 - Math.abs(dy) / (bandHalf + 1);
+            grid[tx][py] += baseWeight * level.weight * fade * pulse * Math.pow(softness, 1.7);
+          }
+        }
+      }
+    }
+  });
+
+  for (const ev of visibleEvents) {
+    const tx = Math.floor(((ev.ts - timeStart) / windowMs) * TIME_BUCKETS);
+    const py = Math.floor((1 - (ev.price - pMin) / pRange) * PRICE_BUCKETS);
+    if (tx < 0 || tx >= TIME_BUCKETS || py < 0 || py >= PRICE_BUCKETS) continue;
+    for (let dx = -2; dx <= 8; dx++) {
+      for (let dy = -2; dy <= 2; dy++) {
+        const gx = tx + dx;
+        const gy = py + dy;
+        if (gx >= 0 && gx < TIME_BUCKETS && gy >= 0 && gy < PRICE_BUCKETS) {
+          grid[gx][gy] += Math.log10(ev.usd + 10) * 2.6;
+        }
+      }
+    }
+  }
+
+  const maxVal = Math.max(...grid.flatMap((col) => col), 1);
+  const cellW = CW / TIME_BUCKETS;
+  const cellH = CH / PRICE_BUCKETS;
+
+  for (let tx = 0; tx < TIME_BUCKETS; tx++) {
+    for (let py = 0; py < PRICE_BUCKETS; py++) {
+      const value = grid[tx][py];
+      if (value <= 0.02) continue;
+      ctx.fillStyle = heatColor(Math.pow(value / maxVal, 0.42));
+      ctx.fillRect(
+        PAD_L + Math.floor(tx * cellW),
+        PAD_T + Math.floor(py * cellH),
+        Math.ceil(cellW) + 1,
+        Math.ceil(cellH) + 1,
+      );
+    }
+  }
+
+  ctx.strokeStyle = "rgba(7,13,30,0.36)";
+  ctx.lineWidth = 0.5;
+  for (let i = 1; i < 5; i++) {
+    const y = PAD_T + (CH / 5) * i;
+    ctx.beginPath();
+    ctx.moveTo(PAD_L, y);
+    ctx.lineTo(PAD_L + CW, y);
+    ctx.stroke();
+  }
+  for (let i = 1; i < 8; i++) {
+    const x = PAD_L + (CW / 8) * i;
+    ctx.beginPath();
+    ctx.moveTo(x, PAD_T);
+    ctx.lineTo(x, PAD_T + CH);
+    ctx.stroke();
+  }
+
+  const spacing = CW / Math.max(visibleCandles.length, 1);
+  const bodyW = Math.max(1, Math.min(4, spacing * 0.6));
+  for (const c of visibleCandles) {
+    const x = toX(c.openTime) + spacing / 2;
+    const isUp = c.close >= c.open;
+    const color = isUp ? "#00e08a" : "#ff366d";
+    ctx.strokeStyle = color;
+    ctx.fillStyle = color;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(x, toY(c.high));
+    ctx.lineTo(x, toY(c.low));
+    ctx.stroke();
+    const y1 = toY(Math.max(c.open, c.close));
+    const y2 = toY(Math.min(c.open, c.close));
+    ctx.fillRect(x - bodyW / 2, y1, bodyW, Math.max(1, y2 - y1));
+  }
+
+  if (Number.isFinite(currentPrice)) {
+    const y = toY(currentPrice);
+    ctx.strokeStyle = "rgba(56,189,248,0.9)";
+    ctx.lineWidth = 1;
+    ctx.setLineDash([5, 4]);
+    ctx.beginPath();
+    ctx.moveTo(PAD_L, y);
+    ctx.lineTo(PAD_L + CW, y);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    const tagW = PAD_R - 5;
+    const tagH = 18;
+    const tagX = PAD_L + CW + 3;
+    ctx.fillStyle = "#38bdf8";
+    ctx.beginPath();
+    ctx.roundRect(tagX, y - tagH / 2, tagW, tagH, 3);
+    ctx.fill();
+    ctx.fillStyle = "#06111f";
+    ctx.font = "bold 10px ui-monospace, monospace";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(`$${Math.round(currentPrice).toLocaleString("en-US")}`, tagX + tagW / 2, y);
+  }
+
+  ctx.fillStyle = "rgba(210,219,239,0.78)";
+  ctx.font = "11px ui-monospace, monospace";
+  ctx.textAlign = "left";
+  ctx.textBaseline = "middle";
+  for (let i = 0; i <= 6; i++) {
+    const price = pMax - (pRange / 6) * i;
+    const y = PAD_T + (CH / 6) * i;
+    ctx.fillText(Math.round(price).toLocaleString("en-US"), PAD_L + CW + 6, y);
+  }
+
+  ctx.textAlign = "center";
+  ctx.textBaseline = "top";
+  for (let i = 0; i <= 7; i++) {
+    const ts = timeStart + (windowMs / 7) * i;
+    const x = PAD_L + (CW / 7) * i;
+    const d = new Date(ts);
+    const mm = d.getMinutes().toString().padStart(2, "0");
+    ctx.fillText(`${d.getMonth() + 1}-${d.getDate()} ${d.getHours()}:${mm}`, x, PAD_T + CH + 8);
+  }
+
+  if (visibleCandles.length > 2) {
+    const miniTop = PAD_T + CH + 34;
+    const miniH = 18;
+    ctx.fillStyle = "rgba(71,103,166,0.38)";
+    ctx.beginPath();
+    visibleCandles.forEach((c, i) => {
+      const x = toX(c.openTime);
+      const y = miniTop + miniH - ((c.close - pMin) / pRange) * miniH;
+      if (i === 0) ctx.moveTo(x, miniTop + miniH);
+      ctx.lineTo(x, y);
+    });
+    ctx.lineTo(PAD_L + CW, miniTop + miniH);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.strokeStyle = "rgba(140,170,230,0.76)";
+    ctx.beginPath();
+    visibleCandles.forEach((c, i) => {
+      const x = toX(c.openTime);
+      const y = miniTop + miniH - ((c.close - pMin) / pRange) * miniH;
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    });
+    ctx.stroke();
+  }
+
+  ctx.font = "bold 12px ui-sans-serif, system-ui, sans-serif";
+  ctx.textAlign = "left";
+  ctx.textBaseline = "middle";
+  ctx.fillStyle = "#6c1f83";
+  ctx.fillRect(PAD_L + CW * 0.43, 11, 10, 10);
+  ctx.fillStyle = "#f2f5fb";
+  ctx.fillText("청산 레버리지", PAD_L + CW * 0.43 + 15, 16);
+  ctx.fillStyle = "#00e08a";
+  ctx.fillRect(PAD_L + CW * 0.54, 11, 10, 10);
+  ctx.fillStyle = "#f2f5fb";
+  ctx.fillText("슈퍼차트", PAD_L + CW * 0.54 + 15, 16);
+}
+
 function ColorLegend() {
   const ref = useRef<HTMLCanvasElement>(null);
   useEffect(() => {
@@ -396,7 +657,7 @@ export default function LiquidationMap() {
     if (!canvas) return;
     cancelAnimationFrame(rafRef.current);
     rafRef.current = requestAnimationFrame(() => {
-      drawChart(canvas, events, candles, coin, win.ms, currentPrice);
+      drawLeverageChart(canvas, events, candles, coin, win.ms, currentPrice);
     });
   }, [events, candles, coin, win.ms, currentPrice]);
 
@@ -407,7 +668,7 @@ export default function LiquidationMap() {
     const ro = new ResizeObserver(() => {
       cancelAnimationFrame(rafRef.current);
       rafRef.current = requestAnimationFrame(() => {
-        drawChart(canvas, events, candles, coin, win.ms, currentPrice);
+        drawLeverageChart(canvas, events, candles, coin, win.ms, currentPrice);
       });
     });
     ro.observe(canvas.parentElement);
