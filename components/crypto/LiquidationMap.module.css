@@ -1,4 +1,4 @@
-/* ── Panel shell ─────────────────────────────────────────────────────────── */
+/* ── Panel ───────────────────────────────────────────────────────────────── */
 .panel {
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-lg);
@@ -18,7 +18,6 @@
   gap: 1rem;
   flex-wrap: wrap;
 }
-
 .kicker {
   font-size: 0.68rem;
   font-weight: 800;
@@ -30,20 +29,18 @@
   background-clip: text;
   margin-bottom: 0.25rem;
 }
-
 .title {
   color: #f8fafc;
   font-size: 1.25rem;
   font-weight: 700;
   margin-bottom: 0.2rem;
 }
-
 .hint {
   color: rgb(148 163 184);
   font-size: 0.8rem;
 }
 
-/* ── WebSocket status badge ──────────────────────────────────────────────── */
+/* ── WS badge ────────────────────────────────────────────────────────────── */
 .wsBadge {
   display: flex;
   align-items: center;
@@ -51,18 +48,16 @@
   font-size: 0.72rem;
   font-weight: 700;
   letter-spacing: 0.06em;
-  padding: 0.3rem 0.7rem;
+  padding: 0.3rem 0.75rem;
   border-radius: 99px;
   border: 1px solid transparent;
   flex-shrink: 0;
 }
-
 .wsDot {
   width: 6px;
   height: 6px;
   border-radius: 50%;
 }
-
 .ws_live {
   color: #4ade80;
   background: rgba(74 222 128 / 0.08);
@@ -73,7 +68,6 @@
   box-shadow: 0 0 6px #4ade80;
   animation: pulse 1.4s ease-in-out infinite;
 }
-
 .ws_connecting {
   color: #fbbf24;
   background: rgba(251 191 36 / 0.08);
@@ -83,15 +77,12 @@
   background: #fbbf24;
   animation: pulse 0.8s ease-in-out infinite;
 }
-
 .ws_error {
   color: #f87171;
   background: rgba(248 113 113 / 0.08);
   border-color: rgba(248 113 113 / 0.25);
 }
-.ws_error .wsDot {
-  background: #f87171;
-}
+.ws_error .wsDot { background: #f87171; }
 
 @keyframes pulse {
   0%, 100% { opacity: 1; }
@@ -105,13 +96,11 @@
   gap: 1rem;
   align-items: center;
 }
-
 .controlGroup {
   display: flex;
   align-items: center;
   gap: 0.5rem;
 }
-
 .controlLabel {
   font-size: 0.72rem;
   font-weight: 600;
@@ -120,12 +109,10 @@
   text-transform: uppercase;
   white-space: nowrap;
 }
-
 .btnGroup {
   display: flex;
   gap: 0.25rem;
 }
-
 .ctrlBtn {
   padding: 0.3rem 0.65rem;
   border-radius: 6px;
@@ -140,7 +127,6 @@
 .ctrlBtn:hover {
   border-color: rgb(100 116 139);
   color: #e2e8f0;
-  background: rgba(30 41 59 / 0.8);
 }
 .ctrlBtnActive {
   border-color: rgba(56 189 248 / 0.5);
@@ -148,13 +134,12 @@
   color: #38bdf8;
 }
 
-/* ── Stats bar ───────────────────────────────────────────────────────────── */
+/* ── Stats ───────────────────────────────────────────────────────────────── */
 .statsRow {
   display: flex;
   flex-wrap: wrap;
   gap: 0.75rem;
 }
-
 .statBox {
   display: flex;
   flex-direction: column;
@@ -163,9 +148,8 @@
   border-radius: 8px;
   border: 1px solid rgb(30 41 59);
   background: rgba(15 23 42 / 0.5);
-  min-width: 100px;
+  min-width: 90px;
 }
-
 .statLabel {
   font-size: 0.68rem;
   font-weight: 600;
@@ -173,166 +157,54 @@
   text-transform: uppercase;
   color: rgb(100 116 139);
 }
-
 .statValue {
   font-size: 1rem;
   font-weight: 700;
   color: #f1f5f9;
   font-variant-numeric: tabular-nums;
 }
-
-.statLong .statValue  { color: #f87171; }
+.statLong  .statValue { color: #f87171; }
 .statShort .statValue { color: #4ade80; }
 
-/* ── Map wrapper ─────────────────────────────────────────────────────────── */
-.mapWrap {
+/* ── Chart container ─────────────────────────────────────────────────────── */
+.chartWrap {
   display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.6rem;
+  align-items: stretch;
+  border: 1px solid rgba(51 65 85 / 0.4);
+  border-radius: 10px;
+  overflow: hidden;
+  background: #060d1f;
 }
 
-/* ── Legend ──────────────────────────────────────────────────────────────── */
-.legend {
+/* ── Legend bar (left side) ──────────────────────────────────────────────── */
+.legendBar {
   display: flex;
+  flex-direction: column;
+  align-items: center;
   justify-content: space-between;
-  padding: 0 0.25rem;
+  padding: 0.75rem 0.5rem;
+  gap: 0.4rem;
+  flex-shrink: 0;
 }
-
-.legendLong {
-  font-size: 0.7rem;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  color: #f87171;
-  text-transform: uppercase;
-}
-
-.legendShort {
-  font-size: 0.7rem;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  color: #4ade80;
-  text-transform: uppercase;
-}
-
-/* ── Chart ───────────────────────────────────────────────────────────────── */
-.chart {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-  border: 1px solid rgba(51 65 85 / 0.5);
-  border-radius: 8px;
-  overflow: hidden;
-  background: rgba(7 17 31 / 0.6);
-}
-
-/* ── Row ─────────────────────────────────────────────────────────────────── */
-.row {
-  display: grid;
-  grid-template-columns: 1fr 80px 1fr;
-  align-items: center;
-  height: 20px;
-  transition: background 0.1s ease;
-}
-.row:hover {
-  background: rgba(51 65 85 / 0.25);
-}
-
-.rowCurrent {
-  background: rgba(56 189 248 / 0.06);
-  border-top: 1px solid rgba(56 189 248 / 0.3);
-  border-bottom: 1px solid rgba(56 189 248 / 0.3);
-  position: relative;
-  z-index: 1;
-}
-
-/* ── Long side (left, fills right-to-left) ───────────────────────────────── */
-.longSide {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  height: 100%;
-  overflow: hidden;
-  padding-right: 2px;
-}
-
-.longBar {
-  height: 14px;
-  background: linear-gradient(to left, #f87171, rgba(248 113 113 / 0.35));
-  border-radius: 2px 0 0 2px;
-  min-width: 2px;
-  transition: width 0.3s ease;
-  max-width: 100%;
-}
-
-/* ── Short side (right, fills left-to-right) ─────────────────────────────── */
-.shortSide {
-  display: flex;
-  justify-content: flex-start;
-  align-items: center;
-  height: 100%;
-  overflow: hidden;
-  padding-left: 2px;
-}
-
-.shortBar {
-  height: 14px;
-  background: linear-gradient(to right, #4ade80, rgba(74 222 128 / 0.35));
-  border-radius: 0 2px 2px 0;
-  min-width: 2px;
-  transition: width 0.3s ease;
-  max-width: 100%;
-}
-
-/* ── Price label (center) ────────────────────────────────────────────────── */
-.priceCell {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.2rem;
-  position: relative;
-}
-
-.currentMark {
+.legendHigh,
+.legendLow {
   font-size: 0.6rem;
-  color: #38bdf8;
-  position: absolute;
-  left: 0;
-}
-
-.priceLabel {
-  font-size: 0.65rem;
-  font-variant-numeric: tabular-nums;
-  color: rgb(71 85 105);
-  letter-spacing: -0.01em;
-  line-height: 1;
-}
-
-.priceLabelCurrent {
-  color: #38bdf8;
   font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  writing-mode: horizontal-tb;
 }
+.legendHigh { color: #fde725; }
+.legendLow  { color: rgb(59 28 90); }
 
-.priceLabelActive {
-  color: rgb(148 163 184);
-}
-
-/* ── Empty / waiting states ──────────────────────────────────────────────── */
-.empty {
-  padding: 3rem 1rem;
-  text-align: center;
-  color: rgb(100 116 139);
-  font-size: 0.85rem;
-  border: 1px dashed rgba(51 65 85 / 0.5);
-  border-radius: 8px;
-}
-
-.waitingOverlay {
-  text-align: center;
-  padding: 0.5rem 0;
-  font-size: 0.72rem;
-  color: rgb(100 116 139);
-  letter-spacing: 0.03em;
-  margin-bottom: 0.25rem;
+/* ── Canvas ──────────────────────────────────────────────────────────────── */
+.canvas {
+  flex: 1;
+  display: block;
+  width: 100%;
+  height: 460px;
+  cursor: crosshair;
 }
 
 /* ── Info note ───────────────────────────────────────────────────────────── */
@@ -340,6 +212,6 @@
   font-size: 0.72rem;
   color: rgb(71 85 105);
   line-height: 1.5;
-  padding: 0.5rem 0.25rem 0;
+  padding-top: 0.25rem;
   border-top: 1px solid rgba(51 65 85 / 0.4);
 }
