@@ -107,15 +107,29 @@ function drawChart(
   const toX = (ts: number)  => PAD_L + ((ts - timeStart) / windowMs) * CW;
   const toY = (price: number) => PAD_T + (1 - (price - pMin) / pRange) * CH;
 
-  // ── Build heatmap grid ───────────────────────────────────────────────
-  const grid: number[][] = Array.from({ length: TIME_BUCKETS }, () =>
+  // ── Build raw event grid ─────────────────────────────────────────────
+  const rawGrid: number[][] = Array.from({ length: TIME_BUCKETS }, () =>
     new Array(PRICE_BUCKETS).fill(0),
   );
 
   for (const ev of filteredEvents) {
     const tx = Math.min(TIME_BUCKETS - 1, Math.floor(((ev.ts - timeStart) / windowMs) * TIME_BUCKETS));
     const py = Math.min(PRICE_BUCKETS - 1, Math.floor(((ev.price - pMin) / pRange) * PRICE_BUCKETS));
-    if (tx >= 0 && py >= 0) grid[tx][PRICE_BUCKETS - 1 - py] += ev.usd;
+    if (tx >= 0 && py >= 0) rawGrid[tx][PRICE_BUCKETS - 1 - py] += ev.usd;
+  }
+
+  // ── Cumulative-forward grid (Coinglass-style: events persist rightward) ──
+  // For each price row, run a decaying EMA so liquidation bands extend in time
+  const DECAY = Math.exp(-2.5 / TIME_BUCKETS); // tune: lower = faster fade
+  const grid: number[][] = Array.from({ length: TIME_BUCKETS }, () =>
+    new Array(PRICE_BUCKETS).fill(0),
+  );
+  for (let py = 0; py < PRICE_BUCKETS; py++) {
+    let ema = 0;
+    for (let tx = 0; tx < TIME_BUCKETS; tx++) {
+      ema = ema * DECAY + rawGrid[tx][py];
+      grid[tx][py] = ema;
+    }
   }
 
   const maxVal = Math.max(...grid.flatMap(col => col), 1);
@@ -127,8 +141,8 @@ function drawChart(
   for (let tx = 0; tx < TIME_BUCKETS; tx++) {
     for (let py = 0; py < PRICE_BUCKETS; py++) {
       const v = grid[tx][py];
-      if (v === 0) continue;
-      const t = Math.pow(v / maxVal, 0.32); // power curve for better contrast
+      if (v < maxVal * 0.005) continue; // skip near-zero cells
+      const t = Math.pow(v / maxVal, 0.28);
       ctx.fillStyle = heatColor(t);
       ctx.fillRect(
         PAD_L + Math.floor(tx * cellW),
