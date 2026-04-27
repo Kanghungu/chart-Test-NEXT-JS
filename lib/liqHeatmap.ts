@@ -176,13 +176,60 @@ export async function buildLiqHeatmap(
     }
   }
 
-  // ── Step 3: Forward EMA — bands accumulate rightward (open positions) ─────
+  // ── Step 3: Build price path — running min/max of candle wicks ───────────
+  // Used to detect which liquidation zones were actually consumed by price movement
+  const pathLow  = new Float32Array(TB).fill(Infinity);
+  const pathHigh = new Float32Array(TB).fill(-Infinity);
+
+  for (const c of candles) {
+    const tx = Math.min(TB - 1, Math.floor(((c.ts - timeStart) / timeRange) * TB));
+    pathLow[tx]  = Math.min(pathLow[tx],  c.low);
+    pathHigh[tx] = Math.max(pathHigh[tx], c.high);
+  }
+
+  // Convert to running cumulative min/max (forward pass)
+  let runLow = Infinity, runHigh = -Infinity;
+  for (let tx = 0; tx < TB; tx++) {
+    if (isFinite(pathLow[tx]))  runLow  = Math.min(runLow,  pathLow[tx]);
+    if (isFinite(pathHigh[tx])) runHigh = Math.max(runHigh, pathHigh[tx]);
+    pathLow[tx]  = isFinite(runLow)  ? runLow  : pMin;
+    pathHigh[tx] = isFinite(runHigh) ? runHigh : pMax;
+  }
+
+  // ── Step 4: Forward EMA + simultaneous liquidation clearing ──────────────
+  // At each time step:
+  //   - EMA accumulates new positions (persistence)
+  //   - Zones where price has passed through get cleared (liquidated positions disappear)
+  //
+  // clearing factor = exp(-K × relative_distance_past_path)
+  // K=70: 1% past path → 50% cleared, 3% past → 12%, 5% past → 3%
+  const K_CLEAR = 70;
+
   const grid = new Float32Array(TB * PB);
   for (let py = 0; py < PB; py++) {
+    // Actual price this bucket represents (high price at top, low at bottom)
+    const bucketPrice = pMax - (py + 0.5) / PB * pRange;
+
     let ema = 0;
     for (let tx = 0; tx < TB; tx++) {
       ema = ema * EMA_DECAY + smoothed[tx * PB + py];
-      grid[tx * PB + py] = ema;
+
+      // Determine clearing factor based on price path
+      let factor = 1.0;
+      const pLow  = pathLow[tx];
+      const pHigh = pathHigh[tx];
+
+      if (bucketPrice < pLow) {
+        // Long liq zone: price has been BELOW this level → longs got liquidated
+        const dist = (pLow - bucketPrice) / pLow;
+        factor = Math.exp(-K_CLEAR * dist);
+      } else if (bucketPrice > pHigh) {
+        // Short liq zone: price has been ABOVE this level → shorts got liquidated
+        const dist = (bucketPrice - pHigh) / pHigh;
+        factor = Math.exp(-K_CLEAR * dist);
+      }
+
+      grid[tx * PB + py] = ema * factor;
     }
   }
 
