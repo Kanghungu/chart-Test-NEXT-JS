@@ -4,7 +4,6 @@ import { Fragment, useEffect, useState } from "react";
 import { useLanguage } from "@/components/i18n/LanguageProvider";
 import {
   EXCHANGE_LABELS,
-  scanFunding,
   formatFR,
   formatOI,
   formatPrice,
@@ -17,6 +16,11 @@ import {
 import styles from "./FundingPanel.module.css";
 
 const EXCHANGE_ORDER: ExchangeId[] = ["binance", "bybit", "okx", "bitget", "gate", "mexc", "htx"];
+
+type FundingApiResponse = {
+  rows?: FundingRow[];
+  error?: string;
+};
 
 const COPY = {
   ko: {
@@ -227,8 +231,14 @@ export default function FundingPanel() {
     try {
       setError(null);
       setLoading(true);
-      const data = await scanFunding();
-      setRows(data);
+      const res = await fetch("/api/funding/crypto", { cache: "no-store" });
+      const data = (await res.json()) as FundingApiResponse;
+
+      if (!res.ok) {
+        throw new Error(data.error ?? `Funding request failed (${res.status})`);
+      }
+
+      setRows(Array.isArray(data.rows) ? data.rows : []);
       setLastScan(Date.now());
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));

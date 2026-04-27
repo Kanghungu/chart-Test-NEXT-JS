@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 export const revalidate = 60;
+export const dynamic = "force-dynamic";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 export type TF = "15m" | "1h" | "4h";
