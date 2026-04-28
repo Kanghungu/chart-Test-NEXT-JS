@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import {
   createChart,
   createSeriesMarkers,
   CandlestickSeries,
   LineSeries,
+  HistogramSeries,
   CrosshairMode,
   LineStyle,
   type IChartApi,
@@ -44,6 +45,61 @@ function formatPrice(p: number): string {
   if (p >= 1)    return p.toFixed(3);
   if (p >= 0.01) return p.toFixed(4);
   return p.toFixed(6);
+}
+
+// ── Indicator computations ────────────────────────────────────────────────
+function calcSMA(data: number[], period: number): number[] {
+  const out = new Array(data.length).fill(NaN);
+  for (let i = period - 1; i < data.length; i++) {
+    out[i] = data.slice(i - period + 1, i + 1).reduce((s, v) => s + v, 0) / period;
+  }
+  return out;
+}
+
+function calcEMA(data: number[], period: number): number[] {
+  const k = 2 / (period + 1);
+  const out = new Array(data.length).fill(NaN);
+  for (let i = 0; i < data.length; i++) {
+    if (i < period - 1) continue;
+    out[i] = i === period - 1
+      ? data.slice(0, period).reduce((s, v) => s + v, 0) / period
+      : data[i] * k + out[i - 1] * (1 - k);
+  }
+  return out;
+}
+
+function calcBB(data: number[], period = 20, mult = 2) {
+  const mid = calcSMA(data, period);
+  const upper = new Array(data.length).fill(NaN);
+  const lower = new Array(data.length).fill(NaN);
+  for (let i = period - 1; i < data.length; i++) {
+    const slice = data.slice(i - period + 1, i + 1);
+    const mean  = mid[i];
+    const std   = Math.sqrt(slice.reduce((s, v) => s + (v - mean) ** 2, 0) / period);
+    upper[i] = mean + mult * std;
+    lower[i] = mean - mult * std;
+  }
+  return { upper, middle: mid, lower };
+}
+
+function calcRSI(data: number[], period = 14): number[] {
+  const out = new Array(data.length).fill(NaN);
+  if (data.length < period + 1) return out;
+  let avgG = 0, avgL = 0;
+  for (let i = 1; i <= period; i++) {
+    const d = data[i] - data[i - 1];
+    avgG += Math.max(0, d);
+    avgL += Math.max(0, -d);
+  }
+  avgG /= period; avgL /= period;
+  out[period] = 100 - 100 / (1 + (avgL === 0 ? Infinity : avgG / avgL));
+  for (let i = period + 1; i < data.length; i++) {
+    const d = data[i] - data[i - 1];
+    avgG = (avgG * (period - 1) + Math.max(0, d)) / period;
+    avgL = (avgL * (period - 1) + Math.max(0, -d)) / period;
+    out[i] = 100 - 100 / (1 + (avgL === 0 ? Infinity : avgG / avgL));
+  }
+  return out;
 }
 
 // ── Rectangle primitive ───────────────────────────────────────────────────
@@ -121,7 +177,26 @@ export default function SignalChartModal({
 }) {
   const { language } = useLanguage();
   const priceRef = useRef<HTMLDivElement>(null);
+  const volRef   = useRef<HTMLDivElement>(null);
   const rsiRef   = useRef<HTMLDivElement>(null);
+
+  // Compute indicator values from candle data (for display in info strip)
+  const indValues = useMemo(() => {
+    const closes = signal.candles.map(c => c.close);
+    const ema20  = calcEMA(closes, 20);
+    const ema50  = calcEMA(closes, 50);
+    const rsi    = calcRSI(closes, 14);
+    const bb     = calcBB(closes, 20, 2);
+    const n = closes.length - 1;
+    return {
+      ema20: ema20[n],
+      ema50: ema50[n],
+      rsi:   rsi[n],
+      bbUpper: bb.upper[n],
+      bbLower: bb.lower[n],
+      bbWidth: isNaN(bb.upper[n]) ? NaN : (bb.upper[n] - bb.lower[n]) / closes[n] * 100,
+    };
+  }, [signal]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
@@ -136,7 +211,7 @@ export default function SignalChartModal({
 
     const chart: IChartApi = createChart(container, {
       width: container.clientWidth,
-      height: signal.viz.kind === "DIVERGENCE" ? 280 : 380,
+      height: 240,
       layout: {
         background: { color: "transparent" },
         textColor: "#cbd5e1",
@@ -231,71 +306,174 @@ export default function SignalChartModal({
       })));
     }
 
+    // ── EMA 20 & 50 overlays ───────────────────────────────────────────────
+    const closes = signal.candles.map(c => c.close);
+    const times  = signal.candles.map(c => toTs(c.time));
+
+    const ema20vals = calcEMA(closes, 20);
+    const ema50vals = calcEMA(closes, 50);
+
+    const ema20Series = chart.addSeries(LineSeries, {
+      color: "#38bdf8", lineWidth: 1, priceLineVisible: false,
+      lastValueVisible: true, crosshairMarkerVisible: false, title: "EMA20",
+    });
+    ema20Series.setData(
+      times.map((t, i) => ({ time: t, value: ema20vals[i] })).filter(d => isFinite(d.value)),
+    );
+
+    const ema50Series = chart.addSeries(LineSeries, {
+      color: "#f97316", lineWidth: 1, priceLineVisible: false,
+      lastValueVisible: true, crosshairMarkerVisible: false, title: "EMA50",
+    });
+    ema50Series.setData(
+      times.map((t, i) => ({ time: t, value: ema50vals[i] })).filter(d => isFinite(d.value)),
+    );
+
+    // ── Bollinger Bands (BB20, 2σ) ─────────────────────────────────────────
+    const bb = calcBB(closes, 20, 2);
+    const bbOpts = { lineWidth: 1 as const, priceLineVisible: false, lastValueVisible: false, crosshairMarkerVisible: false };
+
+    const bbUpperSeries = chart.addSeries(LineSeries, {
+      ...bbOpts, color: "rgba(147,197,253,0.55)", lineStyle: LineStyle.Dotted,
+    });
+    bbUpperSeries.setData(
+      times.map((t, i) => ({ time: t, value: bb.upper[i] })).filter(d => isFinite(d.value)),
+    );
+    const bbLowerSeries = chart.addSeries(LineSeries, {
+      ...bbOpts, color: "rgba(147,197,253,0.55)", lineStyle: LineStyle.Dotted,
+    });
+    bbLowerSeries.setData(
+      times.map((t, i) => ({ time: t, value: bb.lower[i] })).filter(d => isFinite(d.value)),
+    );
+    const bbMidSeries = chart.addSeries(LineSeries, {
+      ...bbOpts, color: "rgba(147,197,253,0.25)", lineStyle: LineStyle.Dashed,
+    });
+    bbMidSeries.setData(
+      times.map((t, i) => ({ time: t, value: bb.middle[i] })).filter(d => isFinite(d.value)),
+    );
+
     chart.timeScale().fitContent();
 
-    // RSI sub-chart
+    // ── Volume sub-chart ───────────────────────────────────────────────────
+    let volChart: IChartApi | null = null;
+    if (volRef.current) {
+      volChart = createChart(volRef.current, {
+        width: volRef.current.clientWidth,
+        height: 60,
+        layout: {
+          background: { color: "transparent" },
+          textColor: "#cbd5e1",
+          fontFamily: `"JetBrains Mono", ui-monospace, monospace`,
+        },
+        grid: { vertLines: { color: "transparent" }, horzLines: { color: "rgba(51,65,85,0.15)" } },
+        rightPriceScale: { borderColor: "rgba(51,65,85,0.5)", scaleMargins: { top: 0.1, bottom: 0 } },
+        timeScale: { borderColor: "rgba(51,65,85,0.5)", timeVisible: true, secondsVisible: false },
+        crosshair: { mode: CrosshairMode.Normal },
+      });
+      const volSeries = volChart.addSeries(HistogramSeries, {
+        priceScaleId: "right",
+        priceLineVisible: false,
+        lastValueVisible: false,
+      });
+      volSeries.setData(
+        signal.candles.map((c) => ({
+          time: toTs(c.time),
+          value: c.volume,
+          color: c.close >= c.open ? "rgba(74,222,128,0.55)" : "rgba(248,113,113,0.55)",
+        })),
+      );
+      volChart.timeScale().fitContent();
+    }
+
+    // ── RSI sub-chart (all signal types) ──────────────────────────────────
     let rsiChart: IChartApi | null = null;
-    if (signal.viz.kind === "DIVERGENCE" && rsiRef.current) {
-      const { rsi, rsiPoints } = signal.viz;
-      rsiChart = createChart(rsiRef.current!, {
+    if (rsiRef.current) {
+      // Use precomputed RSI values for DIVERGENCE, or compute fresh for others
+      const rsiData = signal.viz.kind === "DIVERGENCE"
+        ? signal.viz.rsi.map(p => ({ time: toTs(p.time), value: p.value }))
+        : calcRSI(closes, 14)
+            .map((v, i) => ({ time: times[i], value: v }))
+            .filter(d => isFinite(d.value));
+
+      rsiChart = createChart(rsiRef.current, {
         width: rsiRef.current.clientWidth,
-        height: 140,
+        height: 90,
         layout: {
           background: { color: "transparent" },
           textColor: "#cbd5e1",
           fontFamily: `"JetBrains Mono", ui-monospace, monospace`,
         },
         grid: {
-          vertLines: { color: "rgba(51, 65, 85, 0.25)" },
-          horzLines: { color: "rgba(51, 65, 85, 0.25)" },
+          vertLines: { color: "rgba(51,65,85,0.2)" },
+          horzLines: { color: "rgba(51,65,85,0.2)" },
         },
-        rightPriceScale: { borderColor: "rgba(51, 65, 85, 0.5)" },
-        timeScale: { borderColor: "rgba(51, 65, 85, 0.5)", timeVisible: true, secondsVisible: false },
+        rightPriceScale: { borderColor: "rgba(51,65,85,0.5)", scaleMargins: { top: 0.1, bottom: 0.1 } },
+        timeScale: { borderColor: "rgba(51,65,85,0.5)", timeVisible: true, secondsVisible: false },
+        crosshair: { mode: CrosshairMode.Normal },
       });
-      const rsiSeries = rsiChart.addSeries(LineSeries, {
-        color: "#818cf8", lineWidth: 2, priceLineVisible: false, lastValueVisible: true,
-      });
-      rsiSeries.setData(rsi.map((p) => ({ time: toTs(p.time), value: p.value })));
-      rsiSeries.createPriceLine({ price: 70, color: "rgba(248, 113, 113, 0.4)", lineWidth: 1, lineStyle: LineStyle.Dashed, axisLabelVisible: true, title: "70" });
-      rsiSeries.createPriceLine({ price: 30, color: "rgba(74, 222, 128, 0.4)",  lineWidth: 1, lineStyle: LineStyle.Dashed, axisLabelVisible: true, title: "30" });
 
-      const divColor = signal.direction === "BULLISH" ? "#4ade80" : "#f87171";
-      const isPred = Boolean(signal.isPrediction);
-      const divLine = rsiChart.addSeries(LineSeries, {
-        color: isPred ? hexToRgba(divColor, 0.55) : divColor,
-        lineWidth: isPred ? 1 : 2,
-        lineStyle: isPred ? LineStyle.Dotted : LineStyle.Dashed,
-        crosshairMarkerVisible: false, priceLineVisible: false, lastValueVisible: false,
+      const rsiSeries = rsiChart.addSeries(LineSeries, {
+        color: "#818cf8", lineWidth: 1, priceLineVisible: false, lastValueVisible: true,
       });
-      divLine.setData(
-        rsiPoints.map((p) => ({ time: toTs(p.time), value: p.price }))
-          .sort((a, b) => (a.time as number) - (b.time as number))
-      );
-      createSeriesMarkers(rsiSeries, rsiPoints.map((p) => ({
-        time: toTs(p.time),
-        position: signal.direction === "BULLISH" ? "aboveBar" as const : "belowBar" as const,
-        color: isPred ? hexToRgba(divColor, 0.65) : divColor,
-        shape: "circle" as const,
-        text: p.label ?? "",
-        size: isPred ? 1 : 2,
-      })));
+      rsiSeries.setData(rsiData);
+      rsiSeries.createPriceLine({ price: 70, color: "rgba(248,113,113,0.5)", lineWidth: 1, lineStyle: LineStyle.Dashed, axisLabelVisible: true, title: "OB" });
+      rsiSeries.createPriceLine({ price: 30, color: "rgba(74,222,128,0.5)",  lineWidth: 1, lineStyle: LineStyle.Dashed, axisLabelVisible: true, title: "OS" });
+      rsiSeries.createPriceLine({ price: 50, color: "rgba(100,116,139,0.3)", lineWidth: 1, lineStyle: LineStyle.Dotted, axisLabelVisible: false });
+
+      // For DIVERGENCE: draw the divergence line on RSI pane
+      if (signal.viz.kind === "DIVERGENCE") {
+        const { rsiPoints } = signal.viz;
+        const divColor = signal.direction === "BULLISH" ? "#4ade80" : "#f87171";
+        const isPred   = Boolean(signal.isPrediction);
+        const divLine  = rsiChart.addSeries(LineSeries, {
+          color: isPred ? hexToRgba(divColor, 0.55) : divColor,
+          lineWidth: isPred ? 1 : 2,
+          lineStyle: isPred ? LineStyle.Dotted : LineStyle.Dashed,
+          crosshairMarkerVisible: false, priceLineVisible: false, lastValueVisible: false,
+        });
+        divLine.setData(
+          rsiPoints.map(p => ({ time: toTs(p.time), value: p.price }))
+            .sort((a, b) => (a.time as number) - (b.time as number)),
+        );
+        createSeriesMarkers(rsiSeries, rsiPoints.map(p => ({
+          time: toTs(p.time),
+          position: signal.direction === "BULLISH" ? "aboveBar" as const : "belowBar" as const,
+          color: isPred ? hexToRgba(divColor, 0.65) : divColor,
+          shape: "circle" as const,
+          text: p.label ?? "",
+          size: isPred ? 1 : 2,
+        })));
+      }
 
       rsiChart.timeScale().fitContent();
+    }
 
-      const priceScale = chart.timeScale();
-      const rsiScale = rsiChart.timeScale();
-      priceScale.subscribeVisibleLogicalRangeChange((r) => { if (r) rsiScale.setVisibleLogicalRange(r); });
-      rsiScale.subscribeVisibleLogicalRangeChange((r)   => { if (r) priceScale.setVisibleLogicalRange(r); });
+    // ── Sync all time scales ───────────────────────────────────────────────
+    const charts = [volChart, rsiChart].filter(Boolean) as IChartApi[];
+    const subs: Array<() => void> = [];
+    const priceTS = chart.timeScale();
+
+    for (const sub of charts) {
+      const subTS = sub.timeScale();
+      const u1 = (r: Parameters<Parameters<typeof priceTS.subscribeVisibleLogicalRangeChange>[0]>[0]) => { if (r) subTS.setVisibleLogicalRange(r); };
+      const u2 = (r: Parameters<Parameters<typeof subTS.subscribeVisibleLogicalRangeChange>[0]>[0]) => { if (r) priceTS.setVisibleLogicalRange(r); };
+      priceTS.subscribeVisibleLogicalRangeChange(u1);
+      subTS.subscribeVisibleLogicalRangeChange(u2);
+      subs.push(() => { priceTS.unsubscribeVisibleLogicalRangeChange(u1); subTS.unsubscribeVisibleLogicalRangeChange(u2); });
     }
 
     const onResize = () => {
       if (priceRef.current) chart.applyOptions({ width: priceRef.current.clientWidth });
-      if (rsiChart && rsiRef.current) rsiChart.applyOptions({ width: rsiRef.current.clientWidth });
+      if (volChart  && volRef.current)  volChart.applyOptions({ width: volRef.current.clientWidth });
+      if (rsiChart  && rsiRef.current)  rsiChart.applyOptions({ width: rsiRef.current.clientWidth });
     };
     window.addEventListener("resize", onResize);
+
     return () => {
       window.removeEventListener("resize", onResize);
+      subs.forEach(fn => fn());
       chart.remove();
+      if (volChart) volChart.remove();
       if (rsiChart) rsiChart.remove();
     };
   }, [signal, language]);
@@ -387,16 +565,48 @@ export default function SignalChartModal({
 
           {/* ── RIGHT: Charts ── */}
           <div className={styles.chartArea}>
+            {/* Indicator value strip */}
+            <div className={styles.indStrip}>
+              <span className={styles.indBadge}>
+                <span className={styles.indDot} style={{ background: "#38bdf8" }} />
+                <span className={styles.indLabel}>EMA20</span>
+                <span className={styles.indVal}>{isFinite(indValues.ema20) ? `$${formatPrice(indValues.ema20)}` : "—"}</span>
+              </span>
+              <span className={styles.indBadge}>
+                <span className={styles.indDot} style={{ background: "#f97316" }} />
+                <span className={styles.indLabel}>EMA50</span>
+                <span className={styles.indVal}>{isFinite(indValues.ema50) ? `$${formatPrice(indValues.ema50)}` : "—"}</span>
+              </span>
+              <span className={styles.indBadge}>
+                <span className={styles.indDot} style={{ background: "rgba(147,197,253,0.7)" }} />
+                <span className={styles.indLabel}>BB (20,2)</span>
+                <span className={styles.indVal}>{isFinite(indValues.bbWidth) ? `${indValues.bbWidth.toFixed(2)}%` : "—"}</span>
+              </span>
+              <span className={styles.indBadge}>
+                <span className={styles.indDot} style={{ background: "#818cf8" }} />
+                <span className={styles.indLabel}>RSI14</span>
+                <span className={
+                  indValues.rsi > 70 ? styles.indValOverbought
+                  : indValues.rsi < 30 ? styles.indValOversold
+                  : styles.indVal
+                }>{isFinite(indValues.rsi) ? indValues.rsi.toFixed(1) : "—"}</span>
+              </span>
+            </div>
+
+            {/* Price chart (EMA + BB overlaid inside) */}
             <div ref={priceRef} className={styles.priceChart} />
-            {signal.viz.kind === "DIVERGENCE" && (
-              <>
-                <div className={styles.rsiLabel}>
-                  RSI (14) · {isKo ? "다이버전스" : "Divergence"}
-                  {signal.isPrediction ? (isKo ? " (예측)" : " (forming)") : ""}
-                </div>
-                <div ref={rsiRef} className={styles.rsiChart} />
-              </>
-            )}
+
+            {/* Volume */}
+            <div className={styles.subChartLabel}>
+              VOL · {isKo ? "거래량" : "Volume"}
+            </div>
+            <div ref={volRef} className={styles.volChart} />
+
+            {/* RSI */}
+            <div className={styles.subChartLabel}>
+              RSI (14){signal.viz.kind === "DIVERGENCE" ? ` · ${isKo ? "다이버전스" : "Divergence"}${signal.isPrediction ? (isKo ? " (예측)" : " (forming)") : ""}` : ""}
+            </div>
+            <div ref={rsiRef} className={styles.rsiChart} />
           </div>
         </div>
       </div>
