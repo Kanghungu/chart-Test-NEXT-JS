@@ -63,11 +63,16 @@ export const EXCHANGE_LABELS: Record<ExchangeId, string> = {
   htx: "HTX",
 };
 
-const FUTURES_SYMBOLS = [
+export const FUTURES_SYMBOLS = [
   "BTCUSDT", "ETHUSDT", "SOLUSDT", "XRPUSDT", "BNBUSDT",
   "ADAUSDT", "DOGEUSDT", "LTCUSDT", "TAOUSDT", "WLDUSDT",
   "ENAUSDT", "MAGICUSDT", "VIRTUALUSDT", "TURBOUSDT",
 ];
+
+/** 브라우저에서 직접 호출 가능 (CORS 허용) */
+export const BROWSER_SAFE_EXCHANGES: ExchangeId[] = ["binance", "bybit", "okx", "bitget"];
+/** Vercel 서버에서만 작동 (브라우저 CORS 차단) */
+export const SERVER_ONLY_EXCHANGES: ExchangeId[] = ["gate", "mexc", "htx"];
 
 async function fetchJSON<T>(url: string): Promise<T | null> {
   try {
@@ -425,8 +430,11 @@ function sum(values: number[]): number {
   return finite.reduce((total, value) => total + value, 0);
 }
 
-async function fetchFundingRow(symbol: string): Promise<FundingRow | null> {
-  const settled = await Promise.all(EXCHANGES.map((exchange) => exchange.fetcher(symbol)));
+async function fetchFundingRow(symbol: string, exchangeFilter?: ExchangeId[]): Promise<FundingRow | null> {
+  const pool = exchangeFilter
+    ? EXCHANGES.filter((e) => exchangeFilter.includes(e.id))
+    : EXCHANGES;
+  const settled = await Promise.all(pool.map((exchange) => exchange.fetcher(symbol)));
   const exchanges = settled.filter((row): row is ExchangeFundingRow => row !== null);
   if (exchanges.length === 0) return null;
 
@@ -459,12 +467,58 @@ async function fetchFundingRow(symbol: string): Promise<FundingRow | null> {
 /** Fetch all rows; sort by market-cap rank (FUTURES_SYMBOLS order). */
 export async function scanFunding(
   symbols: string[] = FUTURES_SYMBOLS,
+  exchangeFilter?: ExchangeId[],
 ): Promise<FundingRow[]> {
   const rankMap = new Map(symbols.map((s, i) => [s, i]));
-  const results = await Promise.all(symbols.map(fetchFundingRow));
+  const results = await Promise.all(symbols.map((s) => fetchFundingRow(s, exchangeFilter)));
   return results
     .filter((row): row is FundingRow => row !== null)
     .sort((a, b) => (rankMap.get(a.symbol) ?? 999) - (rankMap.get(b.symbol) ?? 999));
+}
+
+/**
+ * 두 FundingRow 배열을 심볼 기준으로 병합.
+ * primary (브라우저) 기준으로 secondary (서버) exchange 데이터를 합산하여
+ * OI 가중평균 펀딩비 등 집계값을 재계산한다.
+ */
+export function mergeFundingRows(
+  primary: FundingRow[],
+  secondary: FundingRow[],
+): FundingRow[] {
+  const secMap = new Map(secondary.map((r) => [r.symbol, r]));
+  const rankMap = new Map(FUTURES_SYMBOLS.map((s, i) => [s, i]));
+
+  const merged = primary.map((row) => {
+    const sec = secMap.get(row.symbol);
+    if (!sec) return row;
+    secMap.delete(row.symbol);
+
+    const allExchanges = [...row.exchanges, ...sec.exchanges];
+    const fr = oiWeightedAverage(allExchanges);
+    const totalOI = sum(allExchanges.map((e) => e.oiUSD));
+    const avgOIChg = average(allExchanges.map((e) => e.oiChange1hPct));
+    const futureTimes = allExchanges
+      .map((e) => e.nextFundingTime)
+      .filter((t) => Number.isFinite(t) && t > Date.now());
+
+    return {
+      ...row,
+      exchanges: allExchanges,
+      availableCount: allExchanges.length,
+      fundingRate: fr,
+      oiUSD: totalOI,
+      oiChange1hPct: avgOIChg,
+      nextFundingTime: futureTimes.length > 0 ? Math.min(...futureTimes) : row.nextFundingTime,
+      frLevel: toFRLevel(fr),
+      oiTrend: toOITrend(avgOIChg),
+    };
+  });
+
+  // secondary에만 있는 심볼 추가 (primary에 없는 경우)
+  merged.push(...Array.from(secMap.values()));
+
+  // 시총 순 정렬 유지
+  return merged.sort((a, b) => (rankMap.get(a.symbol) ?? 999) - (rankMap.get(b.symbol) ?? 999));
 }
 
 export function formatFR(fr: number): string {

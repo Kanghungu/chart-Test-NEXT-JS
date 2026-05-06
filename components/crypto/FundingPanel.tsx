@@ -5,6 +5,8 @@ import { useLanguage } from "@/components/i18n/LanguageProvider";
 import {
   EXCHANGE_LABELS,
   scanFunding,
+  mergeFundingRows,
+  BROWSER_SAFE_EXCHANGES,
   formatFR,
   formatOI,
   formatPrice,
@@ -227,10 +229,21 @@ export default function FundingPanel() {
     try {
       setError(null);
       setLoading(true);
-      // 클라이언트(브라우저)에서 직접 호출
-      // Vercel 서버가 아닌 사용자 브라우저에서 요청 → Binance/Bybit IP 차단 문제 없음
-      const data = await scanFunding();
-      setRows(data);
+
+      // 하이브리드 병렬 호출:
+      // ① 브라우저: Binance, Bybit, OKX, Bitget (CORS 허용 → 브라우저 직접 호출)
+      // ② 서버 API: Gate.io, MEXC, HTX (브라우저 CORS 차단 → Vercel 서버 경유)
+      const [browserResult, serverResult] = await Promise.allSettled([
+        scanFunding(undefined, BROWSER_SAFE_EXCHANGES),
+        fetch("/api/funding/crypto", { cache: "no-store" }).then((r) => r.json()),
+      ]);
+
+      const browserRows = browserResult.status === "fulfilled" ? browserResult.value : [];
+      const serverRows  = serverResult.status === "fulfilled" && Array.isArray(serverResult.value?.rows)
+        ? (serverResult.value.rows as FundingRow[])
+        : [];
+
+      setRows(mergeFundingRows(browserRows, serverRows));
       setLastScan(Date.now());
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));

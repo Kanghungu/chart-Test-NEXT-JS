@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { scanFunding, type FundingRow } from "@/lib/fundingSignals";
+import { scanFunding, SERVER_ONLY_EXCHANGES, type FundingRow } from "@/lib/fundingSignals";
 
 export const revalidate = 60;
 export const dynamic = "force-dynamic";
@@ -11,7 +11,8 @@ export type CryptoFundingResponse = {
 
 export async function GET() {
   try {
-    const rows = await scanFunding();
+    // Vercel 서버에서는 Binance/Bybit IP 차단됨 → CORS 허용 거래소만 처리
+    const rows = await scanFunding(undefined, SERVER_ONLY_EXCHANGES);
 
     return NextResponse.json(
       { rows, fetchedAt: new Date().toISOString() } satisfies CryptoFundingResponse,
