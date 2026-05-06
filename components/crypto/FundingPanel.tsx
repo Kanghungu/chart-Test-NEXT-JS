@@ -4,6 +4,7 @@ import { Fragment, useEffect, useState } from "react";
 import { useLanguage } from "@/components/i18n/LanguageProvider";
 import {
   EXCHANGE_LABELS,
+  scanFunding,
   formatFR,
   formatOI,
   formatPrice,
@@ -16,11 +17,6 @@ import {
 import styles from "./FundingPanel.module.css";
 
 const EXCHANGE_ORDER: ExchangeId[] = ["binance", "bybit", "okx", "bitget", "gate", "mexc", "htx"];
-
-type FundingApiResponse = {
-  rows?: FundingRow[];
-  error?: string;
-};
 
 const COPY = {
   ko: {
@@ -231,14 +227,10 @@ export default function FundingPanel() {
     try {
       setError(null);
       setLoading(true);
-      const res = await fetch("/api/funding/crypto", { cache: "no-store" });
-      const data = (await res.json()) as FundingApiResponse;
-
-      if (!res.ok) {
-        throw new Error(data.error ?? `Funding request failed (${res.status})`);
-      }
-
-      setRows(Array.isArray(data.rows) ? data.rows : []);
+      // 클라이언트(브라우저)에서 직접 호출
+      // Vercel 서버가 아닌 사용자 브라우저에서 요청 → Binance/Bybit IP 차단 문제 없음
+      const data = await scanFunding();
+      setRows(data);
       setLastScan(Date.now());
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
