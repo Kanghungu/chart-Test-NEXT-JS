@@ -104,6 +104,17 @@ const COPY = {
   }
 } as const;
 
+function formatEventTime(iso: string, language: "ko" | "en"): string {
+  try {
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return iso;
+    return d.toLocaleString(language === "ko" ? "ko-KR" : "en-US", {
+      month: "short", day: "numeric", weekday: "short",
+      hour: "2-digit", minute: "2-digit",
+    });
+  } catch { return iso; }
+}
+
 function getSessionStatus(hour: number, start: number, end: number): SessionStatus {
   if (hour >= start && hour < end) return "live";
   if (hour < start) return "next";
@@ -326,7 +337,7 @@ export default function HomeSessionBoard() {
                   <span className={styles.eventImpact}>{getLocalizedImpact(event, language)}</span>
                 </div>
                 <strong className={styles.eventTitle}>{getLocalizedEventTitle(event, language)}</strong>
-                <p className={styles.eventTime}>{event.time}</p>
+                <p className={styles.eventTime}>{formatEventTime(event.time, language)}</p>
               </div>
             ))}
             {!events.length ? <p className={styles.empty}>{copy.noEvents}</p> : null}

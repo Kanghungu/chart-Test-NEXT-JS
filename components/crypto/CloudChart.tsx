@@ -457,7 +457,7 @@ async function fetchCandles(coin: Coin, tf: TF): Promise<Candle[]> {
 // ── Copy ──────────────────────────────────────────────────────────────────
 const COPY = {
   ko: {
-    kicker:    "05 / TRADING EDGE CLOUD",
+    kicker:    "CLOUD · 구름대",
     title:     "트레이딩 엣지 구름대",
     hint:      "셋업 스코어 · 진입/손절/목표 자동산출 · 플랫 Kijun · 거래량 필터 · 미래 구름 프리뷰",
     coin: "코인", tf: "봉", refresh: "새로고침",
@@ -480,7 +480,7 @@ const COPY = {
     info: "✦ 최고 품질 셋업: 구름 외부에서 TK 크로스 + 거래량 확인 + Chikou 클리어 | 플랫 Kijun은 강한 지지·저항 | 미래 구름(점선)으로 추세 전환 조기 감지",
   },
   en: {
-    kicker:    "05 / TRADING EDGE CLOUD",
+    kicker:    "CLOUD · 구름대",
     title:     "Trading Edge Cloud",
     hint:      "Setup score · Auto entry/SL/TP · Flat Kijun S/R · Volume filter · Future cloud preview",
     coin: "Coin", tf: "TF", refresh: "Refresh",

@@ -22,7 +22,7 @@ const EXCHANGE_ORDER: ExchangeId[] = ["binance", "bybit", "okx", "bitget", "gate
 
 const COPY = {
   ko: {
-    kicker: "03 / FUTURES",
+    kicker: "FUTURES · 선물",
     title: "선물 지표 대시보드",
     hint: "펀딩비 · 미결제약정 — Binance, Bybit, OKX, Bitget, Gate.io, MEXC, HTX 통합 조회 · OI 가중평균 (60초 갱신)",
     scanning: "스캔 중",
@@ -71,7 +71,7 @@ const COPY = {
     extremeTitle: "극단 펀딩비 감지",
   },
   en: {
-    kicker: "03 / FUTURES",
+    kicker: "FUTURES · 선물",
     title: "Futures Dashboard",
     hint: "Funding Rate · Open Interest — Binance, Bybit, OKX, Bitget, Gate.io, MEXC, HTX · OI-weighted avg (60s refresh)",
     scanning: "Scanning",

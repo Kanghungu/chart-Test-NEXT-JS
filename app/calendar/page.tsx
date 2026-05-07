@@ -75,6 +75,24 @@ const COPY = {
   }
 } as const;
 
+/** ISO 날짜 문자열을 읽기 쉬운 형식으로 변환 */
+function formatEventTime(iso: string, language: "ko" | "en"): string {
+  try {
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return iso;
+    const locale = language === "ko" ? "ko-KR" : "en-US";
+    return d.toLocaleString(locale, {
+      month: "short",
+      day: "numeric",
+      weekday: "short",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  } catch {
+    return iso;
+  }
+}
+
 function getImpactClass(impact: string) {
   const upper = impact.toUpperCase();
   if (upper.includes("HIGH") || impact.includes("높")) return styles.impactHigh;
@@ -186,7 +204,7 @@ export default function CalendarPage() {
                     <div>
                       <p className={styles.itemTitle}>{getLocalizedEventTitle(item, language)}</p>
                       <p className={styles.itemSub}>{getLocalizedEventCountry(item, language)}</p>
-                      <p className={styles.itemMeta}>{item.time}</p>
+                      <p className={styles.itemMeta}>{formatEventTime(item.time, language)}</p>
                     </div>
                     <span className={getImpactClass(getLocalizedImpact(item, language))}>
                       {getLocalizedImpact(item, language)}

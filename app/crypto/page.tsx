@@ -308,7 +308,7 @@ export default function CryptoPage() {
                 onClick={() => setPanelTab(key)}
               >
                 {key === "futures"      && <span className={styles.tabIcon}>📊</span>}
-                {key === "liquidations" && <span className={styles.tabIcon}>💥</span>}
+                {key === "liquidations" && <span className={styles.tabIcon}>🔥</span>}
                 {key === "cloud"        && <span className={styles.tabIcon}>☁️</span>}
                 {key === "technicals"   && <span className={styles.tabIcon}>🔬</span>}
                 {label}
@@ -330,7 +330,7 @@ export default function CryptoPage() {
         <section className={styles.pickerSection}>
           <div className={styles.pickerHeader}>
             <div>
-              <p className={styles.panelKicker}>03 · PICK</p>
+              <p className={styles.panelKicker}>06 · PICK</p>
               <h2 className={styles.panelTitle}>{c.picker}</h2>
               <p className={styles.panelHint}>{c.pickerHint}</p>
             </div>
@@ -372,7 +372,7 @@ export default function CryptoPage() {
               <div className={styles.detailLeft}>
                 <span className={styles.detailCoinMark}>{COIN_INFO[coin].symbol}</span>
                 <div>
-                  <p className={styles.detailKicker}>{c.detailKicker} · 04</p>
+                  <p className={styles.detailKicker}>04 · {c.detailKicker}</p>
                   <h2 className={styles.detailTitle}>
                     {coin}<span className={styles.detailPair}>/USDT</span>
                   </h2>

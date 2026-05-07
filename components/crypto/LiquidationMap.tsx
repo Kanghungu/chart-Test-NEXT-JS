@@ -253,7 +253,7 @@ function ColorLegend() {
 // ── Copy ───────────────────────────────────────────────────────────────────
 const COPY = {
   ko: {
-    kicker:  "04 / LIQUIDATIONS",
+    kicker:  "LIQUIDATIONS · 청산맵",
     title:   "청산 히트맵",
     hint:    "레버리지 포지션 추정 × 가격 × 시간 — Binance 공개 OI·롱숏 데이터 기반",
     coin:    "코인",
@@ -267,7 +267,7 @@ const COPY = {
     info:    "OI × 롱숏비율 × 레버리지 분포(5x·10x·20x·50x·100x)로 추정한 청산 가격대. Coinglass와 유사한 자체 계산 방식.",
   },
   en: {
-    kicker:  "04 / LIQUIDATIONS",
+    kicker:  "LIQUIDATIONS · 청산맵",
     title:   "Liquidation Heatmap",
     hint:    "Estimated leverage positions × price × time — based on Binance public OI & long/short data",
     coin:    "Coin",

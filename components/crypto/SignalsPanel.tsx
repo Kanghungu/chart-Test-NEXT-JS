@@ -133,7 +133,7 @@ export default function SignalsPanel() {
     <section className={styles.panel}>
       <div className={styles.header}>
         <div>
-          <p className={styles.kicker}>02 · SIGNALS</p>
+          <p className={styles.kicker}>SIGNALS · 시그널</p>
           <h2 className={styles.title}>{C.title}</h2>
           <p className={styles.hint}>{C.hint}</p>
         </div>
