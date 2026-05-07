@@ -6,6 +6,7 @@ import SignalsPanel from "@/components/crypto/SignalsPanel";
 import FundingPanel from "@/components/crypto/FundingPanel";
 import TechnicalsPanel from "@/components/crypto/TechnicalsPanel";
 import LiquidationMap from "@/components/crypto/LiquidationMap";
+import CloudChart from "@/components/crypto/CloudChart";
 import styles from "./page.module.css";
 
 // ── Types ─────────────────────────────────────────────────────────────────
@@ -103,7 +104,7 @@ function useClock() {
 }
 
 // ── Page ──────────────────────────────────────────────────────────────────
-type PanelTab = "signals" | "futures" | "liquidations" | "technicals";
+type PanelTab = "signals" | "futures" | "liquidations" | "cloud" | "technicals";
 
 export default function CryptoPage() {
   const { language } = useLanguage();
@@ -131,6 +132,7 @@ export default function CryptoPage() {
       tabSignals:  "시그널",
       tabFutures:  "선물 지표",
       tabLiq:      "청산 맵",
+      tabCloud:    "구름대",
       tabTech:     "테크니컬",
       picker:      "코인 선택",
       pickerHint:  "카드를 클릭하면 상세 분석 섹션으로 이동합니다",
@@ -156,6 +158,7 @@ export default function CryptoPage() {
       tabSignals:  "Signals",
       tabFutures:  "Futures",
       tabLiq:      "Liq Map",
+      tabCloud:    "Cloud",
       tabTech:     "Technicals",
       picker:      "Select Coin",
       pickerHint:  "Click a card to jump to detailed analysis",
@@ -295,6 +298,7 @@ export default function CryptoPage() {
               { key: "signals",      label: c.tabSignals },
               { key: "futures",      label: c.tabFutures },
               { key: "liquidations", label: c.tabLiq     },
+              { key: "cloud",        label: c.tabCloud   },
               { key: "technicals",   label: c.tabTech    },
             ] as const).map(({ key, label }) => (
               <button
@@ -305,6 +309,7 @@ export default function CryptoPage() {
               >
                 {key === "futures"      && <span className={styles.tabIcon}>📊</span>}
                 {key === "liquidations" && <span className={styles.tabIcon}>💥</span>}
+                {key === "cloud"        && <span className={styles.tabIcon}>☁️</span>}
                 {key === "technicals"   && <span className={styles.tabIcon}>🔬</span>}
                 {label}
               </button>
@@ -314,6 +319,7 @@ export default function CryptoPage() {
             {panelTab === "signals"      && <SignalsPanel />}
             {panelTab === "futures"      && <FundingPanel />}
             {panelTab === "liquidations" && <LiquidationMap />}
+            {panelTab === "cloud"        && <CloudChart />}
             {panelTab === "technicals"   && <TechnicalsPanel />}
           </div>
         </div>
