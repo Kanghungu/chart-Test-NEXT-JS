@@ -224,6 +224,127 @@
   flex-shrink: 0;
 }
 
+/* Quick status row */
+.quickStatus {
+  display: flex;
+  gap: 0.4rem;
+  align-items: center;
+  margin-left: auto;
+  flex-wrap: wrap;
+}
+.qBadge {
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0.22rem 0.55rem;
+  border-radius: 5px;
+  border: 1px solid;
+  letter-spacing: 0.04em;
+}
+.qGreen  { color: #4ade80; background: rgba(74 222 128 / 0.08); border-color: rgba(74 222 128 / 0.3); }
+.qYellow { color: #fbbf24; background: rgba(251 191 36 / 0.08); border-color: rgba(251 191 36 / 0.3); }
+.qRed    { color: #f87171; background: rgba(248 113 113 / 0.08); border-color: rgba(248 113 113 / 0.3); }
+
+/* Setup panel */
+.setupPanel {
+  display: flex;
+  gap: 1rem;
+  padding: 0.85rem 1rem;
+  border-radius: 10px;
+  border: 1px solid;
+  flex-wrap: wrap;
+}
+.setupLong  { background: rgba(74 222 128 / 0.06); border-color: rgba(74 222 128 / 0.3); }
+.setupShort { background: rgba(248 113 113 / 0.06); border-color: rgba(248 113 113 / 0.3); }
+
+.setupLeft  { flex: 1; min-width: 220px; display: flex; flex-direction: column; gap: 0.5rem; }
+.setupRight { flex: 1; min-width: 260px; }
+
+.setupScore { display: flex; align-items: center; gap: 0.6rem; }
+.setupStars { font-size: 1rem; letter-spacing: 0.05em; }
+.setupLabel { font-size: 0.78rem; color: rgb(148 163 184); }
+
+.setupReasons { display: flex; flex-wrap: wrap; gap: 0.3rem; }
+.setupReason  {
+  font-size: 0.68rem; font-weight: 600;
+  padding: 0.15rem 0.45rem; border-radius: 4px;
+  background: rgba(56 189 248 / 0.1); color: #38bdf8;
+  border: 1px solid rgba(56 189 248 / 0.2);
+}
+.setupWarning {
+  font-size: 0.68rem; font-weight: 600;
+  padding: 0.15rem 0.45rem; border-radius: 4px;
+  background: rgba(251 191 36 / 0.1); color: #fbbf24;
+  border: 1px solid rgba(251 191 36 / 0.2);
+}
+
+.setupGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.4rem;
+}
+.setupCell {
+  background: rgba(15 23 42 / 0.5);
+  border: 1px solid rgba(51 65 85 / 0.5);
+  border-radius: 6px;
+  padding: 0.4rem 0.6rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+.setupCellLabel { font-size: 0.62rem; color: rgb(100 116 139); text-transform: uppercase; letter-spacing: 0.06em; }
+.setupCellVal   { font-size: 0.82rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.setupCellVal small { font-size: 0.65rem; font-weight: 400; opacity: 0.8; }
+
+/* Neutral box */
+.neutralBox {
+  padding: 0.65rem 1rem;
+  background: rgba(51 65 85 / 0.3);
+  border: 1px dashed rgba(100 116 139 / 0.4);
+  border-radius: 8px;
+  font-size: 0.8rem;
+  color: rgb(148 163 184);
+}
+
+/* Flat Kijun bar */
+.flatKijunBar {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.5rem 0.75rem;
+  background: rgba(251 191 36 / 0.06);
+  border: 1px solid rgba(251 191 36 / 0.25);
+  border-radius: 7px;
+  font-size: 0.78rem;
+  flex-wrap: wrap;
+}
+.flatKijunLabel { color: #fbbf24; font-weight: 700; }
+.flatKijunLevel {
+  font-family: var(--font-mono, ui-monospace);
+  font-size: 0.78rem;
+  color: #fde68a;
+  background: rgba(251 191 36 / 0.12);
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+/* Vol wrap */
+.volWrap { display: flex; flex-direction: column; gap: 0.25rem; }
+.volLabel {
+  font-size: 0.65rem;
+  color: rgb(100 116 139);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.volChart {
+  width: 100%;
+  height: 80px;
+  background: rgba(6 13 31 / 0.6);
+  border: 1px solid rgba(51 65 85 / 0.4);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
 /* Info note */
 .infoNote {
   font-size: 0.72rem;
