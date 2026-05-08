@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import styles from "@/components/discover/DiscoverPage.module.css";
+import bStyles from "./briefing.module.css";
 import { useLanguage } from "@/components/i18n/LanguageProvider";
 import { formatPercent } from "@/lib/formatters";
 import {
@@ -95,7 +96,10 @@ const COPY: Record<
     loading: "브리핑 생성 중...",
     generate: "브리핑 생성",
     emptyAnswer: "아직 생성된 브리핑이 없습니다. 빠른 질문을 누르거나 직접 입력해 보세요.",
-    askError: "브리핑을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요."
+    askError: "브리핑을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.",
+    macroPanel: "글로벌 매크로",
+    macroHint: "달러·환율·금·원유",
+    dxy: "달러 인덱스", usdkrw: "원/달러", gold: "금 (XAU)", oil: "WTI 원유",
   },
   en: {
     eyebrow: "AI BRIEFING",
@@ -116,9 +120,46 @@ const COPY: Record<
     loading: "Generating briefing...",
     generate: "Generate briefing",
     emptyAnswer: "No briefing yet. Start with a quick prompt or type your own question.",
-    askError: "We couldn't generate the briefing. Please try again in a moment."
+    askError: "We couldn't generate the briefing. Please try again in a moment.",
+    macroPanel: "Global Macro",
+    macroHint: "Dollar · FX · Gold · Oil",
+    dxy: "Dollar Index", usdkrw: "USD/KRW", gold: "Gold (XAU)", oil: "WTI Crude",
   }
 };
+
+type MacroQ  = { price: number | null; changePercent: number | null };
+type MacroD  = { dxy: MacroQ; usdkrw: MacroQ; gold: MacroQ; oil: MacroQ };
+const emptyQ: MacroQ = { price: null, changePercent: null };
+
+async function fetchMacroBrief(): Promise<MacroD> {
+  const stooq = async (sym: string): Promise<MacroQ> => {
+    try {
+      const r = await fetch(`https://stooq.com/q/l/?s=${sym}&f=sd2t2ohlcv&h&e=csv`, { cache: "no-store" });
+      const text = await r.text();
+      const cols = text.trim().split("\n")[1]?.split(",") ?? [];
+      const close = parseFloat(cols[6]), open = parseFloat(cols[3]);
+      if (!isFinite(close)) return emptyQ;
+      return { price: close, changePercent: isFinite(open) ? ((close - open) / open) * 100 : null };
+    } catch { return emptyQ; }
+  };
+  const goldFetch = async (): Promise<MacroQ> => {
+    try {
+      const r = await fetch("https://api.binance.com/api/v3/ticker/24hr?symbol=XAUUSDT", { cache: "no-store" });
+      const d = await r.json();
+      return { price: parseFloat(d.lastPrice), changePercent: parseFloat(d.priceChangePercent) };
+    } catch { return emptyQ; }
+  };
+  const [dxy, usdkrw, oil, gold] = await Promise.all([stooq("dxy.f"), stooq("usdkrw"), stooq("cl.f"), goldFetch()]);
+  return { dxy, usdkrw, gold, oil };
+}
+
+function formatEventDate(iso: string, language: "ko" | "en"): string {
+  try {
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return iso;
+    return d.toLocaleString(language === "ko" ? "ko-KR" : "en-US", { month: "short", day: "numeric", weekday: "short", hour: "2-digit", minute: "2-digit" });
+  } catch { return iso; }
+}
 
 function getImpactClassName(impact: string) {
   if (impact.includes("높") || impact.toUpperCase().includes("HIGH")) return styles.impactHigh;
@@ -136,6 +177,7 @@ export default function BriefingPage() {
   const [snapshotAssets, setSnapshotAssets] = useState<SnapshotAsset[]>([]);
   const [watchlist, setWatchlist] = useState<WatchItem[]>([]);
   const [events, setEvents] = useState<EventItem[]>([]);
+  const [macro, setMacro] = useState<MacroD>({ dxy: emptyQ, usdkrw: emptyQ, gold: emptyQ, oil: emptyQ });
 
   useEffect(() => {
     setQuestion(prompts[0]);
@@ -172,10 +214,14 @@ export default function BriefingPage() {
     };
 
     load();
+    return () => { mounted = false; };
+  }, []);
 
-    return () => {
-      mounted = false;
-    };
+  useEffect(() => {
+    let mounted = true;
+    fetchMacroBrief().then(d => { if (mounted) setMacro(d); });
+    const t = setInterval(() => fetchMacroBrief().then(d => { if (mounted) setMacro(d); }), 60000);
+    return () => { mounted = false; clearInterval(t); };
   }, []);
 
   const strongest = useMemo(() => {
@@ -244,6 +290,35 @@ export default function BriefingPage() {
           </div>
         </section>
 
+        {/* 매크로 패널 */}
+        <section className={`${styles.panel} ${bStyles.macroSection}`}>
+          <div className={styles.panelHeader}>
+            <h2 className={styles.panelTitle}>{copy.macroPanel}</h2>
+            <span className={styles.panelCaption}>{copy.macroHint}</span>
+          </div>
+          <div className={bStyles.macroGrid}>
+            {([
+              { label: copy.dxy,    q: macro.dxy,    icon: "💵", fmt: (p: number) => p.toFixed(2) },
+              { label: copy.usdkrw, q: macro.usdkrw, icon: "₩",  fmt: (p: number) => p.toLocaleString("ko-KR", { maximumFractionDigits: 0 }) },
+              { label: copy.gold,   q: macro.gold,   icon: "🥇", fmt: (p: number) => `$${p.toLocaleString("en-US", { maximumFractionDigits: 0 })}` },
+              { label: copy.oil,    q: macro.oil,    icon: "🛢️", fmt: (p: number) => `$${p.toFixed(2)}` },
+            ] as const).map(({ label, q, icon, fmt }) => (
+              <div key={label} className={bStyles.macroCard}>
+                <span className={bStyles.macroIcon}>{icon}</span>
+                <div>
+                  <p className={bStyles.macroLabel}>{label}</p>
+                  <p className={bStyles.macroPrice}>{q.price !== null && isFinite(q.price) ? fmt(q.price) : "—"}</p>
+                  {q.changePercent !== null && isFinite(q.changePercent) && (
+                    <p className={q.changePercent >= 0 ? bStyles.macroUp : bStyles.macroDn}>
+                      {q.changePercent >= 0 ? "+" : ""}{q.changePercent.toFixed(2)}%
+                    </p>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
         <section className={styles.masonry}>
           <div className={styles.stack}>
             <article className={styles.panel}>
@@ -277,7 +352,7 @@ export default function BriefingPage() {
                         <div>
                           <p className={styles.itemTitle}>{getLocalizedEventTitle(item, language)}</p>
                           <p className={styles.itemMeta}>{getLocalizedEventCountry(item, language)}</p>
-                          <p className={styles.itemMeta}>{item.time}</p>
+                          <p className={styles.itemMeta}>{formatEventDate(item.time, language)}</p>
                         </div>
                         <span className={getImpactClassName(localizedImpact)}>{localizedImpact}</span>
                       </div>

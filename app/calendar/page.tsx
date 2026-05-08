@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import styles from "@/components/discover/DiscoverPage.module.css";
+import cStyles from "./calendar.module.css";
 import { useLanguage } from "@/components/i18n/LanguageProvider";
 import {
   getLocalizedEventCountry,
@@ -41,6 +42,11 @@ const COPY = {
     guide: "가이드",
     empty: "표시할 일정이 없습니다.",
     items: "개",
+    countdown: "다음 고중요도 이벤트",
+    countdownUntil: "까지",
+    countdownNow: "발표 중 / 방금 발표",
+    countdownHint: "고중요도 이벤트 기준",
+    timeUntilLabel: "남은 시간",
     tips: [
       "높은 중요도 일정은 발표 전후로 차트와 뉴스 흐름을 함께 보는 편이 좋습니다.",
       "미국 이벤트가 몰리면 미국주식과 한국주식 변동성이 함께 커질 수 있습니다.",
@@ -66,6 +72,11 @@ const COPY = {
     guide: "Guide",
     empty: "No events to display.",
     items: "items",
+    countdown: "Next High-Impact Event",
+    countdownUntil: "until",
+    countdownNow: "Live / Just released",
+    countdownHint: "High-impact events only",
+    timeUntilLabel: "Time left",
     tips: [
       "For high-impact releases, keep the chart tab open before and after the event.",
       "When US events are stacked, volatility in US and Korean equities often rises together.",
@@ -93,6 +104,16 @@ function formatEventTime(iso: string, language: "ko" | "en"): string {
   }
 }
 
+function formatCountdown(ms: number, language: "ko" | "en"): string {
+  if (ms <= 0) return language === "ko" ? "발표 중 / 방금 발표" : "Live / Just released";
+  const h = Math.floor(ms / 3_600_000);
+  const m = Math.floor((ms % 3_600_000) / 60_000);
+  const s = Math.floor((ms % 60_000) / 1_000);
+  if (h > 0) return language === "ko" ? `${h}시간 ${m}분 후` : `${h}h ${m}m left`;
+  if (m > 0) return language === "ko" ? `${m}분 ${s}초 후` : `${m}m ${s}s left`;
+  return language === "ko" ? `${s}초 후` : `${s}s left`;
+}
+
 function getImpactClass(impact: string) {
   const upper = impact.toUpperCase();
   if (upper.includes("HIGH") || impact.includes("높")) return styles.impactHigh;
@@ -105,6 +126,7 @@ export default function CalendarPage() {
   const copy = COPY[language];
   const [events, setEvents] = useState<EventItem[]>([]);
   const [country, setCountry] = useState("all");
+  const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
     let mounted = true;
@@ -121,17 +143,32 @@ export default function CalendarPage() {
 
     load();
     const timer = setInterval(load, 5 * 60 * 1000);
+    return () => { mounted = false; clearInterval(timer); };
+  }, []);
 
-    return () => {
-      mounted = false;
-      clearInterval(timer);
-    };
+  // 1초마다 카운트다운 업데이트
+  useEffect(() => {
+    const t = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(t);
   }, []);
 
   const countries = useMemo(
     () => ["all", ...new Set(events.map((item) => getLocalizedEventCountry(item, language)))],
     [events, language]
   );
+
+  // 다음 고중요도 이벤트 (미래 + 높음)
+  const nextHighEvent = useMemo(() => {
+    return events
+      .filter(e => {
+        const isHigh = e.impact?.toUpperCase().includes("HIGH") || e.impactKo?.includes("높");
+        const t = new Date(e.time).getTime();
+        return isHigh && isFinite(t) && t > now - 30 * 60_000; // 30분 이내 지난 것도 포함
+      })
+      .sort((a, b) => new Date(a.time).getTime() - new Date(b.time).getTime())[0] ?? null;
+  }, [events, now]);
+
+  const nextHighMs = nextHighEvent ? new Date(nextHighEvent.time).getTime() - now : null;
 
   const visibleEvents = useMemo(() => {
     if (country === "all") return events;
@@ -173,6 +210,29 @@ export default function CalendarPage() {
           </div>
         </section>
 
+        {/* 다음 고중요도 이벤트 카운트다운 */}
+        {nextHighEvent && (
+          <section className={cStyles.countdown}>
+            <div className={cStyles.countdownLeft}>
+              <span className={cStyles.countdownTag}>{copy.countdown}</span>
+              <p className={cStyles.countdownTitle}>
+                {language === "ko" ? (nextHighEvent.titleKo || nextHighEvent.title) : (nextHighEvent.titleEn || nextHighEvent.title)}
+              </p>
+              <p className={cStyles.countdownCountry}>
+                {language === "ko" ? (nextHighEvent.countryKo || nextHighEvent.country) : (nextHighEvent.countryEn || nextHighEvent.country)}
+                {" · "}
+                {formatEventTime(nextHighEvent.time, language)}
+              </p>
+            </div>
+            <div className={cStyles.countdownRight}>
+              <p className={cStyles.countdownTime} style={{ color: nextHighMs !== null && nextHighMs <= 1800000 ? "#f87171" : "#38bdf8" }}>
+                {nextHighMs !== null ? formatCountdown(nextHighMs, language) : "—"}
+              </p>
+              <p className={cStyles.countdownHint}>{copy.countdownHint}</p>
+            </div>
+          </section>
+        )}
+
         <section className={styles.panel}>
           <div className={styles.panelHeader}>
             <h2 className={styles.panelTitle}>{copy.byCountry}</h2>
@@ -198,20 +258,35 @@ export default function CalendarPage() {
               <span className={styles.pill}>{`${visibleEvents.length} ${copy.items}`}</span>
             </div>
             <div className={styles.stack}>
-              {visibleEvents.map((item, index) => (
-                <div key={`${item.time}-${item.title}-${index}`} className={styles.listCard}>
-                  <div className={styles.itemRow}>
-                    <div>
-                      <p className={styles.itemTitle}>{getLocalizedEventTitle(item, language)}</p>
-                      <p className={styles.itemSub}>{getLocalizedEventCountry(item, language)}</p>
-                      <p className={styles.itemMeta}>{formatEventTime(item.time, language)}</p>
+              {visibleEvents.map((item, index) => {
+                const evMs = new Date(item.time).getTime() - now;
+                const isSoon = isFinite(evMs) && evMs > 0 && evMs < 2 * 60 * 60_000; // 2시간 이내
+                const isPast = isFinite(evMs) && evMs < -5 * 60_000; // 5분 이상 지남
+                const isHigh = item.impact?.toUpperCase().includes("HIGH") || item.impactKo?.includes("높");
+                return (
+                  <div key={`${item.time}-${item.title}-${index}`}
+                    className={`${styles.listCard} ${isSoon && isHigh ? cStyles.cardSoon : ""}`}>
+                    <div className={styles.itemRow}>
+                      <div>
+                        <p className={styles.itemTitle}>{getLocalizedEventTitle(item, language)}</p>
+                        <p className={styles.itemSub}>{getLocalizedEventCountry(item, language)}</p>
+                        <p className={styles.itemMeta}>{formatEventTime(item.time, language)}</p>
+                      </div>
+                      <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "0.3rem" }}>
+                        <span className={getImpactClass(getLocalizedImpact(item, language))}>
+                          {getLocalizedImpact(item, language)}
+                        </span>
+                        {isFinite(evMs) && !isPast && (
+                          <span className={`${cStyles.timeLeft} ${isSoon ? cStyles.timeLeftSoon : ""}`}>
+                            {formatCountdown(Math.max(0, evMs), language)}
+                          </span>
+                        )}
+                        {isPast && <span className={cStyles.timePast}>{language === "ko" ? "완료" : "Done"}</span>}
+                      </div>
                     </div>
-                    <span className={getImpactClass(getLocalizedImpact(item, language))}>
-                      {getLocalizedImpact(item, language)}
-                    </span>
                   </div>
-                </div>
-              ))}
+                );
+              })}
               {!visibleEvents.length ? <p className={styles.emptyState}>{copy.empty}</p> : null}
             </div>
           </article>
