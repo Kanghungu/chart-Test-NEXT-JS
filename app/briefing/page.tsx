@@ -75,6 +75,12 @@ const COPY: Record<
     generate: string;
     emptyAnswer: string;
     askError: string;
+    macroPanel: string;
+    macroHint: string;
+    dxy: string;
+    usdkrw: string;
+    gold: string;
+    oil: string;
   }
 > = {
   ko: {
