@@ -78,48 +78,19 @@ function fgLabel(val: number, levels: readonly string[]): string {
   return levels[4];
 }
 
-// 매크로 데이터 fetch (Binance 선물/스팟 기반)
+// 매크로 데이터 — 서버 프록시 사용 (CORS 우회)
 async function fetchMacro(): Promise<MacroData> {
   const empty = { price: null, changePercent: null };
   try {
-    const [goldRes, btcRes] = await Promise.allSettled([
-      fetch("https://api.binance.com/api/v3/ticker/24hr?symbol=XAUUSDT", { cache: "no-store" }),
-      fetch("https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT", { cache: "no-store" }),
-    ]);
-
-    const parseQuote = async (res: PromiseSettledResult<Response>): Promise<MacroQuote> => {
-      if (res.status !== "fulfilled" || !res.value.ok) return empty;
-      const d = await res.value.json();
-      return {
-        price: parseFloat(d.lastPrice),
-        changePercent: parseFloat(d.priceChangePercent),
-      };
+    const res = await fetch("/api/macro/quotes", { cache: "no-store" });
+    if (!res.ok) throw new Error();
+    const d = await res.json();
+    return {
+      dxy:    d.dxy    ?? empty,
+      usdkrw: d.usdkrw ?? empty,
+      gold:   d.gold   ?? empty,
+      oil:    d.oil    ?? empty,
     };
-
-    const gold = await parseQuote(goldRes);
-
-    // DXY, USD/KRW, WTI는 공개 API가 제한적 — Stooq CSV proxy 사용
-    const fetchStooq = async (sym: string): Promise<MacroQuote> => {
-      try {
-        const r = await fetch(`https://stooq.com/q/l/?s=${sym}&f=sd2t2ohlcv&h&e=csv`, { cache: "no-store" });
-        const text = await r.text();
-        const lines = text.trim().split("\n");
-        if (lines.length < 2) return empty;
-        const cols = lines[1].split(",");
-        const close = parseFloat(cols[6]);
-        const open  = parseFloat(cols[3]);
-        if (!isFinite(close) || !isFinite(open)) return empty;
-        return { price: close, changePercent: ((close - open) / open) * 100 };
-      } catch { return empty; }
-    };
-
-    const [dxy, usdkrw, oil] = await Promise.all([
-      fetchStooq("dxy.f"),
-      fetchStooq("usdkrw"),
-      fetchStooq("cl.f"),
-    ]);
-
-    return { dxy, usdkrw, gold, oil };
   } catch {
     return { dxy: empty, usdkrw: empty, gold: empty, oil: empty };
   }

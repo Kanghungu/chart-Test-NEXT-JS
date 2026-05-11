@@ -138,25 +138,19 @@ type MacroD  = { dxy: MacroQ; usdkrw: MacroQ; gold: MacroQ; oil: MacroQ };
 const emptyQ: MacroQ = { price: null, changePercent: null };
 
 async function fetchMacroBrief(): Promise<MacroD> {
-  const stooq = async (sym: string): Promise<MacroQ> => {
-    try {
-      const r = await fetch(`https://stooq.com/q/l/?s=${sym}&f=sd2t2ohlcv&h&e=csv`, { cache: "no-store" });
-      const text = await r.text();
-      const cols = text.trim().split("\n")[1]?.split(",") ?? [];
-      const close = parseFloat(cols[6]), open = parseFloat(cols[3]);
-      if (!isFinite(close)) return emptyQ;
-      return { price: close, changePercent: isFinite(open) ? ((close - open) / open) * 100 : null };
-    } catch { return emptyQ; }
-  };
-  const goldFetch = async (): Promise<MacroQ> => {
-    try {
-      const r = await fetch("https://api.binance.com/api/v3/ticker/24hr?symbol=XAUUSDT", { cache: "no-store" });
-      const d = await r.json();
-      return { price: parseFloat(d.lastPrice), changePercent: parseFloat(d.priceChangePercent) };
-    } catch { return emptyQ; }
-  };
-  const [dxy, usdkrw, oil, gold] = await Promise.all([stooq("dxy.f"), stooq("usdkrw"), stooq("cl.f"), goldFetch()]);
-  return { dxy, usdkrw, gold, oil };
+  try {
+    const res = await fetch("/api/macro/quotes", { cache: "no-store" });
+    if (!res.ok) throw new Error();
+    const d = await res.json();
+    return {
+      dxy:    d.dxy    ?? emptyQ,
+      usdkrw: d.usdkrw ?? emptyQ,
+      gold:   d.gold   ?? emptyQ,
+      oil:    d.oil    ?? emptyQ,
+    };
+  } catch {
+    return { dxy: emptyQ, usdkrw: emptyQ, gold: emptyQ, oil: emptyQ };
+  }
 }
 
 function formatEventDate(iso: string, language: "ko" | "en"): string {

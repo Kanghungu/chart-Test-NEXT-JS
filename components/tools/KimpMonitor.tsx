@@ -16,10 +16,11 @@ const HISTORY_MAX = 60;
 async function fetchKimp(): Promise<KimpData> {
   const ts = Date.now();
   try {
-    const [upbitRes, binRes, fxRes] = await Promise.allSettled([
+    // 업비트·바이낸스는 브라우저 CORS 허용, 환율만 서버 프록시 사용
+    const [upbitRes, binRes, macroRes] = await Promise.allSettled([
       fetch("https://api.upbit.com/v1/ticker?markets=KRW-BTC", { cache: "no-store" }),
       fetch("https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT", { cache: "no-store" }),
-      fetch("https://stooq.com/q/l/?s=usdkrw&f=sd2t2ohlcv&h&e=csv", { cache: "no-store" }),
+      fetch("/api/macro/quotes", { cache: "no-store" }),
     ]);
 
     const upbit = upbitRes.status === "fulfilled" && upbitRes.value.ok
@@ -31,11 +32,9 @@ async function fetchKimp(): Promise<KimpData> {
       : null;
 
     let usdkrw: number | null = null;
-    if (fxRes.status === "fulfilled" && fxRes.value.ok) {
-      const text = await fxRes.value.text();
-      const cols = text.trim().split("\n")[1]?.split(",") ?? [];
-      const v = parseFloat(cols[6]);
-      if (isFinite(v)) usdkrw = v;
+    if (macroRes.status === "fulfilled" && macroRes.value.ok) {
+      const d = await macroRes.value.json();
+      usdkrw = d?.usdkrw?.price ?? null;
     }
 
     const kimp = upbit && binance && usdkrw
