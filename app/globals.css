@@ -27,7 +27,8 @@
   --hair-2: rgba(125, 211, 252, 0.30);
 
   --f-sans: "Pretendard Variable", "Pretendard", "Noto Sans KR", system-ui, sans-serif;
-  --f-mono: "JetBrains Mono", "SF Mono", Menlo, monospace;
+  /* next/font이 --font-jetbrains-mono CSS 변수 주입 */
+  --f-mono: var(--font-jetbrains-mono), "SF Mono", Menlo, monospace;
 
   /* ── 레거시 호환 (기존 컴포넌트 변수) ────────────────────── */
   --background: var(--bg-0);

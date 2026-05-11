@@ -4,7 +4,7 @@
  */
 import { NextResponse } from "next/server";
 
-export const revalidate = 120; // 2분 캐시
+export const revalidate = 300; // 5분 캐시 (CoinGecko 무료 API 30req/min 대응)
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -24,6 +24,16 @@ export async function GET(request: Request) {
       cache: "no-store",
       headers: { "accept": "application/json" },
     });
+
+    if (res.status === 429) {
+      return NextResponse.json(
+        { error: "RATE_LIMIT", message: "CoinGecko API 요청 한도 초과. 잠시 후 다시 시도해주세요." },
+        {
+          status: 429,
+          headers: { "Retry-After": "60", "Cache-Control": "no-store" },
+        },
+      );
+    }
 
     if (!res.ok) {
       return NextResponse.json(

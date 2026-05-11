@@ -59,15 +59,27 @@ function fmtNum(n: number | null): string {
   return `$${n.toFixed(0)}`;
 }
 
-async function fetchSectorCoins(categoryId: string): Promise<CoinItem[]> {
+// 클라이언트 메모리 캐시 (5분) — CoinGecko 429 방지
+const coinCache = new Map<string, { data: CoinItem[]; ts: number }>();
+const CACHE_TTL = 5 * 60_000; // 5분
+
+async function fetchSectorCoins(categoryId: string): Promise<CoinItem[] | "RATE_LIMIT"> {
+  // 캐시 확인
+  const cached = coinCache.get(categoryId);
+  if (cached && Date.now() - cached.ts < CACHE_TTL) return cached.data;
+
   try {
-    // 브라우저 CORS 차단 → 서버 프록시 경유
     const res = await fetch(
       `/api/coingecko/sector?category=${encodeURIComponent(categoryId)}`,
       { cache: "no-store" }
     );
+
+    if (res.status === 429) return "RATE_LIMIT";
     if (!res.ok) throw new Error();
-    return await res.json() as CoinItem[];
+
+    const data = await res.json() as CoinItem[];
+    coinCache.set(categoryId, { data, ts: Date.now() });
+    return data;
   } catch { return []; }
 }
 
@@ -92,6 +104,7 @@ export default function SectorMap() {
   const [selected, setSelected]     = useState<Sector | null>(null);
   const [coins, setCoins]           = useState<CoinItem[]>([]);
   const [coinsLoading, setCoinsLoading] = useState(false);
+  const [coinsRateLimit, setCoinsRateLimit] = useState(false);
   const [view, setView]             = useState<"heatmap"|"list">("heatmap");
 
   const load = useCallback(async () => {
@@ -106,11 +119,17 @@ export default function SectorMap() {
 
   // 섹터 클릭 시 코인 목록 fetch
   const handleSelectSector = async (sec: Sector) => {
-    if (selected?.id === sec.id) { setSelected(null); setCoins([]); return; }
+    if (selected?.id === sec.id) { setSelected(null); setCoins([]); setCoinsRateLimit(false); return; }
     setSelected(sec);
     setCoinsLoading(true);
-    const data = await fetchSectorCoins(sec.id);
-    setCoins(data);
+    setCoinsRateLimit(false);
+    const result = await fetchSectorCoins(sec.id);
+    if (result === "RATE_LIMIT") {
+      setCoins([]);
+      setCoinsRateLimit(true);
+    } else {
+      setCoins(result);
+    }
     setCoinsLoading(false);
   };
 
@@ -219,6 +238,11 @@ export default function SectorMap() {
 
           {coinsLoading ? (
             <div className={s.loadingBox}><span className={s.spinner} /> 코인 목록 로딩 중...</div>
+          ) : coinsRateLimit ? (
+            <div className={s.loadingBox} style={{ flexDirection: "column", gap: "0.4rem", color: "#f59e0b" }}>
+              <span>⚠ CoinGecko API 요청 한도 초과 (30회/분)</span>
+              <span style={{ fontSize: "0.72rem", color: "#64748b" }}>잠시 후 다시 클릭해주세요 (캐시 적용 중)</span>
+            </div>
           ) : (
             <div className={s.coinGrid}>
               {coins.map(coin => (
