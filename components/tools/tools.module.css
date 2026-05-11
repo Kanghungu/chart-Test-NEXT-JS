@@ -367,6 +367,81 @@
 .hideSmall { display: table-cell; }
 @media (max-width: 600px) { .hideSmall { display: none; } }
 
+/* ── Sector Coin Panel ───────────────────────────────────────────────────── */
+.coinPanel {
+  border: 1px solid rgba(124,58,237,0.25);
+  border-radius: 10px;
+  background: rgba(124,58,237,0.05);
+  overflow: hidden;
+  animation: slideDown 0.2s ease-out;
+}
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.coinPanelHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid rgba(124,58,237,0.15);
+  background: rgba(124,58,237,0.06);
+}
+.coinPanelTitle {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #e2e8f0;
+  display: block;
+  margin-bottom: 0.2rem;
+}
+.coinPanelSub { font-size: 0.72rem; color: #64748b; }
+
+.closeBtn {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  color: #64748b;
+  border-radius: 5px;
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 0.75rem;
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+.closeBtn:hover { color: #f87171; border-color: rgba(248,113,113,0.3); }
+
+.coinGrid {
+  display: flex;
+  flex-direction: column;
+  max-height: 380px;
+  overflow-y: auto;
+}
+.coinCard {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.6rem 1rem;
+  border-bottom: 1px solid rgba(255,255,255,0.03);
+  transition: background 0.12s;
+}
+.coinCard:hover { background: rgba(124,58,237,0.06); }
+.coinCard:last-child { border-bottom: none; }
+
+.coinImg   { width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0; }
+.coinInfo  { flex: 1; display: flex; flex-direction: column; gap: 0.05rem; min-width: 0; }
+.coinName  { font-size: 0.8rem; font-weight: 600; color: #e2e8f0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.coinSymbol { font-size: 0.65rem; color: #64748b; text-transform: uppercase; }
+
+.coinRight { display: flex; flex-direction: column; align-items: flex-end; gap: 0.05rem; flex-shrink: 0; }
+.coinPrice { font-size: 0.82rem; font-weight: 700; font-variant-numeric: tabular-nums; color: #f1f5f9; }
+.coinChg   { font-size: 0.72rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.coinMcap  { font-size: 0.65rem; color: #64748b; }
+.noCoins   { text-align: center; color: #475569; font-size: 0.78rem; padding: 1.5rem; }
+
 /* ── ETF Flow ────────────────────────────────────────────────────────────── */
 .etfStats { display: grid; grid-template-columns: repeat(3,1fr); gap: 0.75rem; }
 .etfStat { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 0.7rem 0.85rem; }

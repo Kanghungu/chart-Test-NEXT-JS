@@ -12,6 +12,17 @@ type Sector = {
   top_3_coins: string[];
 };
 
+type CoinItem = {
+  id: string;
+  symbol: string;
+  name: string;
+  current_price: number;
+  price_change_percentage_24h: number;
+  market_cap: number;
+  total_volume: number;
+  image: string;
+};
+
 const COPY = {
   ko: {
     title: "크립토 섹터 히트맵", kicker: "SECTOR HEATMAP · 섹터별 성과",
@@ -48,6 +59,17 @@ function fmtNum(n: number | null): string {
   return `$${n.toFixed(0)}`;
 }
 
+async function fetchSectorCoins(categoryId: string): Promise<CoinItem[]> {
+  try {
+    const res = await fetch(
+      `https://api.coingecko.com/api/v3/coins/markets?category=${categoryId}&vs_currency=usd&order=market_cap_desc&per_page=20&page=1&sparkline=false`,
+      { cache: "no-store" }
+    );
+    if (!res.ok) throw new Error();
+    return await res.json() as CoinItem[];
+  } catch { return []; }
+}
+
 async function fetchSectors(): Promise<Sector[]> {
   try {
     const res = await fetch(
@@ -63,11 +85,13 @@ async function fetchSectors(): Promise<Sector[]> {
 export default function SectorMap() {
   const { language } = useLanguage();
   const C = COPY[language];
-  const [sectors, setSectors] = useState<Sector[]>([]);
-  const [loading, setLoading]  = useState(true);
-  const [error, setError]      = useState(false);
-  const [selected, setSelected] = useState<Sector | null>(null);
-  const [view, setView]         = useState<"heatmap"|"list">("heatmap");
+  const [sectors, setSectors]       = useState<Sector[]>([]);
+  const [loading, setLoading]       = useState(true);
+  const [error, setError]           = useState(false);
+  const [selected, setSelected]     = useState<Sector | null>(null);
+  const [coins, setCoins]           = useState<CoinItem[]>([]);
+  const [coinsLoading, setCoinsLoading] = useState(false);
+  const [view, setView]             = useState<"heatmap"|"list">("heatmap");
 
   const load = useCallback(async () => {
     setLoading(true); setError(false);
@@ -78,6 +102,16 @@ export default function SectorMap() {
   }, []);
 
   useEffect(() => { load(); }, [load]);
+
+  // 섹터 클릭 시 코인 목록 fetch
+  const handleSelectSector = async (sec: Sector) => {
+    if (selected?.id === sec.id) { setSelected(null); setCoins([]); return; }
+    setSelected(sec);
+    setCoinsLoading(true);
+    const data = await fetchSectorCoins(sec.id);
+    setCoins(data);
+    setCoinsLoading(false);
+  };
 
   // 시총 기준 박스 크기 결정
   const maxCap = Math.max(...sectors.map(s => s.market_cap ?? 0), 1);
@@ -116,7 +150,7 @@ export default function SectorMap() {
                   gridColumn: `span ${Math.round(size * 2)}`,
                   minHeight: `${Math.max(60, size * 50)}px`,
                 }}
-                onClick={() => setSelected(selected?.id === sec.id ? null : sec)}
+                onClick={() => handleSelectSector(sec)}
               >
                 <span className={s.heatName}>{sec.name}</span>
                 <span className={s.heatPct} style={{ color: text }}>
@@ -165,12 +199,52 @@ export default function SectorMap() {
         </div>
       )}
 
+      {/* 섹터 선택 → 코인 목록 */}
       {selected && (
-        <div className={s.sectorDetail}>
-          <strong>{selected.name}</strong>
-          <span>24H: {selected.market_cap_change_24h?.toFixed(2)}%</span>
-          <span>시총: {fmtNum(selected.market_cap)}</span>
-          <span>거래량: {fmtNum(selected.volume_24h)}</span>
+        <div className={s.coinPanel}>
+          <div className={s.coinPanelHeader}>
+            <div>
+              <span className={s.coinPanelTitle}>{selected.name}</span>
+              <span className={s.coinPanelSub}>
+                24H: <span style={{ color: (selected.market_cap_change_24h ?? 0) >= 0 ? "#10b981" : "#f87171", fontWeight: 700 }}>
+                  {selected.market_cap_change_24h !== null ? `${selected.market_cap_change_24h >= 0 ? "+" : ""}${selected.market_cap_change_24h.toFixed(2)}%` : "—"}
+                </span>
+                {" · "}시총: {fmtNum(selected.market_cap)}
+                {" · "}거래량: {fmtNum(selected.volume_24h)}
+              </span>
+            </div>
+            <button className={s.closeBtn} onClick={() => { setSelected(null); setCoins([]); }}>✕</button>
+          </div>
+
+          {coinsLoading ? (
+            <div className={s.loadingBox}><span className={s.spinner} /> 코인 목록 로딩 중...</div>
+          ) : (
+            <div className={s.coinGrid}>
+              {coins.map(coin => (
+                <div key={coin.id} className={s.coinCard}>
+                  <img src={coin.image} alt={coin.symbol} className={s.coinImg} />
+                  <div className={s.coinInfo}>
+                    <span className={s.coinName}>{coin.name}</span>
+                    <span className={s.coinSymbol}>{coin.symbol.toUpperCase()}</span>
+                  </div>
+                  <div className={s.coinRight}>
+                    <span className={s.coinPrice}>
+                      ${coin.current_price >= 1
+                        ? coin.current_price.toLocaleString("en-US", { maximumFractionDigits: 2 })
+                        : coin.current_price.toFixed(6)}
+                    </span>
+                    <span className={s.coinChg}
+                      style={{ color: coin.price_change_percentage_24h >= 0 ? "#10b981" : "#f87171" }}>
+                      {coin.price_change_percentage_24h >= 0 ? "+" : ""}
+                      {coin.price_change_percentage_24h?.toFixed(2)}%
+                    </span>
+                    <span className={s.coinMcap}>{fmtNum(coin.market_cap)}</span>
+                  </div>
+                </div>
+              ))}
+              {!coins.length && <p className={s.noCoins}>코인 데이터 없음 (CoinGecko 무료 제한)</p>}
+            </div>
+          )}
         </div>
       )}
     </div>
