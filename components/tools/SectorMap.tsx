@@ -61,8 +61,9 @@ function fmtNum(n: number | null): string {
 
 async function fetchSectorCoins(categoryId: string): Promise<CoinItem[]> {
   try {
+    // 브라우저 CORS 차단 → 서버 프록시 경유
     const res = await fetch(
-      `https://api.coingecko.com/api/v3/coins/markets?category=${categoryId}&vs_currency=usd&order=market_cap_desc&per_page=20&page=1&sparkline=false`,
+      `/api/coingecko/sector?category=${encodeURIComponent(categoryId)}`,
       { cache: "no-store" }
     );
     if (!res.ok) throw new Error();
