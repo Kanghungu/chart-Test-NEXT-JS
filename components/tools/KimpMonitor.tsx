@@ -75,7 +75,8 @@ function kimpColor(v: number | null) {
   return "#06b6d4";
 }
 
-function kimpLabel(v: number | null, C: typeof COPY["ko"]) {
+type CopyType = { premium: string; discount: string; neutral: string };
+function kimpLabel(v: number | null, C: CopyType) {
   if (v === null) return "—";
   if (v > 0.3) return C.premium;
   if (v < -0.3) return C.discount;
