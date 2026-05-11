@@ -17,17 +17,15 @@ export default function Home() {
   const { language } = useLanguage();
   const [majorNewsItems, setMajorNewsItems] = useState([]);
   const [majorNewsLoading, setMajorNewsLoading] = useState(true);
-  const [snapshot, setSnapshot]   = useState(null);
-  const [clock, setClock]         = useState(null);
+  const [snapshot, setSnapshot] = useState(null);
+  const [clock, setClock]       = useState(null);
 
-  // 실시간 시계
   useEffect(() => {
     setClock(new Date());
     const t = setInterval(() => setClock(new Date()), 1000);
     return () => clearInterval(t);
   }, []);
 
-  // 뉴스
   useEffect(() => {
     let mounted = true;
     const load = async () => {
@@ -37,14 +35,13 @@ export default function Home() {
         if (!mounted) return;
         setMajorNewsItems(Array.isArray(json?.items) ? json.items : []);
       } catch { if (mounted) setMajorNewsItems([]); }
-      finally { if (mounted) setMajorNewsLoading(false); }
+      finally  { if (mounted) setMajorNewsLoading(false); }
     };
     load();
     const t = setInterval(load, 5 * 60_000);
     return () => { mounted = false; clearInterval(t); };
   }, []);
 
-  // 스냅샷
   useEffect(() => {
     let mounted = true;
     const load = async () => {
@@ -59,11 +56,11 @@ export default function Home() {
   }, []);
 
   const timeStr = clock ? clock.toLocaleTimeString("ko-KR", {
-    hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false
+    hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false,
   }) : "--:--:--";
 
   const dateStr = clock ? clock.toLocaleDateString(language === "ko" ? "ko-KR" : "en-US", {
-    year: "numeric", month: "long", day: "numeric", weekday: "short"
+    year: "numeric", month: "long", day: "numeric", weekday: "short",
   }) : "";
 
   const kospi  = snapshot?.assets?.find(a => a.symbol === "KOSPI");
@@ -73,100 +70,96 @@ export default function Home() {
   const fgVal  = snapshot?.fearGreed?.value;
   const fgCls  = snapshot?.fearGreed?.classification;
 
-  const pctColor = v => v == null ? "#64748b" : v >= 0 ? "#10b981" : "#f87171";
+  const pctColor = v => v == null ? "rgba(0,212,255,0.3)" : v >= 0 ? "#00ff88" : "#ff3366";
   const fmtPct   = v => v == null ? "—" : `${v >= 0 ? "+" : ""}${Number(v).toFixed(2)}%`;
   const fmtKrw   = v => v ? `₩${Number(v).toLocaleString("ko-KR")}` : "—";
   const fmtUsd   = v => v ? `$${Number(v).toLocaleString("en-US", { maximumFractionDigits: 2 })}` : "—";
 
   const shortcuts = [
-    { href: "/crypto",    icon: "◈", ko: "크립토 터미널",  en: "Crypto" },
-    { href: "/tools",     icon: "⬡", ko: "트레이딩 도구",  en: "Tools" },
-    { href: "/signals",   icon: "◉", ko: "시장 시그널",    en: "Signals" },
-    { href: "/briefing",  icon: "⬙", ko: "AI 브리핑",      en: "Briefing" },
-    { href: "/watchlist", icon: "▦", ko: "워치리스트",     en: "Watchlist" },
-    { href: "/calendar",  icon: "▤", ko: "경제 캘린더",    en: "Calendar" },
-    { href: "/chart",     icon: "◈", ko: "고급 차트",      en: "Chart" },
+    { href: "/crypto",    prefix: ">", ko: "크립토 터미널",  en: "CRYPTO" },
+    { href: "/tools",     prefix: ">", ko: "트레이딩 도구",  en: "TOOLS" },
+    { href: "/signals",   prefix: ">", ko: "시장 시그널",    en: "SIGNALS" },
+    { href: "/briefing",  prefix: ">", ko: "AI 브리핑",      en: "BRIEFING" },
+    { href: "/watchlist", prefix: ">", ko: "워치리스트",     en: "WATCHLIST" },
+    { href: "/calendar",  prefix: ">", ko: "캘린더",         en: "CALENDAR" },
+    { href: "/chart",     prefix: ">", ko: "차트",           en: "CHART" },
   ];
 
   return (
     <main className={styles.page}>
       <div className={styles.inner}>
 
-        {/* ══ HERO ════════════════════════════════════════════════ */}
+        {/* ══ HERO ══════════════════════════════════════════════ */}
         <header className={styles.hero}>
+          <div className={styles.heroBg} />
+
           <div className={styles.heroLeft}>
-
-            {/* 터미널 상단 바 */}
-            <div className={styles.terminalBar}>
-              <div className={styles.terminalDots}>
-                <span className={`${styles.terminalDot} ${styles.dotRed}`}   />
-                <span className={`${styles.terminalDot} ${styles.dotAmber}`} />
-                <span className={`${styles.terminalDot} ${styles.dotGreen}`} />
-              </div>
-              <span>market-pulse-korea</span>
-              <span className={styles.terminalPath}>/home</span>
-            </div>
-
-            <div style={{ display:"flex", alignItems:"center", gap:"1rem", flexWrap:"wrap" }}>
+            {/* 시스템 ID */}
+            <div className={styles.statusRow}>
+              <span className={styles.systemId}>MPK-SYS-v3 · ONLINE</span>
               <div className={styles.liveBadge}>
                 <span className={styles.liveDot} />
                 LIVE
               </div>
-              <span className={styles.liveClock}>{timeStr} KST</span>
+              <span className={styles.liveClock}>{timeStr}</span>
               <span className={styles.heroDate}>{dateStr}</span>
             </div>
 
+            {/* 타이틀 */}
             <h1 className={styles.heroTitle}>
-              {language === "ko" ? "Market Pulse Korea" : "Market Pulse Korea"}
+              MARKET{" "}
+              <span className={styles.heroTitleAccent}>PULSE</span>
+              {" "}KOREA
             </h1>
 
+            {/* 서브타이틀 (터미널 스타일) */}
             <p className={styles.heroSub}>
-              {language === "ko"
-                ? <>실시간 <span>시장 데이터</span> · AI <span>분석</span> · <span>글로벌 매크로</span> · 크립토 <span>터미널</span></>
-                : <>Real-time <span>market data</span> · AI <span>analysis</span> · <span>Global macro</span> · Crypto <span>terminal</span></>}
+              <span>실시간 시장</span>
+              <i>·</i>
+              <span>AI 분석</span>
+              <i>·</i>
+              <span>글로벌 매크로</span>
+              <i>·</i>
+              <span>크립토 터미널</span>
             </p>
 
+            {/* CTA */}
             <div className={styles.heroActions}>
-              <Link href="/crypto"  className={styles.heroBtnPrimary}>
-                ◈ {language === "ko" ? "크립토 터미널" : "Crypto Terminal"}
+              <Link href="/crypto" className={styles.heroBtnPrimary}>
+                ◈ {language === "ko" ? "크립토 터미널" : "CRYPTO TERMINAL"}
               </Link>
               <Link href="/tools" className={styles.heroBtnSecondary}>
-                ⬡ {language === "ko" ? "트레이딩 도구" : "Trading Tools"}
+                ⬡ {language === "ko" ? "트레이딩 도구" : "TOOLS"}
               </Link>
               <Link href="/briefing" className={styles.heroBtnSecondary}>
-                ⬙ {language === "ko" ? "AI 브리핑" : "AI Briefing"}
+                ⬙ {language === "ko" ? "AI 브리핑" : "BRIEFING"}
               </Link>
             </div>
           </div>
 
-          {/* Quick Stats */}
+          {/* 퀵스탯 그리드 */}
           <div className={styles.heroRight}>
             <div className={styles.quickStats}>
-              <div className={styles.quickCard} style={{"--card-color":"#06b6d4"}}>
-                <span className={styles.quickLabel}>KOSPI</span>
-                <span className={styles.quickPrice}>{fmtKrw(kospi?.price)}</span>
-                <span className={styles.quickPct} style={{color:pctColor(kospi?.changePercent)}}>{fmtPct(kospi?.changePercent)}</span>
-              </div>
-              <div className={styles.quickCard} style={{"--card-color":"#7c3aed"}}>
-                <span className={styles.quickLabel}>KOSDAQ</span>
-                <span className={styles.quickPrice}>{fmtKrw(kosdaq?.price)}</span>
-                <span className={styles.quickPct} style={{color:pctColor(kosdaq?.changePercent)}}>{fmtPct(kosdaq?.changePercent)}</span>
-              </div>
-              <div className={styles.quickCard} style={{"--card-color":"#10b981"}}>
-                <span className={styles.quickLabel}>S&P 500</span>
-                <span className={styles.quickPrice}>{fmtUsd(sp500?.price)}</span>
-                <span className={styles.quickPct} style={{color:pctColor(sp500?.changePercent)}}>{fmtPct(sp500?.changePercent)}</span>
-              </div>
-              <div className={styles.quickCard} style={{"--card-color":"#ec4899"}}>
-                <span className={styles.quickLabel}>NASDAQ</span>
-                <span className={styles.quickPrice}>{fmtUsd(nasdaq?.price)}</span>
-                <span className={styles.quickPct} style={{color:pctColor(nasdaq?.changePercent)}}>{fmtPct(nasdaq?.changePercent)}</span>
-              </div>
+              {[
+                { label:"KOSPI",   val:fmtKrw(kospi?.price),   pct:kospi?.changePercent   },
+                { label:"KOSDAQ",  val:fmtKrw(kosdaq?.price),  pct:kosdaq?.changePercent  },
+                { label:"S&P 500", val:fmtUsd(sp500?.price),   pct:sp500?.changePercent   },
+                { label:"NASDAQ",  val:fmtUsd(nasdaq?.price),  pct:nasdaq?.changePercent  },
+              ].map(({ label, val, pct }) => (
+                <div key={label} className={styles.quickCard}>
+                  <span className={styles.quickLabel}>{label}</span>
+                  <span className={styles.quickPrice}>{val}</span>
+                  <span className={styles.quickPct} style={{ color: pctColor(pct) }}>
+                    {fmtPct(pct)}
+                  </span>
+                </div>
+              ))}
               {fgVal != null && (
                 <div className={styles.fgCard}>
-                  <span className={styles.fgLabel}>{language === "ko" ? "공포탐욕" : "Fear&Greed"}</span>
-                  <span className={styles.fgValue} style={{color: fgVal>=60?"#10b981":fgVal<=40?"#f87171":"#f59e0b",
-                    textShadow:`0 0 20px ${fgVal>=60?"rgba(16,185,129,0.8)":fgVal<=40?"rgba(248,113,113,0.8)":"rgba(245,158,11,0.8)"}`
+                  <span className={styles.fgLabel}>{language === "ko" ? "공포탐욕" : "FEAR/GREED"}</span>
+                  <span className={styles.fgValue} style={{
+                    color: fgVal >= 70 ? "#00ff88" : fgVal <= 30 ? "#ff3366" : "#ffaa00",
+                    textShadow: `0 0 15px ${fgVal >= 70 ? "rgba(0,255,136,0.7)" : fgVal <= 30 ? "rgba(255,51,102,0.7)" : "rgba(255,170,0,0.7)"}`,
                   }}>{fgVal}</span>
                   <span className={styles.fgClass}>{fgCls}</span>
                 </div>
@@ -175,7 +168,7 @@ export default function Home() {
           </div>
         </header>
 
-        {/* ══ MAIN GRID ════════════════════════════════════════════ */}
+        {/* ══ MAIN GRID ════════════════════════════════════════ */}
         <div className={styles.mainGrid}>
           <div className={styles.col1}>
             <div className={styles.panel}><GeoRiskMonitor /></div>
@@ -193,12 +186,12 @@ export default function Home() {
           </div>
         </div>
 
-        {/* ══ SHORTCUTS ════════════════════════════════════════════ */}
+        {/* ══ 단축 메뉴 ════════════════════════════════════════ */}
         <div className={styles.shortcuts}>
-          {shortcuts.map(({ href, icon, ko, en }) => (
+          {shortcuts.map(({ href, prefix, ko, en }) => (
             <Link key={href} href={href} className={styles.shortcutBtn}>
-              <span style={{ fontFamily:"monospace", color:"inherit" }}>{icon}</span>
-              <span>{language === "ko" ? ko : en}</span>
+              <span style={{ color:"rgba(0,212,255,0.4)", fontWeight:300 }}>{prefix}</span>
+              {language === "ko" ? ko : en}
             </Link>
           ))}
         </div>
