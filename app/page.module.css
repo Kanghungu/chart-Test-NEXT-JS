@@ -20,18 +20,31 @@
   gap: 1.25rem;
 }
 
-/* ── 3단 그리드: 세션보드 넓게, 나머지 좁게 ──────────────────── */
+/* ── 3단 그리드 — 세션보드는 충분한 공간 필요 ──────────────── */
 .row2 {
   display: grid;
-  grid-template-columns: 1.7fr 1fr 0.95fr;
+  grid-template-columns: 1.6fr 1fr 0.95fr;
   gap: 1.25rem;
 }
 
-@media (max-width: 1280px) {
-  .row2 { grid-template-columns: 1.5fr 1fr 1fr; }
+@media (max-width: 1200px) {
+  /* 중간 뷰포트: 세션보드 + 나머지 2개를 2행으로 */
+  .row2 {
+    grid-template-columns: 1fr 1fr;
+  }
+  /* 세션보드는 전체 너비 */
+  .row2 > :first-child {
+    grid-column: 1 / -1;
+  }
 }
 @media (max-width: 1100px) {
-  .row1, .row2 { grid-template-columns: 1fr; }
+  .row1 { grid-template-columns: 1fr; }
+  .row2 {
+    grid-template-columns: 1fr;
+  }
+  .row2 > :first-child {
+    grid-column: auto;
+  }
 }
 
 /* ════════════════════════════════════════════════════════════

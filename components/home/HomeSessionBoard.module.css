@@ -35,9 +35,15 @@
 
 .grid {
   display: grid;
-  grid-template-columns: 1.15fr 1fr 1fr;
+  grid-template-columns: 1fr 1fr;   /* 기본 2열 — 좁은 뷰포트에서도 괜찮음 */
   gap: 0.75rem;
   min-width: 0;
+}
+/* 충분히 넓을 때만 3열 */
+@media (min-width: 1400px) {
+  .grid {
+    grid-template-columns: 1.15fr 1fr 1fr;
+  }
 }
 
 .panel {
@@ -47,7 +53,8 @@
   box-shadow: var(--panel-shadow);
   padding: 0.9rem;
   position: relative;
-  overflow: hidden;
+  overflow: visible;  /* 텍스트 잘림 방지 */
+  min-width: 0;
 }
 
 .panelHeader {
@@ -110,12 +117,13 @@
 .sessionCity,
 .eventTitle {
   color: #f8fafc;
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   font-weight: 700;
   line-height: 1.35;
   min-width: 0;
-  word-break: keep-all;
-  overflow-wrap: break-word;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  flex: 1;
 }
 
 .sessionHours,
