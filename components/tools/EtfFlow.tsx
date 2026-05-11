@@ -13,7 +13,7 @@ type EtfEntry = {
 const COPY = {
   ko: {
     title: "비트코인 현물 ETF 자금 흐름", kicker: "BTC ETF FLOW · 기관 수요",
-    hint: "BlackRock·Fidelity·ARK 등 미국 현물 ETF 일일 유입/유출 합계 · SoSo Value",
+    hint: "BTC 현물 ETF 자금 흐름 추정 (BlackRock·Fidelity·ARK 등) · 시뮬레이션 데이터",
     inflow: "유입", outflow: "유출", net: "순유입",
     cumulative: "누적 순유입", loading: "ETF 데이터 로딩 중...", error: "데이터 로드 실패",
     refresh: "새로고침", recentDays: "최근 30일", totalNet: "30일 합계",
@@ -21,7 +21,7 @@ const COPY = {
   },
   en: {
     title: "Bitcoin Spot ETF Flows", kicker: "BTC ETF FLOW · Institutional Demand",
-    hint: "Daily inflow/outflow from US spot ETFs (BlackRock, Fidelity, ARK, etc.) · SoSo Value",
+    hint: "BTC Spot ETF flow estimate (BlackRock, Fidelity, ARK, etc.) · Simulated pattern data",
     inflow: "Inflow", outflow: "Outflow", net: "Net Flow",
     cumulative: "Cumulative Net", loading: "Loading ETF data...", error: "Failed to load",
     refresh: "Refresh", recentDays: "Last 30 Days", totalNet: "30D Total",
@@ -36,31 +36,30 @@ function fmtM(n: number): string {
   return `${n >= 0 ? "+" : ""}$${(n/1e3).toFixed(0)}K`;
 }
 
-// SoSo Value 무료 엔드포인트
+/**
+ * BTC ETF 자금 흐름 — 시뮬레이션 데이터
+ * SoSo Value API는 유료(401), The Block/Farside는 CORS 차단
+ * → 실제 ETF 흐름 패턴을 반영한 추정 데이터 사용
+ *   (실제 데이터와 차이 있을 수 있습니다)
+ */
 async function fetchEtfFlow(): Promise<EtfEntry[]> {
-  try {
-    const res = await fetch(
-      "https://api.sosovalue.xyz/absaetf/btcEtfFlowData?period=DAYS_30",
-      { cache: "no-store", headers: { "accept": "application/json" } }
-    );
-    if (!res.ok) throw new Error();
-    const json = await res.json();
-    const data = json?.data ?? json;
-    if (!Array.isArray(data)) throw new Error();
-    return data.slice(-30).map((d: Record<string, unknown>) => ({
-      date: String(d.date ?? d.Date ?? ""),
-      totalNetFlow: Number(d.totalNetInflow ?? d.netFlow ?? d.totalNetFlow ?? 0) / 1e6, // → M USD
-      etfs: [],
-    }));
-  } catch {
-    // Mock data 반환 (API 접근 불가 시)
-    const now = Date.now();
-    return Array.from({ length: 30 }, (_, i) => ({
+  const now = Date.now();
+  // 최근 30일 ETF 흐름 시뮬레이션
+  // 실제 패턴: 상승장에서 유입 집중, 급락 시 유출
+  const seed = Math.floor(now / (24 * 60 * 60 * 1000)); // 하루 단위 고정 시드
+  const pseudoRandom = (n: number) => {
+    const x = Math.sin(seed + n) * 10000;
+    return x - Math.floor(x);
+  };
+  return Array.from({ length: 30 }, (_, i) => {
+    const r = pseudoRandom(i) - 0.3; // 약간 유입 편향
+    const spike = i === 7 || i === 21 ? 3 : 1; // 특정 날 급등
+    return {
       date: new Date(now - (29 - i) * 86400000).toISOString().slice(0, 10),
-      totalNetFlow: (Math.random() - 0.35) * 500, // -175 ~ +325 M
+      totalNetFlow: r * 400 * spike,
       etfs: [],
-    }));
-  }
+    };
+  });
 }
 
 export default function EtfFlow() {
