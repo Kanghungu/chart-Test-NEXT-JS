@@ -2,129 +2,370 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   HOLOGRAPHIC DESIGN SYSTEM
+   프리즘 그라디언트 · 글래스모피즘 · 네온 글로우 · 이리데슨트 애니메이션
+═══════════════════════════════════════════════════════════════════════════ */
+
 :root {
-  /* Base */
-  --background: #02040f;
-  --foreground: #e5e7eb;
+  /* ── Base surfaces ─────────────────────────────────────────────────── */
+  --background: #01020c;
+  --foreground: #e2e8f0;
   --muted: #94a3b8;
   --muted-strong: #cbd5e1;
 
-  /* Surface layers - creates depth hierarchy */
-  --surface-0: #02040f;
-  --surface-1: #060d1f;
-  --surface-2: #0d1a2e;
-  --surface-3: #132035;
+  --surface-0: #01020c;
+  --surface-1: #050b1a;
+  --surface-2: #0a1224;
+  --surface-3: #0f1a30;
 
-  /* Legacy aliases (kept for compatibility) */
-  --panel-bg: linear-gradient(180deg, rgb(15 23 42 / 0.9), rgb(2 6 23 / 0.94));
-  --panel-bg-soft: linear-gradient(160deg, rgb(2 6 23 / 0.95), rgb(15 23 42 / 0.92));
-  --panel-border: rgb(51 65 85);
-  --panel-shadow: 0 18px 28px rgb(0 0 0 / 0.28);
-  --panel-shadow-strong: 0 25px 50px -12px rgb(0 0 0 / 0.5);
-  --surface-raised: rgb(15 23 42 / 0.78);
-  --surface-strong: rgb(15 23 42 / 0.88);
+  /* ── Holographic accent palette ────────────────────────────────────── */
+  --holo-cyan:   #06b6d4;
+  --holo-purple: #7c3aed;
+  --holo-pink:   #ec4899;
+  --holo-green:  #10b981;
+  --holo-gold:   #f59e0b;
+  --holo-blue:   #3b82f6;
 
-  /* New border system */
-  --border-subtle: rgba(51, 65, 85, 0.5);
-  --border-default: rgba(51, 65, 85, 0.85);
-  --border-accent: rgba(56, 189, 248, 0.25);
-  --border-green: rgba(74, 222, 128, 0.25);
-  --border-red: rgba(248, 113, 113, 0.25);
+  /* ── Glassmorphism card ─────────────────────────────────────────────── */
+  --gradient-card:
+    linear-gradient(135deg,
+      rgba(255,255,255,0.045) 0%,
+      rgba(124,58,237,0.04)   25%,
+      rgba(6,182,212,0.035)   50%,
+      rgba(236,72,153,0.04)   75%,
+      rgba(255,255,255,0.025) 100%
+    );
 
-  /* Gradient tokens */
-  --gradient-card: linear-gradient(135deg, rgba(13, 26, 46, 0.95), rgba(6, 13, 31, 0.98));
-  --gradient-header: linear-gradient(180deg, #060d1f 0%, rgba(2, 4, 15, 0.96) 100%);
-  --gradient-accent: linear-gradient(90deg, #38bdf8, #818cf8);
-  --gradient-green: linear-gradient(90deg, #4ade80, #34d399);
-  --gradient-hero: radial-gradient(ellipse 80% 60% at 50% -10%, rgba(56, 189, 248, 0.08) 0%, transparent 70%);
+  --panel-bg:       linear-gradient(180deg, rgba(10,18,36,0.92), rgba(1,2,12,0.96));
+  --panel-bg-soft:  linear-gradient(160deg, rgba(1,2,12,0.94), rgba(10,18,36,0.90));
+  --panel-border:   rgba(255,255,255,0.06);
+  --surface-raised: rgba(10,18,36,0.75);
+  --surface-strong: rgba(10,18,36,0.88);
 
-  /* Glow effects */
-  --glow-blue: 0 0 24px rgba(56, 189, 248, 0.1), 0 4px 16px rgba(0, 0, 0, 0.4);
-  --glow-green: 0 0 24px rgba(74, 222, 128, 0.1), 0 4px 16px rgba(0, 0, 0, 0.4);
-  --glow-red: 0 0 24px rgba(248, 113, 113, 0.1), 0 4px 16px rgba(0, 0, 0, 0.4);
-  --glow-amber: 0 0 24px rgba(251, 191, 36, 0.12), 0 4px 16px rgba(0, 0, 0, 0.4);
+  /* ── Holographic panel shadow / glow ───────────────────────────────── */
+  --panel-shadow:
+    0 0 0 1px rgba(255,255,255,0.05) inset,
+    0 20px 60px rgba(0,0,0,0.55),
+    0 0 30px rgba(124,58,237,0.07),
+    0 0 60px rgba(6,182,212,0.04);
 
-  /* Accent colors */
-  --accent-blue: #38bdf8;
-  --accent-blue-dim: rgba(56, 189, 248, 0.12);
-  --accent-green: #4ade80;
-  --accent-green-dim: rgba(74, 222, 128, 0.12);
-  --accent-red: #f87171;
-  --accent-red-dim: rgba(248, 113, 113, 0.12);
-  --accent-amber: #fbbf24;
-  --accent-amber-dim: rgba(251, 191, 36, 0.12);
-  --accent-purple: #818cf8;
+  --panel-shadow-strong:
+    0 0 0 1px rgba(255,255,255,0.07) inset,
+    0 30px 80px rgba(0,0,0,0.65),
+    0 0 50px rgba(124,58,237,0.12),
+    0 0 100px rgba(6,182,212,0.07);
 
+  /* ── Border system (holographic) ───────────────────────────────────── */
+  --border-subtle:  rgba(255,255,255,0.07);
+  --border-default: rgba(255,255,255,0.11);
+  --border-accent:  rgba(6,182,212,0.3);
+  --border-green:   rgba(16,185,129,0.3);
+  --border-red:     rgba(239,68,68,0.3);
+
+  /* ── Gradient tokens ────────────────────────────────────────────────── */
+  --gradient-accent: linear-gradient(90deg, #06b6d4, #7c3aed, #ec4899);
+  --gradient-green:  linear-gradient(90deg, #10b981, #06b6d4);
+  --gradient-hero:   radial-gradient(ellipse 90% 70% at 50% -5%, rgba(124,58,237,0.12) 0%, rgba(6,182,212,0.06) 40%, transparent 70%);
+  --gradient-holo:   linear-gradient(135deg, #06b6d4 0%, #7c3aed 50%, #ec4899 100%);
+
+  /* ── Glow effects ───────────────────────────────────────────────────── */
+  --glow-blue:   0 0 20px rgba(6,182,212,0.25),   0 4px 16px rgba(0,0,0,0.4);
+  --glow-green:  0 0 20px rgba(16,185,129,0.25),  0 4px 16px rgba(0,0,0,0.4);
+  --glow-red:    0 0 20px rgba(239,68,68,0.25),    0 4px 16px rgba(0,0,0,0.4);
+  --glow-amber:  0 0 20px rgba(245,158,11,0.25),   0 4px 16px rgba(0,0,0,0.4);
+  --glow-purple: 0 0 20px rgba(124,58,237,0.30),   0 4px 16px rgba(0,0,0,0.4);
+  --glow-holo:
+    0 0 20px rgba(6,182,212,0.2),
+    0 0 40px rgba(124,58,237,0.12),
+    0 0 80px rgba(236,72,153,0.07);
+
+  /* ── Accent colors (legacy compat) ─────────────────────────────────── */
+  --accent-blue:      #06b6d4;
+  --accent-blue-dim:  rgba(6,182,212,0.12);
+  --accent-green:     #10b981;
+  --accent-green-dim: rgba(16,185,129,0.12);
+  --accent-red:       #f87171;
+  --accent-red-dim:   rgba(248,113,113,0.12);
+  --accent-amber:     #f59e0b;
+  --accent-amber-dim: rgba(245,158,11,0.12);
+  --accent-purple:    #7c3aed;
+
+  /* ── Radius & fonts ─────────────────────────────────────────────────── */
   --radius-lg: 1rem;
   --radius-md: 0.75rem;
   --radius-sm: 0.65rem;
   --font-sans:
-    "Pretendard Variable",
-    "Pretendard",
-    "Noto Sans KR",
-    "Apple SD Gothic Neo",
-    "Segoe UI",
-    Arial,
-    sans-serif;
+    "Pretendard Variable", "Pretendard", "Noto Sans KR",
+    "Apple SD Gothic Neo", "Segoe UI", Arial, sans-serif;
   --font-mono:
-    "JetBrains Mono",
-    "SF Mono",
-    "Menlo",
-    "Consolas",
-    "Liberation Mono",
-    monospace;
+    "JetBrains Mono", "SF Mono", "Menlo", "Consolas",
+    "Liberation Mono", monospace;
 }
 
-html,
-body {
-  max-width: 100vw;
-  overflow-x: hidden;
-}
+/* ── Reset ─────────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; padding: 0; margin: 0; min-width: 0; }
+html, body { max-width: 100vw; overflow-x: hidden; }
+html { color-scheme: dark; }
+a, button, input, select, textarea { font: inherit; }
+a { color: inherit; text-decoration: none; }
 
-html {
-  color-scheme: dark;
-}
-
+/* ── Holographic body ───────────────────────────────────────────────────── */
 body {
   color: var(--foreground);
-  background:
-    radial-gradient(circle at top right, rgb(34 197 94 / 0.13), transparent 26%),
-    radial-gradient(circle at top left,  rgb(59 130 246 / 0.20), transparent 32%),
-    linear-gradient(180deg, rgb(2 6 23) 0%, rgb(3 7 18) 44%, rgb(10 15 28) 100%);
-  background-attachment: fixed;
   font-family: var(--font-sans);
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background-color: #01020c;
+  background-image:
+    radial-gradient(ellipse 60% 50% at  15%  20%, rgba(124,58,237,0.18)  0%, transparent 55%),
+    radial-gradient(ellipse 55% 45% at  85%  15%, rgba(6,182,212,0.14)   0%, transparent 50%),
+    radial-gradient(ellipse 50% 45% at  50%  85%, rgba(236,72,153,0.12)  0%, transparent 55%),
+    radial-gradient(ellipse 45% 35% at  80%  70%, rgba(16,185,129,0.09)  0%, transparent 45%),
+    radial-gradient(ellipse 40% 35% at  20%  75%, rgba(245,158,11,0.07)  0%, transparent 45%);
+  background-attachment: fixed;
+  position: relative;
 }
 
-/* Scrollbar */
-::-webkit-scrollbar { width: 8px; height: 8px; }
+/* 홀로그램 노이즈 오버레이 */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+  background-size: 256px 256px;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.6;
+}
+
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(124,58,237,0.06) 0%, transparent 60%);
+  animation: ambientPulse 12s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+
+@keyframes ambientPulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.4; }
+}
+
+/* ── Scrollbar ──────────────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(51,65,85,0.6); border-radius: 9999px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(56,189,248,0.45); }
-
-* {
-  box-sizing: border-box;
-  padding: 0;
-  margin: 0;
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(124,58,237,0.5), rgba(6,182,212,0.5));
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, rgba(124,58,237,0.8), rgba(6,182,212,0.8));
 }
 
-*,
-*::before,
-*::after {
-  min-width: 0;
+/* ═══════════════════════════════════════════════════════════════════════════
+   GLOBAL HOLOGRAPHIC UTILITY CLASSES
+═══════════════════════════════════════════════════════════════════════════ */
+
+/* 홀로그램 패널 (glassmorphism + shimmer) */
+.holo-panel {
+  position: relative;
+  background: var(--gradient-card);
+  backdrop-filter: blur(24px) saturate(1.4);
+  -webkit-backdrop-filter: blur(24px) saturate(1.4);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--panel-shadow);
+  overflow: hidden;
+  isolation: isolate;
 }
 
-a,
-button,
-input,
-select,
-textarea {
-  font: inherit;
+.holo-panel::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    120deg,
+    transparent        20%,
+    rgba(6,182,212,0.03)  30%,
+    rgba(255,255,255,0.05) 35%,
+    rgba(236,72,153,0.03)  40%,
+    transparent        50%,
+    rgba(124,58,237,0.03)  60%,
+    rgba(255,255,255,0.04) 65%,
+    rgba(6,182,212,0.03)  70%,
+    transparent        80%
+  );
+  background-size: 400% 400%;
+  animation: holoShimmer 12s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 1;
 }
 
-a {
-  color: inherit;
-  text-decoration: none;
+@keyframes holoShimmer {
+  0%   { background-position:  0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position:  0% 50%; }
+}
+
+/* 홀로그램 테두리 애니메이션 */
+.holo-border {
+  position: relative;
+}
+.holo-border::after {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  background: linear-gradient(
+    135deg,
+    rgba(6,182,212,0.5)  0%,
+    rgba(124,58,237,0.5) 33%,
+    rgba(236,72,153,0.5) 66%,
+    rgba(6,182,212,0.5)  100%
+  );
+  background-size: 400% 400%;
+  animation: holoBorder 8s ease-in-out infinite;
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: destination-out;
+  mask-composite: exclude;
+  padding: 1px;
+  pointer-events: none;
+  z-index: 0;
+}
+@keyframes holoBorder {
+  0%   { background-position:  0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position:  0% 50%; }
+}
+
+/* 홀로그램 텍스트 */
+.holo-text {
+  background: linear-gradient(90deg,
+    #06b6d4 0%,
+    #7c3aed 30%,
+    #ec4899 60%,
+    #06b6d4 100%
+  );
+  background-size: 300% 100%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: holoTextFlow 5s ease-in-out infinite;
+}
+@keyframes holoTextFlow {
+  0%   { background-position:   0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position:   0% 50%; }
+}
+
+/* 네온 글로우 버튼 */
+.holo-btn {
+  background: linear-gradient(135deg, rgba(124,58,237,0.15), rgba(6,182,212,0.15));
+  border: 1px solid rgba(6,182,212,0.3);
+  color: #06b6d4;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+.holo-btn:hover {
+  background: linear-gradient(135deg, rgba(124,58,237,0.25), rgba(6,182,212,0.25));
+  box-shadow: 0 0 20px rgba(6,182,212,0.3), 0 0 40px rgba(124,58,237,0.15);
+  border-color: rgba(6,182,212,0.6);
+}
+
+/* 홀로그램 카드 호버 효과 */
+.holo-card-hover {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.holo-card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    var(--panel-shadow),
+    0 0 40px rgba(124,58,237,0.15),
+    0 0 80px rgba(6,182,212,0.08);
+}
+
+/* ── Floating glow orbs (ambient decoration) ──────────────────────────── */
+.holo-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(60px);
+  pointer-events: none;
+  animation: orbFloat 20s ease-in-out infinite;
+}
+@keyframes orbFloat {
+  0%, 100% { transform: translateY(0) scale(1); opacity: 0.6; }
+  33%       { transform: translateY(-20px) scale(1.05); opacity: 0.8; }
+  66%       { transform: translateY(10px) scale(0.95); opacity: 0.5; }
+}
+
+/* ── Holographic progress bar ─────────────────────────────────────────── */
+.holo-progress {
+  background: rgba(255,255,255,0.05);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.holo-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #06b6d4, #7c3aed, #ec4899);
+  background-size: 200% 100%;
+  animation: holoTextFlow 3s linear infinite;
+  border-radius: 999px;
+  transition: width 0.5s ease;
+}
+
+/* ── Holographic table ────────────────────────────────────────────────── */
+.holo-table th {
+  background: rgba(124,58,237,0.08);
+  border-bottom: 1px solid rgba(124,58,237,0.2);
+  color: #94a3b8;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 0.65rem 0.85rem;
+}
+.holo-table tr:hover td {
+  background: rgba(124,58,237,0.04);
+}
+
+/* ── Badge glow variants ──────────────────────────────────────────────── */
+.badge-cyan   { color: #06b6d4; background: rgba(6,182,212,0.12);   border: 1px solid rgba(6,182,212,0.25);   }
+.badge-purple { color: #7c3aed; background: rgba(124,58,237,0.12);  border: 1px solid rgba(124,58,237,0.25);  }
+.badge-pink   { color: #ec4899; background: rgba(236,72,153,0.12);  border: 1px solid rgba(236,72,153,0.25);  }
+.badge-green  { color: #10b981; background: rgba(16,185,129,0.12);  border: 1px solid rgba(16,185,129,0.25);  }
+.badge-gold   { color: #f59e0b; background: rgba(245,158,11,0.12);  border: 1px solid rgba(245,158,11,0.25);  }
+
+/* ── Number counter animation ─────────────────────────────────────────── */
+@keyframes countUp {
+  from { transform: translateY(8px); opacity: 0; }
+  to   { transform: translateY(0);   opacity: 1; }
+}
+.animate-count { animation: countUp 0.4s ease-out; }
+
+/* ── Section divider ──────────────────────────────────────────────────── */
+.holo-divider {
+  height: 1px;
+  background: linear-gradient(90deg,
+    transparent,
+    rgba(6,182,212,0.3) 20%,
+    rgba(124,58,237,0.3) 50%,
+    rgba(236,72,153,0.3) 80%,
+    transparent
+  );
+  margin: 1.5rem 0;
+}
+
+/* ── Grid noise background ────────────────────────────────────────────── */
+.holo-grid-bg {
+  background-image:
+    linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+  background-size: 40px 40px;
 }
