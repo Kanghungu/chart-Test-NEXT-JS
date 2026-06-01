@@ -2,54 +2,111 @@
 
 /**
  * FVG / OB 매물대 분석 패널
- *
- * FVG (Fair Value Gap / 공정가치 구간):
- *   3캔들 패턴 — 캔들[i-2].high < 캔들[i].low → 상승 FVG
- *                캔들[i-2].low  > 캔들[i].high → 하락 FVG
- *   midpoint까지 복귀 시 '체결' 처리
- *
- * OB (Order Block / 주문 블록):
- *   상승 OB: 마지막 하락 캔들 후 3봉 이상 연속 상승 + 일정 폭 이상
- *   하락 OB: 마지막 상승 캔들 후 3봉 이상 연속 하락 + 일정 폭 이상
- *   bottom까지 복귀(상승OB) 또는 top까지 복귀(하락OB) 시 '체결' 처리
+ * - 리스트 뷰: 현재가 기준 위/아래 구간 정렬
+ * - 차트 뷰: lightweight-charts 캔들 + FVG/OB 박스 오버레이
  */
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  createChart,
+  CandlestickSeries,
+  LineSeries,
+  CrosshairMode,
+  LineStyle,
+  type IChartApi,
+  type ISeriesApi,
+  type ISeriesPrimitive,
+  type IPrimitivePaneView,
+  type IPrimitivePaneRenderer,
+  type UTCTimestamp,
+  type Time,
+} from "lightweight-charts";
 import { useLanguage } from "@/components/i18n/LanguageProvider";
 import styles from "./FvgObPanel.module.css";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 type Candle = { time: number; open: number; high: number; low: number; close: number };
-
 type Zone = {
-  type:       "FVG" | "OB";
-  direction:  "BULLISH" | "BEARISH";
-  top:        number;
-  bottom:     number;
-  midpoint:   number;
-  formedAt:   number;     // 형성 캔들 시간 (ms)
-  barsAgo:    number;     // 현재로부터 몇 봉 전
-  filled:     boolean;
-  partial:    boolean;    // midpoint 미만 복귀 여부
+  type: "FVG" | "OB"; direction: "BULLISH" | "BEARISH";
+  top: number; bottom: number; midpoint: number;
+  formedAt: number; barsAgo: number;
+  filled: boolean; partial: boolean;
 };
-
-type TF = "1h" | "4h" | "1D";
+type TF   = "1h" | "4h" | "1D";
 type Coin = "BTC" | "ETH" | "SOL" | "XRP" | "BNB";
+type ViewMode = "list" | "chart";
 
 // ── Config ─────────────────────────────────────────────────────────────────
 const COINS: Coin[] = ["BTC", "ETH", "SOL", "XRP", "BNB"];
-const TFS: { key: TF; label: string; interval: string; limit: number }[] = [
-  { key: "1h",  label: "1H",  interval: "1h",  limit: 200 },
-  { key: "4h",  label: "4H",  interval: "4h",  limit: 200 },
-  { key: "1D",  label: "1D",  interval: "1d",  limit: 200 },
+const TFS = [
+  { key: "1h" as TF,  label: "1H",  interval: "1h",  limit: 200 },
+  { key: "4h" as TF,  label: "4H",  interval: "4h",  limit: 200 },
+  { key: "1D" as TF,  label: "1D",  interval: "1d",  limit: 200 },
 ];
-const OB_MOVE_THRESHOLD = 0.003; // OB 인정 최소 이동폭 0.3%
-const MAX_ZONES = 6;              // 위/아래 각 최대 표시 개수
-
+const OB_MOVE_THRESHOLD = 0.003;
+const MAX_ZONES = 6;
 const COIN_COLOR: Record<Coin, string> = {
   BTC: "#f7931a", ETH: "#627eea", SOL: "#14f195",
   XRP: "#00a3e0", BNB: "#f3ba2f",
 };
+
+// ── Rectangle Primitive ────────────────────────────────────────────────────
+class RectPrimitive implements ISeriesPrimitive<Time> {
+  constructor(
+    private _chart: IChartApi,
+    private _series: ISeriesApi<"Candlestick">,
+    private _t1: UTCTimestamp,
+    private _t2: UTCTimestamp,
+    private _priceLow: number,
+    private _priceHigh: number,
+    private _fill: string,
+    private _border: string,
+  ) {}
+  paneViews(): readonly IPrimitivePaneView[] {
+    return [new RectView(
+      this._chart, this._series,
+      this._t1, this._t2, this._priceLow, this._priceHigh,
+      this._fill, this._border,
+    )];
+  }
+}
+class RectView implements IPrimitivePaneView {
+  constructor(
+    private _c: IChartApi,
+    private _s: ISeriesApi<"Candlestick">,
+    private _t1: UTCTimestamp,
+    private _t2: UTCTimestamp,
+    private _lo: number,
+    private _hi: number,
+    private _fill: string,
+    private _border: string,
+  ) {}
+  zOrder() { return "normal" as const; }
+  renderer(): IPrimitivePaneRenderer {
+    const { _c: c, _s: s, _t1: t1, _t2: t2, _lo: lo, _hi: hi, _fill: fill, _border: border } = this;
+    return {
+      draw(scope) {
+        scope.useBitmapCoordinateSpace(({ context: ctx, horizontalPixelRatio: hpr, verticalPixelRatio: vpr }) => {
+          const ts = c.timeScale();
+          const x1 = ts.timeToCoordinate(t1);
+          const x2 = ts.timeToCoordinate(t2);
+          const y1 = s.priceToCoordinate(hi);
+          const y2 = s.priceToCoordinate(lo);
+          if (x1 == null || x2 == null || y1 == null || y2 == null) return;
+          const rx = Math.min(x1, x2) * hpr;
+          const rw = Math.abs(x2 - x1) * hpr;
+          const ry = Math.min(y1, y2) * vpr;
+          const rh = Math.abs(y2 - y1) * vpr;
+          ctx.fillStyle = fill;
+          ctx.fillRect(rx, ry, rw, rh);
+          ctx.strokeStyle = border;
+          ctx.lineWidth = Math.max(1, Math.floor(hpr));
+          ctx.strokeRect(rx, ry, rw, rh);
+        });
+      },
+    };
+  }
+}
 
 // ── Candle fetch ───────────────────────────────────────────────────────────
 async function fetchCandles(coin: Coin, interval: string, limit: number): Promise<Candle[]> {
@@ -73,54 +130,29 @@ async function fetchCandles(coin: Coin, interval: string, limit: number): Promis
 function detectFVGs(candles: Candle[]): Zone[] {
   const zones: Zone[] = [];
   const n = candles.length;
-
   for (let i = 2; i < n; i++) {
-    const c0 = candles[i - 2];
-    const c1 = candles[i - 1]; // 중간 캔들 (FVG 형성 순간)
-    const c2 = candles[i];
-
-    // 상승 FVG: c0.high < c2.low → 둘 사이에 갭 존재
+    const c0 = candles[i - 2], c1 = candles[i - 1], c2 = candles[i];
     if (c2.low > c0.high) {
-      const top    = c2.low;
-      const bottom = c0.high;
-      const mid    = (top + bottom) / 2;
-
-      // 이후 캔들에서 체결 여부 확인
+      const top = c2.low, bottom = c0.high, mid = (top + bottom) / 2;
       let filled = false, partial = false;
       for (let j = i + 1; j < n; j++) {
-        if (candles[j].low <= mid)    { filled  = true; break; }
-        if (candles[j].low <= top)    { partial = true; }
+        if (candles[j].low <= mid)  { filled = true; break; }
+        if (candles[j].low <= top)  { partial = true; }
       }
-
-      zones.push({
-        type: "FVG", direction: "BULLISH",
-        top, bottom, midpoint: mid,
-        formedAt: c1.time, barsAgo: n - 1 - i,
-        filled, partial,
-      });
+      zones.push({ type: "FVG", direction: "BULLISH", top, bottom, midpoint: mid,
+        formedAt: c1.time, barsAgo: n - 1 - i, filled, partial });
     }
-
-    // 하락 FVG: c0.low > c2.high → 둘 사이에 갭 존재
     if (c2.high < c0.low) {
-      const top    = c0.low;
-      const bottom = c2.high;
-      const mid    = (top + bottom) / 2;
-
+      const top = c0.low, bottom = c2.high, mid = (top + bottom) / 2;
       let filled = false, partial = false;
       for (let j = i + 1; j < n; j++) {
-        if (candles[j].high >= mid)    { filled  = true; break; }
+        if (candles[j].high >= mid)    { filled = true; break; }
         if (candles[j].high >= bottom) { partial = true; }
       }
-
-      zones.push({
-        type: "FVG", direction: "BEARISH",
-        top, bottom, midpoint: mid,
-        formedAt: c1.time, barsAgo: n - 1 - i,
-        filled, partial,
-      });
+      zones.push({ type: "FVG", direction: "BEARISH", top, bottom, midpoint: mid,
+        formedAt: c1.time, barsAgo: n - 1 - i, filled, partial });
     }
   }
-
   return zones;
 }
 
@@ -128,183 +160,78 @@ function detectFVGs(candles: Candle[]): Zone[] {
 function detectOBs(candles: Candle[]): Zone[] {
   const zones: Zone[] = [];
   const n = candles.length;
-
   for (let i = 0; i < n - 4; i++) {
     const c = candles[i];
-    const isBear = c.close < c.open;
-    const isBull = c.close > c.open;
-
-    // 상승 OB: 하락 캔들 후 3봉 연속 상승 + 최소 이동폭
+    const isBear = c.close < c.open, isBull = c.close > c.open;
+    const next = candles.slice(i + 1, i + 4);
     if (isBear) {
-      const next = candles.slice(i + 1, i + 4);
       const allUp = next.every(nc => nc.close > nc.open);
-      const move  = (next[next.length - 1].close - c.low) / c.low;
+      const move  = (next[2].close - c.low) / c.low;
       if (allUp && move >= OB_MOVE_THRESHOLD) {
-        const top    = c.open;   // 하락 캔들 몸통 상단
-        const bottom = c.low;    // 캔들 저가
-        const mid    = (top + bottom) / 2;
-
+        const top = c.open, bottom = c.low, mid = (top + bottom) / 2;
         let filled = false, partial = false;
         for (let j = i + 4; j < n; j++) {
-          if (candles[j].low <= bottom)     { filled  = true; break; }
-          if (candles[j].low <= mid)        { partial = true; }
+          if (candles[j].low <= bottom) { filled = true; break; }
+          if (candles[j].low <= mid)    { partial = true; }
         }
-
-        zones.push({
-          type: "OB", direction: "BULLISH",
-          top, bottom, midpoint: mid,
-          formedAt: c.time, barsAgo: n - 1 - i,
-          filled, partial,
-        });
+        zones.push({ type: "OB", direction: "BULLISH", top, bottom, midpoint: mid,
+          formedAt: c.time, barsAgo: n - 1 - i, filled, partial });
       }
     }
-
-    // 하락 OB: 상승 캔들 후 3봉 연속 하락 + 최소 이동폭
     if (isBull) {
-      const next = candles.slice(i + 1, i + 4);
       const allDn = next.every(nc => nc.close < nc.open);
-      const move  = (c.high - next[next.length - 1].close) / c.high;
+      const move  = (c.high - next[2].close) / c.high;
       if (allDn && move >= OB_MOVE_THRESHOLD) {
-        const top    = c.high;   // 캔들 고가
-        const bottom = c.open;   // 상승 캔들 몸통 하단
-
-        const mid = (top + bottom) / 2;
+        const top = c.high, bottom = c.open, mid = (top + bottom) / 2;
         let filled = false, partial = false;
         for (let j = i + 4; j < n; j++) {
-          if (candles[j].high >= top)    { filled  = true; break; }
-          if (candles[j].high >= mid)    { partial = true; }
+          if (candles[j].high >= top) { filled = true; break; }
+          if (candles[j].high >= mid) { partial = true; }
         }
-
-        zones.push({
-          type: "OB", direction: "BEARISH",
-          top, bottom, midpoint: mid,
-          formedAt: c.time, barsAgo: n - 1 - i,
-          filled, partial,
-        });
+        zones.push({ type: "OB", direction: "BEARISH", top, bottom, midpoint: mid,
+          formedAt: c.time, barsAgo: n - 1 - i, filled, partial });
       }
     }
   }
-
   return zones;
 }
 
-// ── 유효 구간 필터 & 정렬 ──────────────────────────────────────────────────
-function processZones(
-  candles: Candle[],
-  currentPrice: number,
-): { resistance: Zone[]; support: Zone[] } {
-  const fvgs = detectFVGs(candles);
-  const obs  = detectOBs(candles);
-  const all  = [...fvgs, ...obs].filter(z => !z.filled);
-
-  // 저항 (현재가 위) — 가까운 순
-  const resistance = all
-    .filter(z => z.bottom > currentPrice)
-    .sort((a, b) => a.bottom - b.bottom)
-    .slice(0, MAX_ZONES);
-
-  // 지지 (현재가 아래) — 가까운 순
-  const support = all
-    .filter(z => z.top < currentPrice)
-    .sort((a, b) => b.top - a.top)
-    .slice(0, MAX_ZONES);
-
-  return { resistance, support };
+// ── 필터 & 정렬 ────────────────────────────────────────────────────────────
+function processZones(candles: Candle[], currentPrice: number) {
+  const all = [...detectFVGs(candles), ...detectOBs(candles)].filter(z => !z.filled);
+  return {
+    resistance: all.filter(z => z.bottom > currentPrice).sort((a,b) => a.bottom - b.bottom).slice(0, MAX_ZONES),
+    support:    all.filter(z => z.top < currentPrice).sort((a,b) => b.top - a.top).slice(0, MAX_ZONES),
+    all:        all,
+  };
 }
 
-// ── Format helpers ─────────────────────────────────────────────────────────
-function fmtPrice(p: number): string {
-  if (p >= 1000) return p.toLocaleString("en-US", { maximumFractionDigits: 0 });
-  if (p >= 1)    return p.toFixed(3);
-  return p.toFixed(6);
-}
-function fmtPct(from: number, to: number): string {
-  const pct = ((to - from) / from) * 100;
-  return `${pct >= 0 ? "+" : ""}${pct.toFixed(2)}%`;
-}
-function fmtTimeAgo(barsAgo: number, tf: TF): string {
-  if (barsAgo === 0) return "방금";
-  const unit = tf === "1h" ? "시간" : tf === "4h" ? "4시간" : "일";
-  return `${barsAgo}${unit} 전`;
-}
+// ── Format ─────────────────────────────────────────────────────────────────
+const toTs = (ms: number): UTCTimestamp => Math.floor(ms / 1000) as UTCTimestamp;
+function fmtP(p: number) { return p >= 1000 ? p.toLocaleString("en-US", { maximumFractionDigits: 0 }) : p >= 1 ? p.toFixed(2) : p.toFixed(6); }
+function fmtPct(from: number, to: number) { const p = ((to - from) / from) * 100; return `${p >= 0 ? "+" : ""}${p.toFixed(2)}%`; }
+function fmtAgo(b: number, tf: TF) { if (b === 0) return "방금"; const u = tf === "1h" ? "H" : tf === "4h" ? "4H" : "D"; return `${b}${u}`; }
 
-// ── Copy ──────────────────────────────────────────────────────────────────
-const COPY = {
-  ko: {
-    kicker:  "SUPPLY & DEMAND · 매물대",
-    title:   "FVG / OB 매물대 분석",
-    hint:    "Fair Value Gap · Order Block — 미체결 구간만 표시, 현재가 기준 정렬",
-    tf:      "타임프레임", coin: "코인",
-    resistance: "저항 (위)", support: "지지 (아래)",
-    loading: "매물대 계산 중...", error: "데이터 로드 실패",
-    noZone:  "구간 없음",
-    partial: "부분체결", unfilled: "미체결",
-    currentPrice: "현재가",
-    topZone: "구간 상단", botZone: "구간 하단",
-    distance: "거리",
-    formed: "형성",
-    fvgDesc: "FVG: 가격 공백 구간 (Price Imbalance)",
-    obDesc:  "OB: 강한 이동 직전 주문 블록 (Order Block)",
-    refresh: "새로고침",
-  },
-  en: {
-    kicker:  "SUPPLY & DEMAND · ZONES",
-    title:   "FVG / OB Zone Analysis",
-    hint:    "Fair Value Gap · Order Block — unfilled zones only, sorted by proximity",
-    tf:      "Timeframe", coin: "Coin",
-    resistance: "Resistance (above)", support: "Support (below)",
-    loading: "Calculating zones...", error: "Failed to load",
-    noZone:  "No zones",
-    partial: "Partial", unfilled: "Unfilled",
-    currentPrice: "Current Price",
-    topZone: "Zone Top", botZone: "Zone Bottom",
-    distance: "Distance",
-    formed: "Formed",
-    fvgDesc: "FVG: Price imbalance (Fair Value Gap)",
-    obDesc:  "OB: Last candle before strong move (Order Block)",
-    refresh: "Refresh",
-  },
-} as const;
-
-// ── Zone row component ─────────────────────────────────────────────────────
-function ZoneRow({
-  zone, currentPrice, tf, isKo,
-}: { zone: Zone; currentPrice: number; tf: TF; isKo: boolean }) {
-  const isFvg = zone.type === "FVG";
+// ── Zone Row (List) ────────────────────────────────────────────────────────
+function ZoneRow({ zone, price, tf }: { zone: Zone; price: number; tf: TF }) {
   const isBull = zone.direction === "BULLISH";
-
   return (
     <div className={`${styles.zoneRow} ${isBull ? styles.zoneRowBull : styles.zoneRowBear}`}>
-      {/* 타입 배지 */}
       <div className={styles.zoneBadges}>
-        <span className={`${styles.typeBadge} ${isFvg ? styles.typeFvg : styles.typeOb}`}>
-          {zone.type}
-        </span>
-        <span className={`${styles.dirArrow} ${isBull ? styles.dirUp : styles.dirDown}`}>
-          {isBull ? "↑" : "↓"}
-        </span>
+        <span className={`${styles.typeBadge} ${zone.type === "FVG" ? styles.typeFvg : styles.typeOb}`}>{zone.type}</span>
+        <span className={`${styles.dirArrow} ${isBull ? styles.dirUp : styles.dirDown}`}>{isBull ? "↑" : "↓"}</span>
       </div>
-
-      {/* 가격 범위 */}
       <div className={styles.zoneRange}>
-        <span className={styles.zoneTop}>{fmtPrice(zone.top)}</span>
+        <span className={styles.zoneTop}>{fmtP(zone.top)}</span>
         <span className={styles.zoneSep}>—</span>
-        <span className={styles.zoneBot}>{fmtPrice(zone.bottom)}</span>
+        <span className={styles.zoneBot}>{fmtP(zone.bottom)}</span>
       </div>
-
-      {/* 거리 */}
       <div className={`${styles.zoneDist} ${isBull ? styles.zoneDistUp : styles.zoneDistDn}`}>
-        {fmtPct(currentPrice, isBull ? zone.bottom : zone.top)}
+        {fmtPct(price, isBull ? zone.bottom : zone.top)}
       </div>
-
-      {/* 형성 시간 */}
-      <div className={styles.zoneFormed}>
-        {fmtTimeAgo(zone.barsAgo, tf)}
-      </div>
-
-      {/* 상태 */}
+      <div className={styles.zoneFormed}>{fmtAgo(zone.barsAgo, tf)}</div>
       <div className={`${styles.zoneStatus} ${zone.partial ? styles.statusPartial : styles.statusOpen}`}>
-        {zone.partial ? (isKo ? "부분" : "Partial") : (isKo ? "미체결" : "Open")}
+        {zone.partial ? "부분" : "미체결"}
       </div>
     </div>
   );
@@ -313,40 +240,148 @@ function ZoneRow({
 // ── Main Component ─────────────────────────────────────────────────────────
 export default function FvgObPanel() {
   const { language } = useLanguage();
-  const C = COPY[language];
   const isKo = language === "ko";
 
-  const [coin, setCoin]     = useState<Coin>("BTC");
-  const [tf, setTf]         = useState<TF>("1h");
-  const [loading, setLoad]  = useState(true);
-  const [error, setError]   = useState(false);
-  const [price, setPrice]   = useState(0);
-  const [resistance, setRes] = useState<Zone[]>([]);
-  const [support, setSup]   = useState<Zone[]>([]);
+  const [coin, setCoin]       = useState<Coin>("BTC");
+  const [tf, setTf]           = useState<TF>("1h");
+  const [view, setView]       = useState<ViewMode>("chart");
+  const [loading, setLoad]    = useState(true);
+  const [error, setError]     = useState(false);
+  const [price, setPrice]     = useState(0);
+  const [candles, setCandles] = useState<Candle[]>([]);
+  const [resistance, setRes]  = useState<Zone[]>([]);
+  const [support, setSup]     = useState<Zone[]>([]);
+  const [allZones, setAll]    = useState<Zone[]>([]);
 
+  const chartContRef = useRef<HTMLDivElement>(null);
+  const chartRef     = useRef<IChartApi | null>(null);
+  const rafRef       = useRef<number>(0);
+
+  // ── 데이터 로드 ──────────────────────────────────────────────────────────
   const load = useCallback(async () => {
     setLoad(true); setError(false);
     const tfCfg = TFS.find(t => t.key === tf)!;
-
-    // 현재가 + 캔들 병렬 fetch
-    const [priceRes, candles] = await Promise.all([
+    const [priceData, cs] = await Promise.all([
       fetch(`https://fapi.binance.com/fapi/v1/premiumIndex?symbol=${coin}USDT`, { cache: "no-store" })
         .then(r => r.json()).then(d => parseFloat(d.markPrice)).catch(() => 0),
       fetchCandles(coin, tfCfg.interval, tfCfg.limit),
     ]);
-
-    if (!candles.length) { setError(true); setLoad(false); return; }
-
-    const curPrice = priceRes || candles.at(-1)!.close;
-    setPrice(curPrice);
-
-    const { resistance: res, support: sup } = processZones(candles, curPrice);
-    setRes(res);
-    setSup(sup);
+    if (!cs.length) { setError(true); setLoad(false); return; }
+    const cur = priceData || cs.at(-1)!.close;
+    setPrice(cur);
+    setCandles(cs);
+    const { resistance: res, support: sup, all } = processZones(cs, cur);
+    setRes(res); setSup(sup); setAll(all);
     setLoad(false);
   }, [coin, tf]);
 
   useEffect(() => { load(); }, [load]);
+
+  // ── 차트 생성 & 구간 박스 ──────────────────────────────────────────────
+  useEffect(() => {
+    if (view !== "chart" || !chartContRef.current || !candles.length) return;
+    const container = chartContRef.current;
+    if (chartRef.current) { chartRef.current.remove(); chartRef.current = null; }
+
+    const chart = createChart(container, {
+      width:  container.clientWidth,
+      height: 420,
+      layout: {
+        background:  { color: "transparent" },
+        textColor:   "#8aa3c2",
+        fontFamily:  "JetBrains Mono, ui-monospace, monospace",
+      },
+      grid: {
+        vertLines: { color: "rgba(125,211,252,0.06)" },
+        horzLines: { color: "rgba(125,211,252,0.06)" },
+      },
+      crosshair: { mode: CrosshairMode.Normal },
+      rightPriceScale: { borderColor: "rgba(125,211,252,0.2)" },
+      timeScale: { borderColor: "rgba(125,211,252,0.2)", timeVisible: true, secondsVisible: false },
+    });
+    chartRef.current = chart;
+
+    // 캔들
+    const candleSeries = chart.addSeries(CandlestickSeries, {
+      upColor: "#86efac", downColor: "#fda4af",
+      borderVisible: false, wickUpColor: "#86efac", wickDownColor: "#fda4af",
+    });
+    candleSeries.setData(candles.map(c => ({
+      time: toTs(c.time), open: c.open, high: c.high, low: c.low, close: c.close,
+    })));
+
+    // 현재가 라인
+    const priceLine = chart.addSeries(LineSeries, {
+      color: COIN_COLOR[coin], lineWidth: 1, lineStyle: LineStyle.Dashed,
+      priceLineVisible: false, lastValueVisible: true, crosshairMarkerVisible: false,
+      title: "현재가",
+    });
+    if (candles.length >= 2) {
+      const last2 = candles.slice(-2).map(c => ({ time: toTs(c.time), value: price }));
+      priceLine.setData(last2);
+    }
+
+    // 현재가 price line 표시
+    candleSeries.createPriceLine({
+      price,
+      color: COIN_COLOR[coin],
+      lineWidth: 1,
+      lineStyle: LineStyle.Dashed,
+      axisLabelVisible: true,
+      title: "",
+    });
+
+    // ── 구간 박스 그리기 ────────────────────────────────────────────────
+    const lastTs = toTs(candles.at(-1)!.time);
+    // 미래 방향으로 약간 연장 (3봉 정도)
+    const dT = candles.length > 1 ? candles[1].time - candles[0].time : 3_600_000;
+    const futureTs = (Math.floor(candles.at(-1)!.time / 1000) + dT * 3 / 1000) as UTCTimestamp;
+
+    allZones.forEach(zone => {
+      if (zone.filled) return;
+      const t1 = toTs(zone.formedAt);
+      const t2 = futureTs;
+      const isBull = zone.direction === "BULLISH";
+      const isFvg  = zone.type === "FVG";
+
+      // 색상: FVG = 더 투명, OB = 더 진함
+      const alpha = isFvg ? 0.18 : 0.28;
+      const alphaPartial = zone.partial ? alpha * 0.5 : alpha;
+      const fillColor   = isBull
+        ? `rgba(134,239,172,${alphaPartial})`
+        : `rgba(253,164,175,${alphaPartial})`;
+      const borderColor = isBull
+        ? `rgba(134,239,172,${alpha * 2})`
+        : `rgba(253,164,175,${alpha * 2})`;
+
+      const rect = new RectPrimitive(chart, candleSeries, t1, t2, zone.bottom, zone.top, fillColor, borderColor);
+      candleSeries.attachPrimitive(rect);
+
+      // 중간선(midpoint) 표시
+      const midLine = chart.addSeries(LineSeries, {
+        color: isBull ? "rgba(134,239,172,0.5)" : "rgba(253,164,175,0.5)",
+        lineWidth: 1, lineStyle: LineStyle.Dotted,
+        priceLineVisible: false, lastValueVisible: false, crosshairMarkerVisible: false,
+      });
+      midLine.setData([
+        { time: t1, value: zone.midpoint },
+        { time: t2, value: zone.midpoint },
+      ]);
+    });
+
+    chart.timeScale().fitContent();
+
+    const onResize = () => {
+      if (chartContRef.current) chart.applyOptions({ width: chartContRef.current.clientWidth });
+    };
+    window.addEventListener("resize", onResize);
+    return () => {
+      window.removeEventListener("resize", onResize);
+      cancelAnimationFrame(rafRef.current);
+      chart.remove();
+      chartRef.current = null;
+    };
+  }, [view, candles, allZones, coin, price, tf]);
 
   const tint = COIN_COLOR[coin];
 
@@ -355,19 +390,28 @@ export default function FvgObPanel() {
       {/* Header */}
       <div className={styles.header}>
         <div>
-          <p className={styles.kicker}>{C.kicker}</p>
-          <h2 className={styles.title}>{C.title}</h2>
-          <p className={styles.hint}>{C.hint}</p>
+          <p className={styles.kicker}>SUPPLY & DEMAND · 매물대</p>
+          <h2 className={styles.title}>FVG / OB 매물대 분석</h2>
+          <p className={styles.hint}>Fair Value Gap · Order Block — 미체결 구간만 표시, 현재가 기준 정렬</p>
         </div>
-        <button className={styles.refreshBtn} onClick={load} disabled={loading}>
-          {loading ? "⟳" : C.refresh}
-        </button>
+        <div style={{ display: "flex", gap: "0.4rem", alignItems: "center" }}>
+          {/* 뷰 토글 */}
+          <div className={styles.viewToggle}>
+            <button className={`${styles.viewBtn} ${view === "chart" ? styles.viewBtnActive : ""}`}
+              onClick={() => setView("chart")}>📈 {isKo ? "차트" : "Chart"}</button>
+            <button className={`${styles.viewBtn} ${view === "list"  ? styles.viewBtnActive : ""}`}
+              onClick={() => setView("list")}>📋 {isKo ? "목록" : "List"}</button>
+          </div>
+          <button className={styles.refreshBtn} onClick={load} disabled={loading}>
+            {loading ? "⟳" : isKo ? "새로고침" : "Refresh"}
+          </button>
+        </div>
       </div>
 
       {/* Controls */}
       <div className={styles.controls}>
         <div className={styles.ctrlGroup}>
-          <span className={styles.ctrlLabel}>{C.coin}</span>
+          <span className={styles.ctrlLabel}>{isKo ? "코인" : "Coin"}</span>
           <div className={styles.btnRow}>
             {COINS.map(c => (
               <button key={c}
@@ -379,7 +423,7 @@ export default function FvgObPanel() {
           </div>
         </div>
         <div className={styles.ctrlGroup}>
-          <span className={styles.ctrlLabel}>{C.tf}</span>
+          <span className={styles.ctrlLabel}>{isKo ? "타임프레임" : "TF"}</span>
           <div className={styles.btnRow}>
             {TFS.map(t => (
               <button key={t.key}
@@ -391,86 +435,99 @@ export default function FvgObPanel() {
         </div>
       </div>
 
-      {/* Legend */}
+      {/* 범례 */}
       <div className={styles.legend}>
         <span className={styles.legendItem}>
-          <span className={`${styles.typeBadge} ${styles.typeFvg}`} style={{ fontSize: "0.6rem" }}>FVG</span>
-          {C.fvgDesc}
+          <span className={styles.legendBox} style={{ background: "rgba(134,239,172,0.35)", border: "1px solid rgba(134,239,172,0.6)" }} />
+          OB ↑ 상승 주문블록
         </span>
         <span className={styles.legendItem}>
-          <span className={`${styles.typeBadge} ${styles.typeOb}`} style={{ fontSize: "0.6rem" }}>OB</span>
-          {C.obDesc}
+          <span className={styles.legendBox} style={{ background: "rgba(253,164,175,0.35)", border: "1px solid rgba(253,164,175,0.6)" }} />
+          OB ↓ 하락 주문블록
+        </span>
+        <span className={styles.legendItem}>
+          <span className={styles.legendBox} style={{ background: "rgba(134,239,172,0.18)", border: "1px dashed rgba(134,239,172,0.5)" }} />
+          FVG ↑ 상승 공백
+        </span>
+        <span className={styles.legendItem}>
+          <span className={styles.legendBox} style={{ background: "rgba(253,164,175,0.18)", border: "1px dashed rgba(253,164,175,0.5)" }} />
+          FVG ↓ 하락 공백
         </span>
       </div>
 
-      {loading && (
-        <div className={styles.loadingBox}><span className={styles.spinner} />{C.loading}</div>
-      )}
-      {!loading && error && (
-        <div className={styles.loadingBox} style={{ color: "#f87171" }}>{C.error}</div>
-      )}
+      {loading && <div className={styles.loadingBox}><span className={styles.spinner} />매물대 계산 중...</div>}
+      {!loading && error && <div className={styles.loadingBox} style={{ color: "#fda4af" }}>데이터 로드 실패</div>}
 
       {!loading && !error && (
-        <div className={styles.zoneContainer}>
-          {/* ── 저항 구간 (위) ── */}
-          <div className={styles.sectionHeader}>
-            <span className={styles.sectionTitle} style={{ color: "#f87171" }}>
-              ▲ {C.resistance}
-            </span>
-            <span className={styles.sectionCount}>{resistance.length}개</span>
-          </div>
-
-          {resistance.length === 0 ? (
-            <p className={styles.noZone}>{C.noZone}</p>
-          ) : (
-            <div className={styles.zoneList}>
-              {resistance.map((z, i) => (
-                <ZoneRow key={i} zone={z} currentPrice={price} tf={tf} isKo={isKo} />
-              ))}
+        <>
+          {/* ── 차트 뷰 ── */}
+          {view === "chart" && (
+            <div className={styles.chartWrap}>
+              <div ref={chartContRef} className={styles.chartInner} />
+              {/* 차트 아래 간략 구간 요약 */}
+              <div className={styles.chartSummary}>
+                <div className={styles.summaryGroup}>
+                  <span className={styles.summaryTitle} style={{ color: "#fda4af" }}>▲ 저항 {resistance.length}개</span>
+                  {resistance.slice(0, 3).map((z, i) => (
+                    <span key={i} className={styles.summaryItem}>
+                      <span className={`${styles.typeBadge} ${z.type === "FVG" ? styles.typeFvg : styles.typeOb}`}
+                        style={{ fontSize: "0.55rem" }}>{z.type}</span>
+                      {fmtP(z.bottom)}~{fmtP(z.top)}
+                      <span style={{ color: "#fda4af" }}> {fmtPct(price, z.bottom)}</span>
+                    </span>
+                  ))}
+                </div>
+                <div className={styles.summaryPrice} style={{ color: tint }}>
+                  ● {fmtP(price)}
+                </div>
+                <div className={styles.summaryGroup} style={{ alignItems: "flex-end" }}>
+                  <span className={styles.summaryTitle} style={{ color: "#86efac" }}>▼ 지지 {support.length}개</span>
+                  {support.slice(0, 3).map((z, i) => (
+                    <span key={i} className={styles.summaryItem}>
+                      <span className={`${styles.typeBadge} ${z.type === "FVG" ? styles.typeFvg : styles.typeOb}`}
+                        style={{ fontSize: "0.55rem" }}>{z.type}</span>
+                      {fmtP(z.bottom)}~{fmtP(z.top)}
+                      <span style={{ color: "#86efac" }}> {fmtPct(price, z.top)}</span>
+                    </span>
+                  ))}
+                </div>
+              </div>
             </div>
           )}
 
-          {/* ── 현재가 ── */}
-          <div className={styles.currentPriceLine}>
-            <div className={styles.currentPriceDot} style={{ background: tint }} />
-            <span className={styles.currentPriceLabel} style={{ color: tint }}>
-              {C.currentPrice}
-            </span>
-            <span className={styles.currentPriceValue} style={{ color: tint }}>
-              ${price > 0 ? fmtPrice(price) : "—"}
-            </span>
-            <div className={styles.currentPriceDot} style={{ background: tint }} />
-          </div>
-
-          {/* ── 지지 구간 (아래) ── */}
-          <div className={styles.sectionHeader}>
-            <span className={styles.sectionTitle} style={{ color: "#4ade80" }}>
-              ▼ {C.support}
-            </span>
-            <span className={styles.sectionCount}>{support.length}개</span>
-          </div>
-
-          {support.length === 0 ? (
-            <p className={styles.noZone}>{C.noZone}</p>
-          ) : (
-            <div className={styles.zoneList}>
-              {support.map((z, i) => (
-                <ZoneRow key={i} zone={z} currentPrice={price} tf={tf} isKo={isKo} />
-              ))}
+          {/* ── 목록 뷰 ── */}
+          {view === "list" && (
+            <div className={styles.zoneContainer}>
+              <div className={styles.colHeader}>
+                <span>타입</span><span>구간</span><span>거리</span><span>형성</span><span>상태</span>
+              </div>
+              <div className={styles.sectionHeader}>
+                <span className={styles.sectionTitle} style={{ color: "#fda4af" }}>▲ 저항 (위)</span>
+                <span className={styles.sectionCount}>{resistance.length}개</span>
+              </div>
+              {resistance.length === 0
+                ? <p className={styles.noZone}>구간 없음</p>
+                : <div className={styles.zoneList}>
+                    {resistance.map((z, i) => <ZoneRow key={i} zone={z} price={price} tf={tf} />)}
+                  </div>}
+              <div className={styles.currentPriceLine}>
+                <div className={styles.currentPriceDot} style={{ background: tint }} />
+                <span className={styles.currentPriceLabel} style={{ color: tint }}>현재가</span>
+                <span className={styles.currentPriceValue} style={{ color: tint }}>${fmtP(price)}</span>
+                <div className={styles.currentPriceDot} style={{ background: tint }} />
+              </div>
+              <div className={styles.sectionHeader}>
+                <span className={styles.sectionTitle} style={{ color: "#86efac" }}>▼ 지지 (아래)</span>
+                <span className={styles.sectionCount}>{support.length}개</span>
+              </div>
+              {support.length === 0
+                ? <p className={styles.noZone}>구간 없음</p>
+                : <div className={styles.zoneList}>
+                    {support.map((z, i) => <ZoneRow key={i} zone={z} price={price} tf={tf} />)}
+                  </div>}
             </div>
           )}
-        </div>
-      )}
-
-      {/* 칼럼 헤더 */}
-      {!loading && !error && (
-        <div className={styles.colHeader}>
-          <span>타입</span>
-          <span>구간</span>
-          <span>거리</span>
-          <span>형성</span>
-          <span>상태</span>
-        </div>
+        </>
       )}
     </section>
   );
