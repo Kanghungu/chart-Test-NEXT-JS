@@ -1,0 +1,290 @@
+.panel {
+  border: 1px solid var(--hair);
+  border-radius: 14px;
+  background: var(--glass);
+  backdrop-filter: blur(18px) saturate(140%);
+  padding: 1.25rem 1.35rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  position: relative;
+  overflow: hidden;
+}
+.panel::before {
+  content: "";
+  position: absolute;
+  left: 10%; right: 10%; top: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(125,211,252,0.5), transparent);
+  pointer-events: none;
+}
+
+/* ── Header ──────────────────────────────────────────────────────────────── */
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.kicker {
+  font-size: 0.63rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  background: linear-gradient(90deg, var(--cy), var(--vi));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 0.2rem;
+}
+.title { font-size: 1.2rem; font-weight: 700; color: #f1f5f9; margin-bottom: 0.15rem; }
+.hint  { font-size: 0.74rem; color: var(--text-2); }
+
+.refreshBtn {
+  padding: 0.28rem 0.65rem;
+  border-radius: 5px;
+  border: 1px solid var(--hair);
+  background: rgba(125,211,252,0.04);
+  color: var(--text-2);
+  font-size: 0.74rem;
+  cursor: pointer;
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+.refreshBtn:hover:not(:disabled) { border-color: var(--hair-2); color: var(--cy); }
+.refreshBtn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ── Controls ────────────────────────────────────────────────────────────── */
+.controls { display: flex; flex-wrap: wrap; gap: 0.85rem; align-items: center; }
+.ctrlGroup { display: flex; align-items: center; gap: 0.45rem; }
+.ctrlLabel {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+.btnRow { display: flex; gap: 0.25rem; }
+.ctrlBtn {
+  padding: 0.25rem 0.6rem;
+  border-radius: 5px;
+  border: 1px solid var(--hair);
+  background: rgba(255,255,255,0.02);
+  color: var(--text-2);
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.ctrlBtn:hover { border-color: var(--hair-2); color: var(--text); }
+.ctrlBtnActive { background: rgba(125,211,252,0.08); }
+
+/* ── Legend ──────────────────────────────────────────────────────────────── */
+.legend {
+  display: flex;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+  font-size: 0.69rem;
+  color: var(--text-3);
+  padding: 0.5rem 0.65rem;
+  background: rgba(255,255,255,0.02);
+  border-radius: 7px;
+  border: 1px solid var(--hair);
+}
+.legendItem { display: flex; align-items: center; gap: 0.4rem; }
+
+/* ── Loading ─────────────────────────────────────────────────────────────── */
+.loadingBox {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 1.5rem;
+  justify-content: center;
+  color: var(--text-3);
+  font-size: 0.82rem;
+}
+.spinner {
+  width: 16px; height: 16px;
+  border: 2px solid rgba(125,211,252,0.2);
+  border-top-color: var(--cy);
+  border-radius: 50%;
+  animation: spin 0.75s linear infinite;
+  flex-shrink: 0;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Zone Container ──────────────────────────────────────────────────────── */
+.zoneContainer { display: flex; flex-direction: column; gap: 0.35rem; }
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.3rem 0;
+  margin-top: 0.25rem;
+}
+.sectionTitle {
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.sectionCount {
+  font-size: 0.65rem;
+  color: var(--text-3);
+  font-family: var(--f-mono);
+}
+
+.noZone {
+  font-size: 0.74rem;
+  color: var(--text-3);
+  text-align: center;
+  padding: 0.6rem;
+}
+
+/* ── Current Price Line ──────────────────────────────────────────────────── */
+.currentPriceLine {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 0.75rem;
+  border-radius: 7px;
+  border: 1px solid rgba(125,211,252,0.2);
+  background: rgba(125,211,252,0.04);
+  margin: 0.2rem 0;
+}
+.currentPriceDot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.currentPriceLabel {
+  font-family: var(--f-mono);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.currentPriceValue {
+  font-family: var(--f-mono);
+  font-size: 1rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  margin-left: auto;
+}
+
+/* ── Zone Row ────────────────────────────────────────────────────────────── */
+.zoneList { display: flex; flex-direction: column; gap: 4px; }
+
+.zoneRow {
+  display: grid;
+  grid-template-columns: 52px 1fr 70px 72px 60px;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.52rem 0.7rem;
+  border-radius: 7px;
+  border: 1px solid transparent;
+  transition: background 0.15s, border-color 0.15s;
+  font-size: 0.78rem;
+}
+.zoneRow:hover { background: rgba(255,255,255,0.025); }
+
+.zoneRowBull {
+  background: rgba(74,222,128,0.04);
+  border-color: rgba(74,222,128,0.1);
+}
+.zoneRowBull:hover { border-color: rgba(74,222,128,0.25); }
+
+.zoneRowBear {
+  background: rgba(248,113,113,0.04);
+  border-color: rgba(248,113,113,0.1);
+}
+.zoneRowBear:hover { border-color: rgba(248,113,113,0.25); }
+
+/* 배지 묶음 */
+.zoneBadges { display: flex; align-items: center; gap: 0.2rem; }
+
+.typeBadge {
+  font-family: var(--f-mono);
+  font-size: 0.58rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  padding: 0.14rem 0.38rem;
+  border-radius: 3px;
+}
+.typeFvg {
+  color: var(--cy);
+  background: rgba(125,211,252,0.12);
+  border: 1px solid rgba(125,211,252,0.28);
+}
+.typeOb {
+  color: var(--vi);
+  background: rgba(196,181,253,0.12);
+  border: 1px solid rgba(196,181,253,0.28);
+}
+
+.dirArrow { font-size: 0.7rem; font-weight: 900; }
+.dirUp   { color: #4ade80; }
+.dirDown { color: #f87171; }
+
+/* 가격 범위 */
+.zoneRange {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-family: var(--f-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 0.74rem;
+  color: #e2e8f0;
+  overflow: hidden;
+}
+.zoneTop { font-weight: 600; }
+.zoneSep { color: var(--text-3); font-size: 0.65rem; }
+.zoneBot { font-weight: 600; }
+
+/* 거리 */
+.zoneDist {
+  font-family: var(--f-mono);
+  font-size: 0.74rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+.zoneDistUp { color: #f87171; }   /* 현재가에서 위쪽 = 저항 = 빨강 */
+.zoneDistDn { color: #4ade80; }   /* 현재가에서 아래 = 지지 = 초록 */
+
+/* 형성 시간 */
+.zoneFormed {
+  font-size: 0.66rem;
+  color: var(--text-3);
+  font-family: var(--f-mono);
+  text-align: center;
+}
+
+/* 상태 */
+.zoneStatus {
+  font-family: var(--f-mono);
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  padding: 0.15rem 0.35rem;
+  border-radius: 3px;
+  text-align: center;
+}
+.statusOpen    { color: var(--gr); background: rgba(134,239,172,0.1); border: 1px solid rgba(134,239,172,0.25); }
+.statusPartial { color: var(--am); background: rgba(252,211,77,0.1);  border: 1px solid rgba(252,211,77,0.25); }
+
+/* ── Column header ───────────────────────────────────────────────────────── */
+.colHeader {
+  display: grid;
+  grid-template-columns: 52px 1fr 70px 72px 60px;
+  gap: 0.5rem;
+  padding: 0 0.7rem;
+  margin-top: -0.5rem;
+  order: -1;  /* 목록 위에 표시 */
+  font-family: var(--f-mono);
+  font-size: 0.58rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
