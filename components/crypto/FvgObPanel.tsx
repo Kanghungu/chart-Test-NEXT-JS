@@ -43,8 +43,10 @@ const TFS = [
   { key: "4h" as TF,  label: "4H",  interval: "4h",  limit: 200 },
   { key: "1D" as TF,  label: "1D",  interval: "1d",  limit: 200 },
 ];
-const OB_MOVE_THRESHOLD = 0.003;
-const MAX_ZONES = 6;
+const OB_MOVE_THRESHOLD  = 0.015;  // OB 인정 최소 이동폭 1.5% (강한 이탈만)
+const FVG_MIN_SIZE_PCT   = 0.003;  // FVG 최소 크기 0.3% (미세 갭 제거)
+const OB_BODY_RATIO      = 0.5;    // OB 캔들 몸통이 전체 범위의 50% 이상
+const MAX_ZONES_PER_SIDE = 3;      // 방향별 최대 3개 (가장 중요한 것만)
 const COIN_COLOR: Record<Coin, string> = {
   BTC: "#f7931a", ETH: "#627eea", SOL: "#14f195",
   XRP: "#00a3e0", BNB: "#f3ba2f",
@@ -126,14 +128,18 @@ async function fetchCandles(coin: Coin, interval: string, limit: number): Promis
   } catch { return []; }
 }
 
-// ── FVG 탐지 ──────────────────────────────────────────────────────────────
-function detectFVGs(candles: Candle[]): Zone[] {
+// ── FVG 탐지 (최소 크기 필터 포함) ──────────────────────────────────────
+function detectFVGs(candles: Candle[], price: number): Zone[] {
   const zones: Zone[] = [];
   const n = candles.length;
   for (let i = 2; i < n; i++) {
     const c0 = candles[i - 2], c1 = candles[i - 1], c2 = candles[i];
+
+    // 상승 FVG
     if (c2.low > c0.high) {
       const top = c2.low, bottom = c0.high, mid = (top + bottom) / 2;
+      // 최소 크기 필터: FVG 폭이 현재가의 0.3% 미만이면 무시
+      if ((top - bottom) / price < FVG_MIN_SIZE_PCT) continue;
       let filled = false, partial = false;
       for (let j = i + 1; j < n; j++) {
         if (candles[j].low <= mid)  { filled = true; break; }
@@ -142,8 +148,11 @@ function detectFVGs(candles: Candle[]): Zone[] {
       zones.push({ type: "FVG", direction: "BULLISH", top, bottom, midpoint: mid,
         formedAt: c1.time, barsAgo: n - 1 - i, filled, partial });
     }
+
+    // 하락 FVG
     if (c2.high < c0.low) {
       const top = c0.low, bottom = c2.high, mid = (top + bottom) / 2;
+      if ((top - bottom) / price < FVG_MIN_SIZE_PCT) continue;
       let filled = false, partial = false;
       for (let j = i + 1; j < n; j++) {
         if (candles[j].high >= mid)    { filled = true; break; }
@@ -156,21 +165,30 @@ function detectFVGs(candles: Candle[]): Zone[] {
   return zones;
 }
 
-// ── OB 탐지 ───────────────────────────────────────────────────────────────
+// ── OB 탐지 (강한 이탈 + 몸통 비율 필터) ─────────────────────────────────
 function detectOBs(candles: Candle[]): Zone[] {
   const zones: Zone[] = [];
   const n = candles.length;
-  for (let i = 0; i < n - 4; i++) {
+  for (let i = 0; i < n - 5; i++) {
     const c = candles[i];
+    const bodySize = Math.abs(c.close - c.open);
+    const wickSize = c.high - c.low;
+    // OB 캔들 품질 필터: 몸통이 전체 범위의 50% 이상이어야 강한 OB
+    if (wickSize > 0 && bodySize / wickSize < OB_BODY_RATIO) continue;
+
     const isBear = c.close < c.open, isBull = c.close > c.open;
-    const next = candles.slice(i + 1, i + 4);
+    // 다음 5봉 확인 (기존 3봉 → 5봉으로 확장, 더 강한 이탈 요구)
+    const next = candles.slice(i + 1, i + 5);
+
+    // 상승 OB: 하락 캔들 후 강한 상승
     if (isBear) {
-      const allUp = next.every(nc => nc.close > nc.open);
-      const move  = (next[2].close - c.low) / c.low;
-      if (allUp && move >= OB_MOVE_THRESHOLD) {
+      const bullCount = next.filter(nc => nc.close > nc.open).length;
+      const move = next.length > 0 ? (Math.max(...next.map(nc => nc.high)) - c.close) / c.close : 0;
+      // 5봉 중 4봉 이상 상승 + 이탈폭 1.5% 이상
+      if (bullCount >= 3 && move >= OB_MOVE_THRESHOLD) {
         const top = c.open, bottom = c.low, mid = (top + bottom) / 2;
         let filled = false, partial = false;
-        for (let j = i + 4; j < n; j++) {
+        for (let j = i + 5; j < n; j++) {
           if (candles[j].low <= bottom) { filled = true; break; }
           if (candles[j].low <= mid)    { partial = true; }
         }
@@ -178,13 +196,15 @@ function detectOBs(candles: Candle[]): Zone[] {
           formedAt: c.time, barsAgo: n - 1 - i, filled, partial });
       }
     }
+
+    // 하락 OB: 상승 캔들 후 강한 하락
     if (isBull) {
-      const allDn = next.every(nc => nc.close < nc.open);
-      const move  = (c.high - next[2].close) / c.high;
-      if (allDn && move >= OB_MOVE_THRESHOLD) {
+      const bearCount = next.filter(nc => nc.close < nc.open).length;
+      const move = next.length > 0 ? (c.close - Math.min(...next.map(nc => nc.low))) / c.close : 0;
+      if (bearCount >= 3 && move >= OB_MOVE_THRESHOLD) {
         const top = c.high, bottom = c.open, mid = (top + bottom) / 2;
         let filled = false, partial = false;
-        for (let j = i + 4; j < n; j++) {
+        for (let j = i + 5; j < n; j++) {
           if (candles[j].high >= top) { filled = true; break; }
           if (candles[j].high >= mid) { partial = true; }
         }
@@ -196,14 +216,54 @@ function detectOBs(candles: Candle[]): Zone[] {
   return zones;
 }
 
+// ── 구간 중복 제거 (50% 이상 겹치면 더 강한 것만 유지) ─────────────────
+function deduplicateZones(zones: Zone[], price: number): Zone[] {
+  // 점수 계산 (크기 × 타입가중치 × 최신성)
+  const scored = zones.map(z => {
+    const sizeScore    = ((z.top - z.bottom) / price) * 100;
+    const typeScore    = z.type === "OB" ? 2.0 : 1.0;
+    const recencyScore = Math.max(0.2, 1 - z.barsAgo / 150);
+    const testScore    = z.partial ? 1.3 : 1.0;
+    return { zone: z, score: sizeScore * typeScore * recencyScore * testScore };
+  }).sort((a, b) => b.score - a.score); // 높은 점수 우선
+
+  const result: Zone[] = [];
+  for (const { zone } of scored) {
+    const hasOverlap = result.some(kept => {
+      const overlapTop = Math.min(kept.top, zone.top);
+      const overlapBot = Math.max(kept.bottom, zone.bottom);
+      if (overlapTop <= overlapBot) return false;
+      const overlapSize  = overlapTop - overlapBot;
+      const smallerSize  = Math.min(kept.top - kept.bottom, zone.top - zone.bottom);
+      return overlapSize / smallerSize > 0.5; // 50% 이상 겹침
+    });
+    if (!hasOverlap) result.push(zone);
+  }
+  return result;
+}
+
 // ── 필터 & 정렬 ────────────────────────────────────────────────────────────
 function processZones(candles: Candle[], currentPrice: number) {
-  const all = [...detectFVGs(candles), ...detectOBs(candles)].filter(z => !z.filled);
-  return {
-    resistance: all.filter(z => z.bottom > currentPrice).sort((a,b) => a.bottom - b.bottom).slice(0, MAX_ZONES),
-    support:    all.filter(z => z.top < currentPrice).sort((a,b) => b.top - a.top).slice(0, MAX_ZONES),
-    all:        all,
-  };
+  const raw = [
+    ...detectFVGs(candles, currentPrice),
+    ...detectOBs(candles),
+  ].filter(z => !z.filled);
+
+  // 1차: 중복 제거 (전체 대상)
+  const deduped = deduplicateZones(raw, currentPrice);
+
+  // 2차: 방향별 분리 → 상위 3개 선택
+  const resistance = deduplicateZones(
+    deduped.filter(z => z.bottom > currentPrice).sort((a, b) => a.bottom - b.bottom),
+    currentPrice,
+  ).slice(0, MAX_ZONES_PER_SIDE);
+
+  const support = deduplicateZones(
+    deduped.filter(z => z.top < currentPrice).sort((a, b) => b.top - a.top),
+    currentPrice,
+  ).slice(0, MAX_ZONES_PER_SIDE);
+
+  return { resistance, support, all: [...resistance, ...support] };
 }
 
 // ── Format ─────────────────────────────────────────────────────────────────
@@ -357,16 +417,7 @@ export default function FvgObPanel() {
       const rect = new RectPrimitive(chart, candleSeries, t1, t2, zone.bottom, zone.top, fillColor, borderColor);
       candleSeries.attachPrimitive(rect);
 
-      // 중간선(midpoint) 표시
-      const midLine = chart.addSeries(LineSeries, {
-        color: isBull ? "rgba(134,239,172,0.5)" : "rgba(253,164,175,0.5)",
-        lineWidth: 1, lineStyle: LineStyle.Dotted,
-        priceLineVisible: false, lastValueVisible: false, crosshairMarkerVisible: false,
-      });
-      midLine.setData([
-        { time: t1, value: zone.midpoint },
-        { time: t2, value: zone.midpoint },
-      ]);
+      // midpoint 점선 제거 — 노이즈 감소
     });
 
     chart.timeScale().fitContent();
