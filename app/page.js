@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import HomeDashboardExtras from "@/components/home/HomeDashboardExtras";
 import HomeSessionBoard    from "@/components/home/HomeSessionBoard";
-import EarningsCalendar    from "@/components/home/EarningsCalendar";
 import GeoRiskMonitor      from "@/components/home/GeoRiskMonitor";
 import SideEvents          from "@/components/sidebar/SideEvents";
 import SideMajorNews       from "@/components/sidebar/SideMajorNews";
