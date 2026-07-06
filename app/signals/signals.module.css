@@ -30,7 +30,7 @@
 
 .gaugeHint {
   font-size: 0.68rem;
-  color: rgb(100 116 139);
+  color: var(--text-3);
   text-align: center;
 }
 
@@ -40,7 +40,7 @@
   width: 100%;
   max-width: 200px;
   font-size: 0.62rem;
-  color: rgb(71 85 105);
+  color: var(--text-3);
   padding: 0 2px;
 }
 
@@ -59,9 +59,9 @@
   align-items: flex-start;
   gap: 0.5rem;
   padding: 0.6rem 0.7rem;
-  background: rgba(15 23 42 / 0.5);
-  border: 1px solid rgba(51 65 85 / 0.4);
-  border-radius: 8px;
+  background: var(--bg-0);
+  border: 1px solid var(--hair);
+  border-radius: var(--radius-md);
 }
 
 .macroIcon { font-size: 1.1rem; flex-shrink: 0; margin-top: 1px; }
@@ -70,7 +70,7 @@
 
 .macroLabel {
   font-size: 0.65rem;
-  color: rgb(100 116 139);
+  color: var(--text-3);
   letter-spacing: 0.03em;
   text-transform: uppercase;
 }
@@ -78,12 +78,12 @@
 .macroPrice {
   font-size: 0.88rem;
   font-weight: 700;
-  color: #f1f5f9;
+  color: var(--text);
   font-variant-numeric: tabular-nums;
 }
 
-.macroUp { font-size: 0.72rem; font-weight: 600; color: #4ade80; }
-.macroDn { font-size: 0.72rem; font-weight: 600; color: #f87171; }
+.macroUp { font-size: 0.72rem; font-weight: 600; color: var(--gr); }
+.macroDn { font-size: 0.72rem; font-weight: 600; color: var(--ro); }
 
 /* 시장 너비 */
 .breadthPanel { display: flex; flex-direction: column; }
@@ -100,13 +100,13 @@
 .breadthBar {
   display: flex;
   height: 22px;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   overflow: hidden;
   gap: 2px;
 }
 
-.breadthUp   { background: #22c55e; transition: width 0.5s ease; border-radius: 5px 0 0 5px; }
-.breadthDown { background: #ef4444; transition: width 0.5s ease; border-radius: 0 5px 5px 0; }
+.breadthUp   { background: var(--gr); transition: width 0.5s ease; border-radius: 5px 0 0 5px; }
+.breadthDown { background: var(--ro); transition: width 0.5s ease; border-radius: 0 5px 5px 0; }
 
 .breadthLabels {
   display: flex;
@@ -119,5 +119,5 @@
   display: flex;
   justify-content: space-between;
   font-size: 0.68rem;
-  color: rgb(100 116 139);
+  color: var(--text-3);
 }

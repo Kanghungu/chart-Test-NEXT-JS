@@ -34,7 +34,7 @@
 .title {
   font-size: 1.1rem;
   font-weight: 800;
-  color: #f8fafc;
+  color: var(--text);
 }
 
 .subtitle {
@@ -52,7 +52,7 @@
 .tabs {
   display: flex;
   gap: 0.2rem;
-  background: rgba(13, 26, 46, 0.8);
+  background: rgba(255, 255, 255, 0.04);
   border: 1px solid var(--border-subtle);
   border-radius: 999px;
   padding: 0.18rem;
@@ -72,7 +72,7 @@
 }
 
 .tabActive {
-  background: rgba(56, 189, 248, 0.18);
+  background: rgba(99, 102, 241, 0.18);
   color: var(--accent-blue);
 }
 
@@ -108,18 +108,18 @@
   font-size: 0.65rem;
   font-weight: 600;
   color: var(--muted);
-  background: rgba(51, 65, 85, 0.4);
+  background: rgba(255, 255, 255, 0.06);
   border-radius: 999px;
   padding: 0.1rem 0.45rem;
 }
 
 .daysTagToday {
-  background: rgba(56, 189, 248, 0.15);
+  background: rgba(99, 102, 241, 0.15);
   color: var(--accent-blue);
 }
 
 .daysTagSoon {
-  background: rgba(251, 191, 36, 0.12);
+  background: rgba(245, 158, 11, 0.12);
   color: var(--accent-amber);
 }
 
@@ -144,11 +144,11 @@
 }
 
 .usCard {
-  background: linear-gradient(135deg, rgba(56, 189, 248, 0.04), rgba(13, 26, 46, 0.9));
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.05), var(--bg-1));
 }
 
 .krCard {
-  background: linear-gradient(135deg, rgba(129, 140, 248, 0.04), rgba(13, 26, 46, 0.9));
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.05), var(--bg-1));
 }
 
 .entryTop {
@@ -168,7 +168,7 @@
 .entrySymbol {
   font-size: 0.85rem;
   font-weight: 800;
-  color: #f8fafc;
+  color: var(--text);
 }
 
 .entryName {
@@ -194,30 +194,30 @@
 }
 
 .bmoBadge {
-  background: rgba(56, 189, 248, 0.15);
-  color: #7dd3fc;
+  background: rgba(99, 102, 241, 0.15);
+  color: var(--brand);
 }
 
 .amcBadge {
-  background: rgba(129, 140, 248, 0.15);
-  color: #a5b4fc;
+  background: rgba(99, 102, 241, 0.15);
+  color: var(--brand);
 }
 
 .tbdBadge {
-  background: rgba(51, 65, 85, 0.5);
+  background: rgba(255, 255, 255, 0.08);
   color: var(--muted);
 }
 
 .usBadge {
-  background: rgba(56, 189, 248, 0.12);
-  color: #7dd3fc;
-  border: 1px solid rgba(56, 189, 248, 0.2);
+  background: rgba(99, 102, 241, 0.12);
+  color: var(--brand);
+  border: 1px solid rgba(99, 102, 241, 0.25);
 }
 
 .krBadge {
-  background: rgba(129, 140, 248, 0.12);
-  color: #a5b4fc;
-  border: 1px solid rgba(129, 140, 248, 0.2);
+  background: rgba(99, 102, 241, 0.12);
+  color: var(--brand);
+  border: 1px solid rgba(99, 102, 241, 0.25);
 }
 
 .entryStats {

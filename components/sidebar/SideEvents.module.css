@@ -1,13 +1,13 @@
 .panel {
   border-radius: var(--radius-lg);
   border: 1px solid var(--panel-border);
-  background: var(--panel-bg-soft);
+  background: var(--bg-1);
   padding: 0.8rem;
   box-shadow: var(--panel-shadow);
 }
 
 .title {
-  color: #f8fafc;
+  color: var(--text);
   font-weight: 800;
   font-size: 0.95rem;
   margin-bottom: 0.6rem;
@@ -20,10 +20,10 @@
 }
 
 .card {
-  border: 1px solid rgb(51 65 85 / 0.8);
-  border-radius: 0.7rem;
+  border: 1px solid var(--hair);
+  border-radius: var(--radius-md);
   padding: 0.56rem;
-  background: var(--surface-raised);
+  background: var(--surface-3);
 }
 
 .topRow {
@@ -34,19 +34,19 @@
 }
 
 .country {
-  color: #93c5fd;
+  color: var(--brand);
   font-size: 0.72rem;
   font-weight: 700;
 }
 
 .impact {
-  color: #fcd34d;
+  color: var(--am);
   font-size: 0.68rem;
   font-weight: 700;
 }
 
 .eventTitle {
-  color: #e2e8f0;
+  color: var(--text);
   font-size: 0.78rem;
   line-height: 1.35;
   display: -webkit-box;

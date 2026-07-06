@@ -2,21 +2,12 @@
   border: 1px solid var(--hair);
   border-radius: 14px;
   background: var(--glass);
-  backdrop-filter: blur(18px) saturate(140%);
   padding: 1.25rem 1.35rem;
   display: flex;
   flex-direction: column;
   gap: 1rem;
   position: relative;
   overflow: hidden;
-}
-.panel::before {
-  content: "";
-  position: absolute;
-  left: 10%; right: 10%; top: 0;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(125,211,252,0.5), transparent);
-  pointer-events: none;
 }
 
 /* ── Header ──────────────────────────────────────────────────────────────── */
@@ -31,27 +22,24 @@
   font-weight: 800;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  background: linear-gradient(90deg, var(--cy), var(--vi));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: var(--brand);
   margin-bottom: 0.2rem;
 }
-.title { font-size: 1.2rem; font-weight: 700; color: #f1f5f9; margin-bottom: 0.15rem; }
+.title { font-size: 1.2rem; font-weight: 700; color: var(--text); margin-bottom: 0.15rem; }
 .hint  { font-size: 0.74rem; color: var(--text-2); }
 
 .refreshBtn {
   padding: 0.28rem 0.65rem;
   border-radius: 5px;
   border: 1px solid var(--hair);
-  background: rgba(125,211,252,0.04);
+  background: rgba(99, 102, 241, 0.04);
   color: var(--text-2);
   font-size: 0.74rem;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: border-color 0.15s, color 0.15s, background-color 0.15s;
   flex-shrink: 0;
 }
-.refreshBtn:hover:not(:disabled) { border-color: var(--hair-2); color: var(--cy); }
+.refreshBtn:hover:not(:disabled) { border-color: var(--hair-2); color: var(--brand); }
 .refreshBtn:disabled { opacity: 0.5; cursor: not-allowed; }
 
 /* ── Controls ────────────────────────────────────────────────────────────── */
@@ -74,10 +62,10 @@
   font-size: 0.72rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: border-color 0.15s, color 0.15s, background-color 0.15s;
 }
 .ctrlBtn:hover { border-color: var(--hair-2); color: var(--text); }
-.ctrlBtnActive { background: rgba(125,211,252,0.08); }
+.ctrlBtnActive { background: rgba(99, 102, 241, 0.1); }
 
 /* ── Legend ──────────────────────────────────────────────────────────────── */
 .legend {
@@ -105,8 +93,8 @@
 }
 .spinner {
   width: 16px; height: 16px;
-  border: 2px solid rgba(125,211,252,0.2);
-  border-top-color: var(--cy);
+  border: 2px solid rgba(99, 102, 241, 0.2);
+  border-top-color: var(--brand);
   border-radius: 50%;
   animation: spin 0.75s linear infinite;
   flex-shrink: 0;
@@ -120,10 +108,10 @@
   font-size: 0.72rem; font-weight: 600;
   color: var(--text-2); cursor: pointer;
   background: transparent;
-  transition: all 0.15s;
+  transition: color 0.15s, background-color 0.15s;
 }
-.viewBtn:hover { color: var(--text); background: rgba(125,211,252,0.04); }
-.viewBtnActive { color: var(--cy); background: rgba(125,211,252,0.1); }
+.viewBtn:hover { color: var(--text); background: rgba(99, 102, 241, 0.04); }
+.viewBtnActive { color: var(--brand); background: rgba(99, 102, 241, 0.1); }
 
 /* ── Legend ─────────────────────────────────────────────────────────────── */
 .legendBox {
@@ -141,7 +129,7 @@
   border: 1px solid var(--hair);
   border-radius: 10px;
   overflow: hidden;
-  background: rgba(6,14,32,0.6);
+  background: var(--bg-0);
 }
 .chartInner {
   width: 100%;
@@ -154,7 +142,7 @@
   gap: 1rem;
   padding: 0.65rem 1rem;
   border-top: 1px solid var(--hair);
-  background: rgba(6,14,32,0.8);
+  background: var(--bg-0);
   font-size: 0.7rem;
 }
 .summaryGroup {
@@ -225,8 +213,8 @@
   gap: 0.5rem;
   padding: 0.6rem 0.75rem;
   border-radius: 7px;
-  border: 1px solid rgba(125,211,252,0.2);
-  background: rgba(125,211,252,0.04);
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  background: rgba(99, 102, 241, 0.04);
   margin: 0.2rem 0;
 }
 .currentPriceDot {
@@ -266,16 +254,16 @@
 .zoneRow:hover { background: rgba(255,255,255,0.025); }
 
 .zoneRowBull {
-  background: rgba(74,222,128,0.04);
-  border-color: rgba(74,222,128,0.1);
+  background: rgba(34, 197, 94, 0.04);
+  border-color: rgba(34, 197, 94, 0.12);
 }
-.zoneRowBull:hover { border-color: rgba(74,222,128,0.25); }
+.zoneRowBull:hover { border-color: rgba(34, 197, 94, 0.28); }
 
 .zoneRowBear {
-  background: rgba(248,113,113,0.04);
-  border-color: rgba(248,113,113,0.1);
+  background: rgba(244, 63, 94, 0.04);
+  border-color: rgba(244, 63, 94, 0.12);
 }
-.zoneRowBear:hover { border-color: rgba(248,113,113,0.25); }
+.zoneRowBear:hover { border-color: rgba(244, 63, 94, 0.28); }
 
 /* 배지 묶음 */
 .zoneBadges { display: flex; align-items: center; gap: 0.2rem; }
@@ -288,20 +276,22 @@
   padding: 0.14rem 0.38rem;
   border-radius: 3px;
 }
+/* FVG — brand-accented (primary zone type) */
 .typeFvg {
-  color: var(--cy);
-  background: rgba(125,211,252,0.12);
-  border: 1px solid rgba(125,211,252,0.28);
+  color: var(--brand);
+  background: rgba(99, 102, 241, 0.12);
+  border: 1px solid rgba(99, 102, 241, 0.3);
 }
+/* OB — neutral (secondary zone type), kept visually distinct from FVG without adding a new hue */
 .typeOb {
-  color: var(--vi);
-  background: rgba(196,181,253,0.12);
-  border: 1px solid rgba(196,181,253,0.28);
+  color: var(--text-2);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--hair-2);
 }
 
 .dirArrow { font-size: 0.7rem; font-weight: 900; }
-.dirUp   { color: #4ade80; }
-.dirDown { color: #f87171; }
+.dirUp   { color: var(--gr); }
+.dirDown { color: var(--ro); }
 
 /* 가격 범위 */
 .zoneRange {
@@ -311,7 +301,7 @@
   font-family: var(--f-mono);
   font-variant-numeric: tabular-nums;
   font-size: 0.74rem;
-  color: #e2e8f0;
+  color: var(--text);
   overflow: hidden;
 }
 .zoneTop { font-weight: 600; }
@@ -326,8 +316,8 @@
   font-variant-numeric: tabular-nums;
   text-align: right;
 }
-.zoneDistUp { color: #f87171; }   /* 현재가에서 위쪽 = 저항 = 빨강 */
-.zoneDistDn { color: #4ade80; }   /* 현재가에서 아래 = 지지 = 초록 */
+.zoneDistUp { color: var(--ro); }   /* 현재가에서 위쪽 = 저항 = 빨강 */
+.zoneDistDn { color: var(--gr); }   /* 현재가에서 아래 = 지지 = 초록 */
 
 /* 형성 시간 */
 .zoneFormed {
@@ -347,8 +337,8 @@
   border-radius: 3px;
   text-align: center;
 }
-.statusOpen    { color: var(--gr); background: rgba(134,239,172,0.1); border: 1px solid rgba(134,239,172,0.25); }
-.statusPartial { color: var(--am); background: rgba(252,211,77,0.1);  border: 1px solid rgba(252,211,77,0.25); }
+.statusOpen    { color: var(--gr); background: rgba(34, 197, 94, 0.1); border: 1px solid rgba(34, 197, 94, 0.28); }
+.statusPartial { color: var(--am); background: rgba(245, 158, 11, 0.1);  border: 1px solid rgba(245, 158, 11, 0.28); }
 
 /* ── Column header ───────────────────────────────────────────────────────── */
 .colHeader {

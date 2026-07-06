@@ -29,13 +29,13 @@
 }
 
 .title {
-  color: #f8fafc;
+  color: var(--text);
   font-size: 1.05rem;
   font-weight: 800;
 }
 
 .description {
-  color: #cbd5e1;
+  color: var(--text-2);
   font-size: 0.82rem;
   line-height: 1.55;
   max-width: 52rem;
@@ -49,15 +49,15 @@
 
 .metaPill {
   border-radius: 999px;
-  border: 1px solid rgb(51 65 85 / 0.9);
-  background: rgb(15 23 42 / 0.75);
-  color: #cbd5e1;
+  border: 1px solid var(--hair-2);
+  background: var(--bg-1);
+  color: var(--text-2);
   font-size: 0.72rem;
   padding: 0.25rem 0.65rem;
 }
 
 .metaPill strong {
-  color: #f8fafc;
+  color: var(--text);
 }
 
 .tagRow {
@@ -71,9 +71,9 @@
   align-items: center;
   gap: 0.35rem;
   border-radius: 999px;
-  border: 1px solid rgb(74 222 128 / 0.35);
-  background: rgb(22 101 52 / 0.2);
-  color: #bbf7d0;
+  border: 1px solid rgba(34, 197, 94, 0.35);
+  background: rgba(34, 197, 94, 0.12);
+  color: var(--gr);
   font-size: 0.78rem;
   font-weight: 700;
   padding: 0.35rem 0.65rem;
@@ -81,14 +81,14 @@
 
 .tagCount {
   border-radius: 999px;
-  background: rgb(2 6 23 / 0.55);
-  color: #ecfccb;
+  background: var(--bg-0);
+  color: var(--gr);
   font-size: 0.72rem;
   padding: 0.1rem 0.45rem;
 }
 
 .tagLabel {
-  color: #dcfce7;
+  color: var(--gr);
 }
 
 .categoryBlock {
@@ -98,7 +98,7 @@
 }
 
 .categoryTitle {
-  color: #94a3b8;
+  color: var(--text-3);
   font-size: 0.72rem;
   font-weight: 700;
   letter-spacing: 0.08em;
@@ -112,19 +112,19 @@
 
 .categoryChip {
   border-radius: 0.65rem;
-  border: 1px solid rgb(51 65 85 / 0.9);
-  background: rgb(15 23 42 / 0.72);
-  color: #cbd5e1;
+  border: 1px solid var(--hair-2);
+  background: var(--bg-1);
+  color: var(--text-2);
   font-size: 0.72rem;
   padding: 0.3rem 0.55rem;
 }
 
 .categoryChip strong {
-  color: #f8fafc;
+  color: var(--text);
 }
 
 .empty {
-  color: #94a3b8;
+  color: var(--text-3);
   font-size: 0.82rem;
   line-height: 1.55;
 }

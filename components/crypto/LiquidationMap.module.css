@@ -1,9 +1,8 @@
 /* ── Panel ───────────────────────────────────────────────────────────────── */
 .panel {
-  border: 1px solid rgba(32, 42, 68, 0.92);
+  border: 1px solid var(--hair-2);
   border-radius: 6px;
-  background: #03070e;
-  box-shadow: 0 18px 50px rgba(0 0 0 / 0.38);
+  background: var(--bg-0);
   padding: 1.1rem;
   display: flex;
   flex-direction: column;
@@ -23,20 +22,17 @@
   font-weight: 800;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  background: var(--gradient-accent);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: var(--brand);
   margin-bottom: 0.25rem;
 }
 .title {
-  color: #f8fafc;
+  color: var(--text);
   font-size: 1.25rem;
   font-weight: 700;
   margin-bottom: 0.2rem;
 }
 .hint {
-  color: rgb(148 163 184);
+  color: var(--text-2);
   font-size: 0.8rem;
 }
 
@@ -59,30 +55,29 @@
   border-radius: 50%;
 }
 .ws_live {
-  color: #4ade80;
-  background: rgba(74 222 128 / 0.08);
-  border-color: rgba(74 222 128 / 0.25);
+  color: var(--gr);
+  background: rgba(34, 197, 94, 0.08);
+  border-color: rgba(34, 197, 94, 0.25);
 }
 .ws_live .wsDot {
-  background: #4ade80;
-  box-shadow: 0 0 6px #4ade80;
+  background: var(--gr);
   animation: pulse 1.4s ease-in-out infinite;
 }
 .ws_connecting {
-  color: #fbbf24;
-  background: rgba(251 191 36 / 0.08);
-  border-color: rgba(251 191 36 / 0.25);
+  color: var(--am);
+  background: rgba(245, 158, 11, 0.08);
+  border-color: rgba(245, 158, 11, 0.25);
 }
 .ws_connecting .wsDot {
-  background: #fbbf24;
+  background: var(--am);
   animation: pulse 0.8s ease-in-out infinite;
 }
 .ws_error {
-  color: #f87171;
-  background: rgba(248 113 113 / 0.08);
-  border-color: rgba(248 113 113 / 0.25);
+  color: var(--ro);
+  background: rgba(244, 63, 94, 0.08);
+  border-color: rgba(244, 63, 94, 0.25);
 }
-.ws_error .wsDot { background: #f87171; }
+.ws_error .wsDot { background: var(--ro); }
 
 @keyframes pulse {
   0%, 100% { opacity: 1; }
@@ -105,7 +100,7 @@
   font-size: 0.72rem;
   font-weight: 600;
   letter-spacing: 0.06em;
-  color: rgb(100 116 139);
+  color: var(--text-3);
   text-transform: uppercase;
   white-space: nowrap;
 }
@@ -116,22 +111,22 @@
 .ctrlBtn {
   padding: 0.3rem 0.65rem;
   border-radius: 6px;
-  border: 1px solid rgb(51 65 85);
-  background: rgba(15 23 42 / 0.6);
-  color: rgb(148 163 184);
+  border: 1px solid var(--hair-2);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--text-2);
   font-size: 0.75rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: border-color 0.15s ease, color 0.15s ease, background-color 0.15s ease;
 }
 .ctrlBtn:hover {
-  border-color: rgb(100 116 139);
-  color: #e2e8f0;
+  border-color: var(--text-2);
+  color: var(--text);
 }
 .ctrlBtnActive {
-  border-color: rgba(56 189 248 / 0.5);
-  background: rgba(56 189 248 / 0.1);
-  color: #38bdf8;
+  border-color: rgba(99, 102, 241, 0.5);
+  background: rgba(99, 102, 241, 0.1);
+  color: var(--brand);
 }
 
 /* ── Stats ───────────────────────────────────────────────────────────────── */
@@ -146,8 +141,8 @@
   gap: 0.2rem;
   padding: 0.6rem 1rem;
   border-radius: 8px;
-  border: 1px solid rgb(30 41 59);
-  background: rgba(15 23 42 / 0.5);
+  border: 1px solid var(--hair);
+  background: rgba(255, 255, 255, 0.02);
   min-width: 90px;
 }
 .statLabel {
@@ -155,26 +150,26 @@
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: rgb(100 116 139);
+  color: var(--text-3);
 }
 .statValue {
   font-size: 1rem;
   font-weight: 700;
-  color: #f1f5f9;
+  color: var(--text);
   font-variant-numeric: tabular-nums;
 }
-.statLong  .statValue { color: #f87171; }
-.statShort .statValue { color: #4ade80; }
+.statLong  .statValue { color: var(--ro); }
+.statShort .statValue { color: var(--gr); }
 
 /* ── Chart container ─────────────────────────────────────────────────────── */
 .chartWrap {
   display: flex;
   gap: 0.6rem;
   align-items: stretch;
-  border: 1px solid rgba(28 39 64 / 0.85);
+  border: 1px solid var(--hair-2);
   border-radius: 4px;
   overflow: hidden;
-  background: #020610;
+  background: var(--bg-0);
 }
 
 /* ── Legend bar (left side) ──────────────────────────────────────────────── */
@@ -195,6 +190,9 @@
   text-transform: uppercase;
   writing-mode: horizontal-tb;
 }
+/* NOTE: these two match the heatmap's canvas-rendered color scale (drawn in
+   LiquidationMap.tsx) rather than the UI accent palette — left as-is so the
+   legend text matches the actual heatmap colors. */
 .legendHigh { color: #fde725; }
 .legendLow  { color: rgb(59 28 90); }
 
@@ -214,17 +212,17 @@
   justify-content: center;
   gap: 0.75rem;
   padding: 1.5rem;
-  color: rgb(100 116 139);
+  color: var(--text-3);
   font-size: 0.85rem;
-  border: 1px dashed rgba(51 65 85 / 0.4);
+  border: 1px dashed var(--hair);
   border-radius: 8px;
 }
 
 .spinner {
   width: 18px;
   height: 18px;
-  border: 2px solid rgba(56 189 248 / 0.2);
-  border-top-color: #38bdf8;
+  border: 2px solid rgba(99, 102, 241, 0.2);
+  border-top-color: var(--brand);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
   flex-shrink: 0;
@@ -237,8 +235,8 @@
 /* ── Info note ───────────────────────────────────────────────────────────── */
 .infoNote {
   font-size: 0.72rem;
-  color: rgb(71 85 105);
+  color: var(--text-3);
   line-height: 1.5;
   padding-top: 0.25rem;
-  border-top: 1px solid rgba(51 65 85 / 0.4);
+  border-top: 1px solid var(--hair);
 }

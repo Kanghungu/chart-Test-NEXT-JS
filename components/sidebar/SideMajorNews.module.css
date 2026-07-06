@@ -1,9 +1,7 @@
 .panel {
   border-radius: var(--radius-lg);
-  border: 1px solid rgb(59 130 246 / 0.25);
-  background:
-    radial-gradient(circle at 0% 0%, rgb(59 130 246 / 0.12), transparent 45%),
-    var(--panel-bg-soft);
+  border: 1px solid var(--hair);
+  background: var(--bg-1);
   padding: 0.8rem;
   box-shadow: var(--panel-shadow);
   display: flex;
@@ -19,7 +17,7 @@
 }
 
 .title {
-  color: #f8fafc;
+  color: var(--text);
   font-weight: 800;
   font-size: 0.95rem;
 }
@@ -46,10 +44,10 @@
   display: flex;
   gap: 0.45rem;
   align-items: flex-start;
-  border: 1px solid rgb(51 65 85 / 0.75);
-  border-radius: 0.65rem;
+  border: 1px solid var(--hair);
+  border-radius: var(--radius-md);
   padding: 0.45rem 0.5rem;
-  background: var(--surface-raised);
+  background: var(--surface-3);
 }
 
 .badgeKr,
@@ -58,21 +56,21 @@
   font-size: 0.62rem;
   font-weight: 800;
   letter-spacing: 0.04em;
-  border-radius: 0.35rem;
+  border-radius: var(--radius-sm);
   padding: 0.12rem 0.32rem;
   margin-top: 0.1rem;
 }
 
 .badgeKr {
-  color: #bae6fd;
-  border: 1px solid rgb(56 189 248 / 0.35);
-  background: rgb(14 165 233 / 0.12);
+  color: var(--brand);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  background: rgba(99, 102, 241, 0.1);
 }
 
 .badgeUs {
-  color: #c4b5fd;
-  border: 1px solid rgb(167 139 250 / 0.35);
-  background: rgb(139 92 246 / 0.12);
+  color: var(--text-2);
+  border: 1px solid var(--hair-2);
+  background: rgba(255, 255, 255, 0.04);
 }
 
 .body {
@@ -84,7 +82,7 @@
 }
 
 .link {
-  color: #e2e8f0;
+  color: var(--text);
   font-size: 0.76rem;
   font-weight: 650;
   line-height: 1.35;
@@ -96,12 +94,12 @@
 }
 
 .link:hover {
-  color: #93c5fd;
+  color: var(--brand);
   text-decoration: underline;
 }
 
 .plainTitle {
-  color: #e2e8f0;
+  color: var(--text);
   font-size: 0.76rem;
   font-weight: 650;
   line-height: 1.35;
@@ -131,13 +129,13 @@
   flex-wrap: wrap;
   gap: 0.5rem;
   padding-top: 0.25rem;
-  border-top: 1px solid rgb(51 65 85 / 0.6);
+  border-top: 1px solid var(--hair);
 }
 
 .footerLink {
   font-size: 0.7rem;
   font-weight: 700;
-  color: #7dd3fc;
+  color: var(--brand);
   text-decoration: none;
 }
 

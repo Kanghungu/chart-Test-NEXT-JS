@@ -21,7 +21,7 @@
 }
 
 .title {
-  color: #f8fafc;
+  color: var(--text);
   font-size: clamp(1.2rem, 2vw, 1.7rem);
   font-weight: 800;
   line-height: 1.15;
@@ -66,16 +66,16 @@
 }
 
 .panelTitle {
-  color: #f8fafc;
+  color: var(--text);
   font-size: 0.98rem;
   font-weight: 700;
 }
 
 .badge {
   border-radius: 999px;
-  border: 1px solid rgb(56 189 248 / 0.25);
-  background: rgb(14 165 233 / 0.12);
-  color: #7dd3fc;
+  border: 1px solid rgba(99, 102, 241, 0.25);
+  background: rgba(99, 102, 241, 0.12);
+  color: var(--brand);
   font-size: 0.68rem;
   font-weight: 800;
   letter-spacing: 0.06em;
@@ -94,7 +94,7 @@
 .eventCard {
   border: 1px solid var(--border-subtle);
   border-radius: 0.65rem;
-  background: rgba(15, 23, 42, 0.55);
+  background: var(--bg-1);
   padding: 0.7rem 0.75rem;
   transition: border-color 0.2s ease;
   min-width: 0;
@@ -116,7 +116,7 @@
 
 .sessionCity,
 .eventTitle {
-  color: #f8fafc;
+  color: var(--text);
   font-size: 0.82rem;
   font-weight: 700;
   line-height: 1.35;
@@ -143,18 +143,18 @@
 }
 
 .sessionLive {
-  background: rgb(74 222 128 / 0.14);
-  color: #86efac;
+  background: rgba(34, 197, 94, 0.14);
+  color: var(--gr);
 }
 
 .sessionNext {
-  background: rgb(125 211 252 / 0.14);
-  color: #bae6fd;
+  background: rgba(99, 102, 241, 0.14);
+  color: var(--brand);
 }
 
 .sessionClosed {
-  background: rgb(71 85 105 / 0.4);
-  color: #cbd5e1;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-2);
 }
 
 .metricGrid {
@@ -173,7 +173,7 @@
 .metricValue {
   display: block;
   margin-top: 0.25rem;
-  color: #f8fafc;
+  color: var(--text);
   font-size: 0.96rem;
   font-weight: 800;
 }
@@ -188,15 +188,15 @@
 }
 
 .toneUp {
-  color: #4ade80;
+  color: var(--gr);
 }
 
 .toneDown {
-  color: #f87171;
+  color: var(--ro);
 }
 
 .toneNeutral {
-  color: #93c5fd;
+  color: var(--brand);
 }
 
 .eventTop {
@@ -207,13 +207,13 @@
 }
 
 .eventCountry {
-  color: #93c5fd;
+  color: var(--brand);
   font-size: 0.74rem;
   font-weight: 700;
 }
 
 .eventImpact {
-  color: #fcd34d;
+  color: var(--am);
   font-size: 0.7rem;
   font-weight: 800;
 }
@@ -237,7 +237,7 @@
 }
 
 .riskStripTitle {
-  color: #e2e8f0;
+  color: var(--text);
   font-size: 0.92rem;
   font-weight: 800;
 }
@@ -251,7 +251,7 @@
 .riskCell {
   border: 1px solid var(--border-subtle);
   border-radius: 0.75rem;
-  background: rgba(15, 23, 42, 0.55);
+  background: var(--bg-1);
   padding: 0.65rem 0.7rem;
   display: flex;
   flex-direction: column;
@@ -271,7 +271,7 @@
 }
 
 .riskPrice {
-  color: #f8fafc;
+  color: var(--text);
   font-size: 0.95rem;
   font-weight: 800;
 }

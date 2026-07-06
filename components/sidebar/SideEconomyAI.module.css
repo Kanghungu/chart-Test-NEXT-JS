@@ -1,7 +1,7 @@
 .panel {
   border-radius: var(--radius-lg);
-  border: 1px solid rgb(59 130 246 / 0.3);
-  background: linear-gradient(135deg, rgb(15 23 42 / 0.9), rgb(30 41 59 / 0.9));
+  border: 1px solid var(--hair);
+  background: var(--bg-1);
   padding: 0.8rem;
   box-shadow: var(--panel-shadow);
   display: flex;
@@ -12,7 +12,7 @@
 .title {
   font-size: 0.95rem;
   font-weight: 700;
-  color: #f8fafc;
+  color: var(--text);
 }
 
 .desc {
@@ -27,11 +27,11 @@
 }
 
 .quickBtn {
-  border: 1px solid rgb(71 85 105);
-  background: rgb(15 23 42 / 0.7);
-  color: #e2e8f0;
+  border: 1px solid var(--hair-2);
+  background: transparent;
+  color: var(--text);
   font-size: 0.72rem;
-  border-radius: 0.5rem;
+  border-radius: var(--radius-md);
   padding: 0.48rem 0.58rem;
   text-align: left;
   cursor: pointer;
@@ -40,18 +40,20 @@
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
   overflow: hidden;
+  transition: background-color .15s, border-color .15s;
 }
 
 .quickBtn:hover {
-  background: rgb(30 41 59 / 0.9);
+  background: rgba(255, 255, 255, 0.04);
+  border-color: var(--text-2);
 }
 
 .input {
   min-height: 88px;
-  border-radius: 0.6rem;
-  border: 1px solid rgb(71 85 105);
-  background: rgb(2 6 23);
-  color: #f8fafc;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--hair-2);
+  background: var(--bg-0);
+  color: var(--text);
   font-size: 0.8rem;
   line-height: 1.45;
   padding: 0.65rem 0.7rem;
@@ -60,18 +62,23 @@
 }
 
 .input:focus {
-  border-color: rgb(59 130 246);
+  border-color: var(--brand);
 }
 
 .submitBtn {
   border: none;
-  border-radius: 0.65rem;
-  background: linear-gradient(90deg, #2563eb, #4f46e5);
+  border-radius: var(--radius-md);
+  background: var(--brand);
   color: white;
   font-size: 0.8rem;
   font-weight: 700;
   padding: 0.6rem 0.7rem;
   cursor: pointer;
+  transition: background-color .15s;
+}
+
+.submitBtn:hover:not(:disabled) {
+  background: #5457e5;
 }
 
 .submitBtn:disabled {
@@ -80,20 +87,20 @@
 }
 
 .error {
-  color: #fca5a5;
+  color: var(--ro);
   font-size: 0.74rem;
 }
 
 .answerBox {
-  border-radius: 0.7rem;
-  border: 1px solid rgb(71 85 105);
-  background: rgb(2 6 23 / 0.8);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--hair-2);
+  background: var(--bg-0);
   padding: 0.75rem;
   min-height: 108px;
 }
 
 .answerText {
-  color: #e2e8f0;
+  color: var(--text);
   font-size: 0.82rem;
   line-height: 1.55;
   white-space: pre-wrap;

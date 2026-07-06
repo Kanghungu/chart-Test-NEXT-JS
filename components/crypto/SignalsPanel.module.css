@@ -7,14 +7,6 @@
   overflow: hidden;
 }
 
-.panel::before {
-  content: "";
-  position: absolute;
-  inset: 0 0 auto 0;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(56, 189, 248, 0.4), transparent);
-}
-
 /* ── Header ────────────────────────────────────────────────────────────── */
 .header {
   display: flex;
@@ -73,13 +65,11 @@
   height: 7px;
   border-radius: 50%;
   background: var(--accent-green);
-  box-shadow: 0 0 8px var(--accent-green);
 }
 
 .scanDotActive {
   animation: pulse 1.2s ease-in-out infinite;
   background: var(--accent-amber);
-  box-shadow: 0 0 10px var(--accent-amber);
 }
 
 @keyframes pulse {
@@ -96,7 +86,7 @@
   padding: 0.4rem 0.85rem;
   border-radius: var(--radius-sm);
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
   letter-spacing: 0.05em;
 }
 
@@ -141,9 +131,9 @@
 }
 
 .tone_neutral { color: var(--muted-strong); }
-.tone_bullish { color: var(--accent-green); box-shadow: 0 0 16px rgba(74, 222, 128, 0.08) inset; }
-.tone_bearish { color: var(--accent-red);   box-shadow: 0 0 16px rgba(248, 113, 113, 0.08) inset; }
-.tone_strong  { color: var(--accent-amber); box-shadow: 0 0 16px rgba(251, 191, 36, 0.08) inset; }
+.tone_bullish { color: var(--accent-green); }
+.tone_bearish { color: var(--accent-red); }
+.tone_strong  { color: var(--accent-amber); }
 
 .summaryLabel {
   font-family: var(--font-mono);
@@ -195,7 +185,7 @@
   padding: 0.4rem 0.9rem;
   border-radius: 999px;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
   letter-spacing: 0.01em;
 }
 
@@ -225,7 +215,7 @@
   background: var(--surface-1);
   color: var(--muted);
   cursor: pointer;
-  transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+  transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
   letter-spacing: 0.04em;
 }
 
@@ -235,10 +225,9 @@
 }
 
 .togglePillOn {
-  color: var(--accent-cyan, #22d3ee);
-  border-color: color-mix(in oklch, var(--accent-cyan, #22d3ee) 55%, var(--border-subtle));
-  background: color-mix(in oklch, var(--accent-cyan, #22d3ee) 10%, var(--surface-1));
-  box-shadow: 0 0 0 1px color-mix(in oklch, var(--accent-cyan, #22d3ee) 20%, transparent);
+  color: var(--brand);
+  border-color: color-mix(in oklch, var(--brand) 55%, var(--border-subtle));
+  background: color-mix(in oklch, var(--brand) 10%, var(--surface-1));
 }
 
 /* ── 정렬·심볼 그룹 ─────────────────────────────────────────────────────── */
@@ -287,7 +276,6 @@
   font-weight: 800;
   letter-spacing: 0.06em;
   color: var(--tint, #94a3b8);
-  text-shadow: 0 0 20px color-mix(in oklch, var(--tint, #64748b) 40%, transparent);
 }
 
 .groupCount {
@@ -310,34 +298,30 @@
   background: var(--accent-blue-dim);
   color: var(--accent-blue);
   border-color: var(--accent-blue);
-  box-shadow: 0 0 12px rgba(56, 189, 248, 0.15);
 }
 
 .pill_BULLISH.pillActive {
   background: var(--accent-green-dim);
   color: var(--accent-green);
   border-color: var(--accent-green);
-  box-shadow: 0 0 12px rgba(74, 222, 128, 0.18);
 }
 
 .pill_BEARISH.pillActive {
   background: var(--accent-red-dim);
   color: var(--accent-red);
   border-color: var(--accent-red);
-  box-shadow: 0 0 12px rgba(248, 113, 113, 0.18);
 }
 
-/* Predictive pill — teal accent + dashed border */
+/* Predictive pill — brand accent + dashed border */
 .pillPredict {
   border-style: dashed;
-  color: #2dd4bf;
+  color: var(--brand);
 }
 .pillPredict.pillActive {
-  background: rgba(45, 212, 191, 0.1);
-  color: #2dd4bf;
-  border-color: #2dd4bf;
+  background: rgba(99, 102, 241, 0.1);
+  color: var(--brand);
+  border-color: var(--brand);
   border-style: dashed;
-  box-shadow: 0 0 12px rgba(45, 212, 191, 0.2);
 }
 
 /* ── Body / states ─────────────────────────────────────────────────────── */
@@ -401,7 +385,7 @@
   border-radius: var(--radius-md);
   padding: 1.1rem 1.1rem 1rem 1.35rem;
   overflow: hidden;
-  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
   cursor: pointer;
   outline: none;
 }
@@ -453,18 +437,13 @@
 }
 
 .card:hover {
-  transform: translateY(-2px);
   border-color: var(--tint);
-  box-shadow:
-    0 12px 32px -8px rgba(0, 0, 0, 0.5),
-    0 0 18px -4px color-mix(in oklch, var(--tint) 45%, transparent);
+  box-shadow: 0 12px 32px -8px rgba(0, 0, 0, 0.5);
 }
 
 .cardExpanded {
   border-color: var(--tint);
-  box-shadow:
-    0 16px 38px -12px rgba(0, 0, 0, 0.58),
-    0 0 22px -6px color-mix(in oklch, var(--tint) 50%, transparent);
+  box-shadow: 0 16px 38px -12px rgba(0, 0, 0, 0.55);
 }
 
 .card:hover::after,
@@ -479,25 +458,20 @@
   box-shadow: 0 0 0 2px color-mix(in oklch, var(--tint) 40%, transparent);
 }
 
-.cardBull { background: linear-gradient(135deg, color-mix(in oklch, var(--tint) 10%, var(--surface-1)), var(--surface-1) 60%); }
-.cardBear { background: linear-gradient(135deg, color-mix(in oklch, var(--tint) 10%, var(--surface-1)), var(--surface-1) 60%); }
+.cardBull { background: color-mix(in oklch, var(--tint) 6%, var(--surface-1)); }
+.cardBear { background: color-mix(in oklch, var(--tint) 6%, var(--surface-1)); }
 
 .cardStrong {
   border-color: color-mix(in oklch, var(--accent-amber) 72%, var(--tint));
-  background:
-    linear-gradient(135deg, rgba(251, 191, 36, 0.18), transparent 42%),
-    linear-gradient(135deg, color-mix(in oklch, var(--tint) 12%, var(--surface-1)), var(--surface-1) 62%);
-  box-shadow:
-    inset 0 0 0 1px rgba(251, 191, 36, 0.24),
-    0 0 28px rgba(251, 191, 36, 0.12);
+  background: color-mix(in oklch, var(--accent-amber) 8%, var(--surface-1));
+  box-shadow: inset 0 0 0 1px rgba(245, 158, 11, 0.28);
 }
 
 .cardStrong:hover {
   border-color: var(--accent-amber);
   box-shadow:
-    inset 0 0 0 1px rgba(251, 191, 36, 0.38),
-    0 16px 36px -10px rgba(0, 0, 0, 0.55),
-    0 0 28px rgba(251, 191, 36, 0.22);
+    inset 0 0 0 1px rgba(245, 158, 11, 0.4),
+    0 16px 36px -10px rgba(0, 0, 0, 0.55);
 }
 
 .cardTintBar {
@@ -507,29 +481,22 @@
   bottom: 0;
   width: 3px;
   background: var(--tint);
-  box-shadow: 0 0 12px var(--tint);
 }
 
 .cardStrong .cardTintBar {
   width: 5px;
   background: linear-gradient(180deg, var(--accent-amber), var(--tint));
-  box-shadow: 0 0 18px var(--accent-amber);
 }
 
 /* Predictive signal cards — dashed border, subtler background */
 .cardPredict {
   border-style: dashed;
-  border-color: rgba(45, 212, 191, 0.35);
-  background: linear-gradient(
-    135deg,
-    rgba(45, 212, 191, 0.06) 0%,
-    var(--surface-1) 55%
-  );
+  border-color: rgba(99, 102, 241, 0.35);
+  background: color-mix(in oklch, var(--brand) 6%, var(--surface-1));
 }
 .cardPredict::after { content: "→"; }
 .cardPredict .cardTintBar {
-  background: linear-gradient(180deg, #2dd4bf, var(--tint));
-  box-shadow: 0 0 10px rgba(45, 212, 191, 0.4);
+  background: linear-gradient(180deg, var(--brand), var(--tint));
 }
 
 .cardHeader {
@@ -569,16 +536,14 @@
   font-family: var(--font-mono);
   font-size: 0.62rem;
   font-weight: 800;
-  color: #111827;
+  color: var(--bg-0);
   background: var(--accent-amber);
   border: 1px solid rgba(255, 255, 255, 0.55);
   border-radius: 4px;
   padding: 0.22rem 0.46rem;
   letter-spacing: 0.11em;
   text-transform: uppercase;
-  box-shadow:
-    0 0 0 1px rgba(251, 191, 36, 0.22),
-    0 0 18px rgba(251, 191, 36, 0.32);
+  box-shadow: 0 0 0 1px rgba(245, 158, 11, 0.28);
 }
 
 .dirBadge {
@@ -621,9 +586,9 @@
 .type_HARMONIC      { color: var(--accent-purple); }
 .type_DIVERGENCE    { color: var(--accent-blue); }
 .type_ZONE_BREAK    { color: var(--accent-amber); }
-/* Predictive signals — teal/cyan tones, dashed border to signal "not yet confirmed" */
-.type_HARMONIC_PRZ  { color: #2dd4bf; border-style: dashed; }
-.type_ZONE_APPROACH { color: #38bdf8; border-style: dashed; }
+/* Predictive signals — brand accent, dashed border to signal "not yet confirmed" */
+.type_HARMONIC_PRZ  { color: var(--brand); border-style: dashed; }
+.type_ZONE_APPROACH { color: var(--brand); border-style: dashed; }
 
 .patternBadge {
   font-family: var(--font-mono);
@@ -642,12 +607,11 @@
   font-weight: 800;
   padding: 0.24rem 0.58rem;
   border-radius: 4px;
-  color: #111827;
+  color: var(--bg-0);
   background: var(--accent-amber);
   border: 1px solid rgba(255, 255, 255, 0.5);
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  box-shadow: 0 0 18px rgba(251, 191, 36, 0.26);
 }
 
 /* 형성 중 다이버전스 등 — ⏳ 예측 필터와 매칭 */
@@ -657,9 +621,9 @@
   font-weight: 700;
   padding: 0.2rem 0.5rem;
   border-radius: 4px;
-  color: #22d3ee;
-  background: color-mix(in oklch, #22d3ee 14%, var(--surface-2));
-  border: 1px solid color-mix(in oklch, #22d3ee 45%, transparent);
+  color: var(--brand);
+  background: color-mix(in oklch, var(--brand) 14%, var(--surface-2));
+  border: 1px solid color-mix(in oklch, var(--brand) 45%, transparent);
   letter-spacing: 0.04em;
 }
 
@@ -775,7 +739,7 @@
 }
 
 .detailMetric {
-  background: rgba(15, 23, 42, 0.52);
+  background: var(--surface-2);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-sm);
   min-width: 0;

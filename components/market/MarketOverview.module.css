@@ -1,35 +1,18 @@
 .root {
   position: relative;
   overflow: hidden;
-  border: 1px solid rgba(56, 189, 248, 0.18);
+  border: 1px solid var(--hair);
   border-radius: var(--radius-lg);
-  background: linear-gradient(160deg, #0a1628 0%, #060d1f 50%, #0d1a2e 100%);
+  background: var(--bg-1);
   padding: 1.25rem;
-  box-shadow: var(--panel-shadow-strong), 0 0 60px rgba(56, 189, 248, 0.04);
+  box-shadow: var(--panel-shadow-strong);
   min-width: 0;
   width: 100%;
 }
 
 .glowTop,
 .glowBottom {
-  position: absolute;
-  width: 10rem;
-  height: 10rem;
-  border-radius: 9999px;
-  filter: blur(48px);
-  pointer-events: none;
-}
-
-.glowTop {
-  top: -4rem;
-  right: -4rem;
-  background: rgb(59 130 246 / 0.2);
-}
-
-.glowBottom {
-  bottom: -4rem;
-  left: -4rem;
-  background: rgb(6 182 212 / 0.2);
+  display: none;
 }
 
 .content {
@@ -48,21 +31,21 @@
 }
 
 .title {
-  color: white;
+  color: var(--text);
   font-size: 1.25rem;
   font-weight: 700;
 }
 
 .description {
-  color: rgb(203 213 225);
+  color: var(--text-2);
   font-size: 0.875rem;
 }
 
 .errorBox {
-  border: 1px solid rgb(244 63 94 / 0.3);
-  border-radius: 0.5rem;
-  background: rgb(244 63 94 / 0.1);
-  color: rgb(254 205 211);
+  border: 1px solid var(--border-red);
+  border-radius: var(--radius-md);
+  background: var(--accent-red-dim);
+  color: var(--ro);
   font-size: 0.75rem;
   padding: 0.5rem 0.75rem;
 }
@@ -72,10 +55,7 @@
   font-weight: 800;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  background: var(--gradient-accent);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: var(--brand);
 }
 
 .macroSection,
@@ -94,9 +74,9 @@
 }
 
 .macroCard {
-  border: 1px solid rgb(51 65 85 / 0.85);
+  border: 1px solid var(--hair);
   border-radius: var(--radius-md);
-  background: rgb(2 6 23 / 0.55);
+  background: var(--bg-0);
   padding: 0.65rem 0.75rem;
 }
 
@@ -124,14 +104,14 @@
 .assetSymbol,
 .metricLabel,
 .tapeName {
-  color: rgb(148 163 184);
+  color: var(--text-2);
   font-size: 0.75rem;
 }
 
 .assetPrice,
 .metricValue {
   margin-top: 0.25rem;
-  color: white;
+  color: var(--text);
   font-size: 0.875rem;
   font-weight: 700;
 }
@@ -143,15 +123,15 @@
 }
 
 .muted {
-  color: rgb(148 163 184);
+  color: var(--text-2);
 }
 
 .positive {
-  color: rgb(52 211 153);
+  color: var(--gr);
 }
 
 .negative {
-  color: rgb(251 113 133);
+  color: var(--ro);
 }
 
 .metricsGrid {
@@ -166,16 +146,16 @@
 }
 
 .signalPanel {
-  border: 1px solid rgba(251, 191, 36, 0.25);
-  border-radius: 0.75rem;
-  background: linear-gradient(135deg, rgba(251, 191, 36, 0.07), rgba(245, 158, 11, 0.04));
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  border-radius: var(--radius-md);
+  background: var(--accent-amber-dim);
   padding: 0.75rem;
   box-shadow: var(--glow-amber);
 }
 
 .signalTitle {
   margin-bottom: 0.5rem;
-  color: rgb(252 211 77);
+  color: var(--am);
   font-size: 0.75rem;
   font-weight: 600;
 }
@@ -187,16 +167,16 @@
 }
 
 .signalItem {
-  color: rgb(254 243 199);
+  color: var(--text-2);
   font-size: 0.875rem;
 }
 
 .tickerSection {
   position: relative;
   overflow: hidden;
-  border: 1px solid rgba(56, 189, 248, 0.2);
-  border-radius: 0.75rem;
-  background: linear-gradient(135deg, rgba(14, 116, 144, 0.12), rgba(6, 13, 31, 0.95), rgba(99, 102, 241, 0.08));
+  border: 1px solid var(--hair);
+  border-radius: var(--radius-md);
+  background: var(--bg-1);
   padding: 0.5rem;
   box-shadow: var(--glow-blue);
   min-width: 0;
@@ -231,35 +211,35 @@
 }
 
 .liveDotPing {
-  background: rgb(52 211 153);
+  background: var(--gr);
   opacity: 0.75;
   animation: ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;
 }
 
 .liveDot {
-  background: rgb(52 211 153);
+  background: var(--gr);
 }
 
 .liveLabel {
-  color: rgb(186 230 253);
+  color: var(--text-2);
   font-size: 0.75rem;
   font-weight: 600;
   letter-spacing: 0.04em;
 }
 
 .liveBadge {
-  border: 1px solid rgb(125 211 252 / 0.3);
+  border: 1px solid rgba(99, 102, 241, 0.3);
   border-radius: 9999px;
-  background: rgb(14 165 233 / 0.1);
-  color: rgb(186 230 253);
+  background: rgba(99, 102, 241, 0.1);
+  color: var(--brand);
   font-size: 10px;
   padding: 0.125rem 0.5rem;
 }
 
 .tickerFrame {
-  border: 1px solid rgb(51 65 85 / 0.7);
-  border-radius: 0.5rem;
-  background: rgb(2 6 23 / 0.7);
+  border: 1px solid var(--hair);
+  border-radius: var(--radius-md);
+  background: var(--bg-0);
   padding: 0.5rem;
   min-width: 0;
 }
@@ -279,23 +259,22 @@
 
 .tapeCard {
   min-width: 140px;
-  border: 1px solid rgb(51 65 85 / 0.8);
-  border-radius: 0.625rem;
-  background: linear-gradient(145deg, rgb(15 23 42 / 0.9), rgb(2 6 23 / 0.9));
-  box-shadow: inset 0 0 0 1px rgb(148 163 184 / 0.08);
+  border: 1px solid var(--hair);
+  border-radius: var(--radius-md);
+  background: var(--surface-3);
   padding: 0.5rem 0.625rem;
 }
 
 .tapePrice {
   margin: 0.125rem 0;
-  color: rgb(248 250 252);
+  color: var(--text);
   font-size: 0.9375rem;
   font-weight: 700;
   line-height: 1.2;
 }
 
 .tapeChange {
-  color: rgb(148 163 184);
+  color: var(--text-2);
   font-size: 0.75rem;
   font-weight: 600;
 }
@@ -310,16 +289,16 @@
 
 .fadeLeft {
   left: 0;
-  background: linear-gradient(to right, rgb(15 23 42 / 0.9), transparent);
+  background: linear-gradient(to right, var(--bg-0), transparent);
 }
 
 .fadeRight {
   right: 0;
-  background: linear-gradient(to left, rgb(15 23 42 / 0.9), transparent);
+  background: linear-gradient(to left, var(--bg-0), transparent);
 }
 
 .updatedAt {
-  color: rgb(100 116 139);
+  color: var(--text-3);
   font-size: 11px;
 }
 

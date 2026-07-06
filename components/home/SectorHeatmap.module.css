@@ -34,7 +34,7 @@
 .title {
   font-size: 1.1rem;
   font-weight: 800;
-  color: #f8fafc;
+  color: var(--text);
 }
 
 .subtitle {
@@ -45,7 +45,7 @@
 .tabs {
   display: flex;
   gap: 0.25rem;
-  background: rgba(13, 26, 46, 0.8);
+  background: rgba(255, 255, 255, 0.04);
   border: 1px solid var(--border-subtle);
   border-radius: 999px;
   padding: 0.2rem;
@@ -64,7 +64,7 @@
 }
 
 .tabActive {
-  background: rgba(56, 189, 248, 0.18);
+  background: rgba(99, 102, 241, 0.18);
   color: var(--accent-blue);
 }
 
@@ -159,21 +159,21 @@
 }
 
 .cellEmpty {
-  background: rgba(51, 65, 85, 0.3);
+  background: rgba(255, 255, 255, 0.05);
   color: var(--muted);
 }
 
 /* Color tiers - up */
-.tier2Up { background: rgba(74, 222, 128, 0.15); border: 1px solid rgba(74, 222, 128, 0.2); }
-.tier3Up { background: rgba(74, 222, 128, 0.28); border: 1px solid rgba(74, 222, 128, 0.35); }
-.tier4Up { background: rgba(74, 222, 128, 0.45); border: 1px solid rgba(74, 222, 128, 0.5); }
-.tier5Up { background: rgba(74, 222, 128, 0.65); border: 1px solid rgba(74, 222, 128, 0.7); }
+.tier2Up { background: rgba(34, 197, 94, 0.15); border: 1px solid rgba(34, 197, 94, 0.2); }
+.tier3Up { background: rgba(34, 197, 94, 0.28); border: 1px solid rgba(34, 197, 94, 0.35); }
+.tier4Up { background: rgba(34, 197, 94, 0.45); border: 1px solid rgba(34, 197, 94, 0.5); }
+.tier5Up { background: rgba(34, 197, 94, 0.65); border: 1px solid rgba(34, 197, 94, 0.7); }
 
 /* Color tiers - down */
-.tier2Down { background: rgba(248, 113, 113, 0.15); border: 1px solid rgba(248, 113, 113, 0.2); }
-.tier3Down { background: rgba(248, 113, 113, 0.28); border: 1px solid rgba(248, 113, 113, 0.35); }
-.tier4Down { background: rgba(248, 113, 113, 0.45); border: 1px solid rgba(248, 113, 113, 0.5); }
-.tier5Down { background: rgba(248, 113, 113, 0.65); border: 1px solid rgba(248, 113, 113, 0.7); }
+.tier2Down { background: rgba(244, 63, 94, 0.15); border: 1px solid rgba(244, 63, 94, 0.2); }
+.tier3Down { background: rgba(244, 63, 94, 0.28); border: 1px solid rgba(244, 63, 94, 0.35); }
+.tier4Down { background: rgba(244, 63, 94, 0.45); border: 1px solid rgba(244, 63, 94, 0.5); }
+.tier5Down { background: rgba(244, 63, 94, 0.65); border: 1px solid rgba(244, 63, 94, 0.7); }
 
 /* Legend */
 .legend {

@@ -1,7 +1,7 @@
 .panel {
   border-radius: var(--radius-lg);
   border: 1px solid var(--panel-border);
-  background: var(--panel-bg-soft);
+  background: var(--bg-1);
   padding: 0.8rem;
   box-shadow: var(--panel-shadow);
   display: flex;
@@ -10,7 +10,7 @@
 }
 
 .title {
-  color: #f8fafc;
+  color: var(--text);
   font-weight: 800;
   font-size: 0.95rem;
 }
@@ -38,14 +38,14 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border: 1px solid rgb(51 65 85 / 0.8);
-  background: var(--surface-raised);
+  border: 1px solid var(--hair);
+  background: var(--surface-3);
   border-radius: var(--radius-sm);
   padding: 0.5rem 0.58rem;
 }
 
 .name {
-  color: #e2e8f0;
+  color: var(--text);
   font-size: 0.78rem;
   font-weight: 700;
   line-height: 1.35;
@@ -66,7 +66,7 @@
 }
 
 .price {
-  color: #f8fafc;
+  color: var(--text);
   font-size: 0.82rem;
   font-weight: 700;
 }
@@ -77,9 +77,9 @@
 }
 
 .up {
-  color: #34d399;
+  color: var(--gr);
 }
 
 .down {
-  color: #f87171;
+  color: var(--ro);
 }

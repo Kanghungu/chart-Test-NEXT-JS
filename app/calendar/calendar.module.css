@@ -5,9 +5,9 @@
   justify-content: space-between;
   gap: 1rem;
   padding: 1rem 1.25rem;
-  background: rgba(56 189 248 / 0.06);
-  border: 1px solid rgba(56 189 248 / 0.3);
-  border-radius: 10px;
+  background: rgba(99, 102, 241, 0.08);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  border-radius: var(--radius-md);
   flex-wrap: wrap;
 }
 
@@ -18,18 +18,18 @@
   font-weight: 800;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: #38bdf8;
+  color: var(--brand);
 }
 
 .countdownTitle {
   font-size: 0.95rem;
   font-weight: 700;
-  color: #f1f5f9;
+  color: var(--text);
 }
 
 .countdownCountry {
   font-size: 0.75rem;
-  color: rgb(148 163 184);
+  color: var(--text-3);
 }
 
 .countdownRight {
@@ -48,25 +48,25 @@
 
 .countdownHint {
   font-size: 0.65rem;
-  color: rgb(100 116 139);
+  color: var(--text-3);
 }
 
 /* 이벤트 카드 — 임박 강조 */
 .cardSoon {
-  border-color: rgba(251 191 36 / 0.4) !important;
-  background: rgba(251 191 36 / 0.04) !important;
+  border-color: rgba(245, 158, 11, 0.4) !important;
+  background: rgba(245, 158, 11, 0.05) !important;
 }
 
 /* 남은 시간 배지 */
 .timeLeft {
   font-size: 0.65rem;
   font-weight: 600;
-  color: rgb(100 116 139);
+  color: var(--text-3);
   font-variant-numeric: tabular-nums;
 }
 
 .timeLeftSoon {
-  color: #fbbf24;
+  color: var(--am);
   animation: blink 1.5s ease-in-out infinite;
 }
 
@@ -77,5 +77,5 @@
 
 .timePast {
   font-size: 0.65rem;
-  color: rgb(71 85 105);
+  color: var(--text-3);
 }
