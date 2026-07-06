@@ -8,11 +8,25 @@ import {
   type CryptoSignal,
   type TF,
 } from "@/lib/cryptoSignals";
+import {
+  scanTechnicalSignals,
+  type TechSignal,
+  type TechSignalType,
+} from "@/lib/technicalSignals";
 import SignalChartModal from "./SignalChartModal";
+import TechChartModal from "./TechChartModal";
 import styles from "./SignalsPanel.module.css";
+import techStyles from "./TechnicalsPanel.module.css";
 
-type TypeFilter = "ALL" | "HARMONIC" | "DIVERGENCE" | "ZONE_BREAK" | "HARMONIC_PRZ" | "ZONE_APPROACH" | "PREDICTIVE";
-type DirFilter  = "ALL" | "BULLISH" | "BEARISH";
+type PatternSignal = CryptoSignal & { kind: "pattern" };
+type TechUnifiedSignal = TechSignal & { kind: "tech" };
+type UnifiedSignal = PatternSignal | TechUnifiedSignal;
+
+type TypeFilter =
+  | "ALL" | "PREDICTIVE"
+  | "HARMONIC" | "DIVERGENCE" | "ZONE_BREAK" | "HARMONIC_PRZ" | "ZONE_APPROACH"
+  | TechSignalType;
+type DirFilter = "ALL" | "BULLISH" | "BEARISH" | "NEUTRAL";
 /** 카드 정렬 기준 (계획: 정렬·그룹핑) */
 type SortKey = "recent" | "strength" | "symbol" | "timeframe";
 
@@ -31,17 +45,25 @@ const COIN_TINT: Record<string, string> = {
   BNB:  "#f3ba2f",
   ADA:  "#0033ad",
   DOGE: "#c2a633",
+  LTC:  "#bfbbbb",
+  TAO:  "#7c3aed",
+  WLD:  "#06b6d4",
+  ENA:  "#ec4899",
+  MAGIC:"#f59e0b",
+  VIRTUAL: "#a78bfa",
+  TURBO: "#fb923c",
 };
 
 export default function SignalsPanel() {
   const { language } = useLanguage();
-  const [signals, setSignals] = useState<CryptoSignal[]>([]);
+  const [patternSignals, setPatternSignals] = useState<CryptoSignal[]>([]);
+  const [techSignals, setTechSignals] = useState<TechSignal[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [lastScan, setLastScan] = useState<number>(0);
   const [typeFilter, setTypeFilter] = useState<TypeFilter>("ALL");
   const [dirFilter, setDirFilter]   = useState<DirFilter>("ALL");
-  const [selected,   setSelected]   = useState<CryptoSignal | null>(null);
+  const [selected,   setSelected]   = useState<UnifiedSignal | null>(null);
   const [viewShowDescription, setViewShowDescription] = useState(true);
   const [viewShowPrz, setViewShowPrz] = useState(true);
   const [viewCompact, setViewCompact] = useState(false);
@@ -69,16 +91,19 @@ export default function SignalsPanel() {
   }, []);
 
   async function scan() {
-    try {
-      setError(null);
-      const result = await scanAllCryptoSignals();
-      setSignals(result);
-      setLastScan(Date.now());
-    } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
-    } finally {
-      setLoading(false);
+    setError(null);
+    const [patternRes, techRes] = await Promise.allSettled([
+      scanAllCryptoSignals(),
+      scanTechnicalSignals(),
+    ]);
+    if (patternRes.status === "fulfilled") setPatternSignals(patternRes.value);
+    if (techRes.status === "fulfilled") setTechSignals(techRes.value);
+    if (patternRes.status === "rejected" && techRes.status === "rejected") {
+      const reason = patternRes.reason;
+      setError(reason instanceof Error ? reason.message : String(reason));
     }
+    setLastScan(Date.now());
+    setLoading(false);
   }
 
   useEffect(() => {
@@ -87,10 +112,17 @@ export default function SignalsPanel() {
     return () => clearInterval(t);
   }, []);
 
+  /** 패턴형 + 테크니컬형 신호를 하나의 목록으로 병합 */
+  const signals = useMemo<UnifiedSignal[]>(() => [
+    ...patternSignals.map((s): PatternSignal => ({ ...s, kind: "pattern" })),
+    ...techSignals.map((s): TechUnifiedSignal => ({ ...s, kind: "tech" })),
+  ], [patternSignals, techSignals]);
+
   const filtered = useMemo(() => {
     return signals.filter((s) => {
       // ⏳ 예측: 하모닉 PRZ 접근 + 다이버전스 형성 중만 (매물대 돌파 임박 ZONE_APPROACH는 제외)
       if (typeFilter === "PREDICTIVE") {
+        if (s.kind !== "pattern") return false;
         if (s.type !== "HARMONIC_PRZ" && !s.isPrediction) return false;
       } else if (typeFilter !== "ALL" && s.type !== typeFilter) return false;
       if (dirFilter !== "ALL" && s.direction !== dirFilter) return false;
@@ -107,7 +139,7 @@ export default function SignalsPanel() {
   /** 심볼별 그룹 (베이스 알파벳 순) */
   const groupedByBase = useMemo(() => {
     if (!groupBySymbol) return null;
-    const map = new Map<string, CryptoSignal[]>();
+    const map = new Map<string, UnifiedSignal[]>();
     for (const s of sortedFiltered) {
       const list = map.get(s.base);
       if (list) list.push(s);
@@ -160,7 +192,7 @@ export default function SignalsPanel() {
       <div className={styles.filterRow}>
         <div className={styles.filterGroup}>
           <span className={styles.filterLabel}>{C.fType}</span>
-          {(["ALL","PREDICTIVE","HARMONIC","DIVERGENCE","ZONE_BREAK"] as const).map((v) => (
+          {(["ALL","PREDICTIVE","HARMONIC","DIVERGENCE","ZONE_BREAK","EMA_CROSS","BB_SQUEEZE","VOL_SPIKE","STOCH_RSI"] as const).map((v) => (
             <button
               key={v}
               className={`${styles.pill} ${typeFilter === v ? styles.pillActive : ""} ${v === "PREDICTIVE" ? styles.pillPredict : ""}`}
@@ -172,7 +204,7 @@ export default function SignalsPanel() {
         </div>
         <div className={styles.filterGroup}>
           <span className={styles.filterLabel}>{C.fDir}</span>
-          {(["ALL","BULLISH","BEARISH"] as const).map((v) => (
+          {(["ALL","BULLISH","BEARISH","NEUTRAL"] as const).map((v) => (
             <button
               key={v}
               className={`${styles.pill} ${styles[`pill_${v}`] ?? ""} ${dirFilter === v ? styles.pillActive : ""}`}
@@ -349,8 +381,11 @@ export default function SignalsPanel() {
         )}
       </div>
 
-      {selected && (
+      {selected && selected.kind === "pattern" && (
         <SignalChartModal signal={selected} onClose={() => setSelected(null)} />
+      )}
+      {selected && selected.kind === "tech" && (
+        <TechChartModal signal={selected} onClose={() => setSelected(null)} />
       )}
     </section>
   );
@@ -383,7 +418,7 @@ function SignalCard({
   showPrz,
   onOpenChart,
 }: {
-  signal: CryptoSignal;
+  signal: UnifiedSignal;
   language: "ko" | "en";
   compact: boolean;
   showDescription: boolean;
@@ -392,16 +427,84 @@ function SignalCard({
 }) {
   const tint = COIN_TINT[signal.base] ?? "#64748b";
   const isBull = signal.direction === "BULLISH";
+  const isBear = signal.direction === "BEARISH";
   const isStrong = signal.strength === "STRONG";
-  const isPredict =
-    signal.type === "HARMONIC_PRZ" ||
-    signal.type === "ZONE_APPROACH" ||
-    Boolean(signal.isPrediction);
   const typeLabel = TYPE_LABEL[language][signal.type];
-  const dirLabel  = isBull ? (language === "ko" ? "상승" : "BULL") : (language === "ko" ? "하락" : "BEAR");
-  const description = language === "ko" ? signal.descriptionKo : signal.descriptionEn;
   const priceFmt = formatPrice(signal.currentPrice);
   const relTime = formatRelativeTime(signal.detectedAt, language);
+
+  if (signal.kind === "pattern") {
+    const isPredict =
+      signal.type === "HARMONIC_PRZ" ||
+      signal.type === "ZONE_APPROACH" ||
+      Boolean(signal.isPrediction);
+    const dirLabel = isBull ? (language === "ko" ? "상승" : "BULL") : (language === "ko" ? "하락" : "BEAR");
+    const description = language === "ko" ? signal.descriptionKo : signal.descriptionEn;
+
+    return (
+      <article
+        role="button"
+        tabIndex={0}
+        onClick={onOpenChart}
+        onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onOpenChart(); } }}
+        className={`${styles.card} ${compact ? styles.cardCompact : ""} ${isBull ? styles.cardBull : styles.cardBear} ${isStrong ? styles.cardStrong : ""} ${isPredict ? styles.cardPredict : ""}`}
+        style={{ "--tint": tint } as React.CSSProperties}
+      >
+        <span className={styles.cardTintBar} aria-hidden="true" />
+        <header className={styles.cardHeader}>
+          <div className={styles.cardBaseWrap}>
+            <span className={styles.cardBase}>{signal.base}</span>
+            <span className={styles.cardTf}>{signal.timeframe}</span>
+          </div>
+          {isStrong && <span className={styles.strongFlag}>STRONG</span>}
+          <span className={`${styles.dirBadge} ${isBull ? styles.dirBull : styles.dirBear}`}>
+            {isBull ? "▲" : "▼"} {dirLabel}
+          </span>
+        </header>
+
+        <div className={styles.cardBadges}>
+          <span className={`${styles.typeBadge} ${styles[`type_${signal.type}`]}`}>
+            {typeLabel}
+          </span>
+          {signal.patternName && (
+            <span className={styles.patternBadge}>{signal.patternName}</span>
+          )}
+          {isStrong && (
+            <span className={styles.strongBadge}>★ STRONG</span>
+          )}
+          {signal.isPrediction && (
+            <span className={styles.predictionBadge}>⏳ {language === "ko" ? "예측" : "FCST"}</span>
+          )}
+        </div>
+
+        {showDescription && (
+          <p className={styles.cardDesc}>{description}</p>
+        )}
+
+        <dl className={styles.cardMeta}>
+          <div className={styles.metaRow}>
+            <dt>{language === "ko" ? "현재가" : "Price"}</dt>
+            <dd className={styles.priceValue}>${priceFmt}</dd>
+          </div>
+          {showPrz && signal.przMin !== undefined && signal.przMax !== undefined && (
+            <div className={styles.metaRow}>
+              <dt>PRZ</dt>
+              <dd className={styles.przValue}>
+                ${formatPrice(signal.przMin)} – ${formatPrice(signal.przMax)}
+              </dd>
+            </div>
+          )}
+          <div className={styles.metaRow}>
+            <dt>{language === "ko" ? "탐지" : "Detected"}</dt>
+            <dd>{relTime}</dd>
+          </div>
+        </dl>
+      </article>
+    );
+  }
+
+  // kind === "tech"
+  const desc = language === "ko" ? signal.descKo : signal.descEn;
 
   return (
     <article
@@ -409,38 +512,46 @@ function SignalCard({
       tabIndex={0}
       onClick={onOpenChart}
       onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onOpenChart(); } }}
-      className={`${styles.card} ${compact ? styles.cardCompact : ""} ${isBull ? styles.cardBull : styles.cardBear} ${isStrong ? styles.cardStrong : ""} ${isPredict ? styles.cardPredict : ""}`}
+      className={`${styles.card} ${compact ? styles.cardCompact : ""} ${isBull ? styles.cardBull : isBear ? styles.cardBear : ""} ${isStrong ? styles.cardStrong : ""}`}
       style={{ "--tint": tint } as React.CSSProperties}
     >
       <span className={styles.cardTintBar} aria-hidden="true" />
       <header className={styles.cardHeader}>
         <div className={styles.cardBaseWrap}>
           <span className={styles.cardBase}>{signal.base}</span>
-          <span className={styles.cardTf}>{tfLabel(signal.timeframe)}</span>
+          <span className={styles.cardTf}>{signal.timeframe}</span>
         </div>
         {isStrong && <span className={styles.strongFlag}>STRONG</span>}
-        <span className={`${styles.dirBadge} ${isBull ? styles.dirBull : styles.dirBear}`}>
-          {isBull ? "▲" : "▼"} {dirLabel}
-        </span>
+        {signal.direction !== "NEUTRAL" && (
+          <span className={`${styles.dirBadge} ${isBull ? styles.dirBull : styles.dirBear}`}>
+            {isBull ? "▲" : "▼"} {isBull ? (language === "ko" ? "상승" : "BULL") : (language === "ko" ? "하락" : "BEAR")}
+          </span>
+        )}
       </header>
 
       <div className={styles.cardBadges}>
-        <span className={`${styles.typeBadge} ${styles[`type_${signal.type}`]}`}>
+        <span className={`${styles.typeBadge} ${techStyles[`type_${signal.type}`] ?? ""}`}>
           {typeLabel}
         </span>
-        {signal.patternName && (
-          <span className={styles.patternBadge}>{signal.patternName}</span>
-        )}
-        {isStrong && (
-          <span className={styles.strongBadge}>★ STRONG</span>
-        )}
-        {signal.isPrediction && (
-          <span className={styles.predictionBadge}>⏳ {language === "ko" ? "예측" : "FCST"}</span>
-        )}
+        {isStrong && <span className={styles.strongBadge}>★ STRONG</span>}
       </div>
 
       {showDescription && (
-        <p className={styles.cardDesc}>{description}</p>
+        <>
+          <p className={techStyles.cardLabel}>{signal.label}</p>
+          <p className={styles.cardDesc}>{desc}</p>
+        </>
+      )}
+
+      {signal.extra && (
+        <div className={techStyles.extraRow}>
+          {Object.entries(signal.extra).map(([k, v]) => (
+            <span key={k} className={techStyles.extraChip}>
+              <span className={techStyles.extraKey}>{k}</span>
+              <span className={techStyles.extraVal}>{v}</span>
+            </span>
+          ))}
+        </div>
       )}
 
       <dl className={styles.cardMeta}>
@@ -448,20 +559,11 @@ function SignalCard({
           <dt>{language === "ko" ? "현재가" : "Price"}</dt>
           <dd className={styles.priceValue}>${priceFmt}</dd>
         </div>
-        {showPrz && signal.przMin !== undefined && signal.przMax !== undefined && (
-          <div className={styles.metaRow}>
-            <dt>PRZ</dt>
-            <dd className={styles.przValue}>
-              ${formatPrice(signal.przMin)} – ${formatPrice(signal.przMax)}
-            </dd>
-          </div>
-        )}
         <div className={styles.metaRow}>
           <dt>{language === "ko" ? "탐지" : "Detected"}</dt>
           <dd>{relTime}</dd>
         </div>
       </dl>
-
     </article>
   );
 }
@@ -470,7 +572,7 @@ function SignalCard({
 const TF_ORDER: Record<TF, number> = { "15m": 0, "1h": 1, "4h": 2 };
 
 /** 필터된 시그널 배열을 사용자 선택 기준으로 정렬 (원본 배열 변경 없음) */
-function sortSignals(list: CryptoSignal[], key: SortKey): CryptoSignal[] {
+function sortSignals(list: UnifiedSignal[], key: SortKey): UnifiedSignal[] {
   const arr = [...list];
   switch (key) {
     case "recent":
@@ -511,10 +613,6 @@ function sortSignals(list: CryptoSignal[], key: SortKey): CryptoSignal[] {
   return arr;
 }
 
-function tfLabel(tf: TF): string {
-  return tf;
-}
-
 function formatPrice(p: number): string {
   if (p >= 1000)  return p.toLocaleString("en-US", { maximumFractionDigits: 2 });
   if (p >= 1)     return p.toFixed(3);
@@ -522,69 +620,17 @@ function formatPrice(p: number): string {
   return p.toFixed(6);
 }
 
-function directionLabel(direction: CryptoSignal["direction"], language: "ko" | "en"): string {
-  if (language === "ko") return direction === "BULLISH" ? "상승" : "하락";
-  return direction === "BULLISH" ? "Bullish" : "Bearish";
-}
-
-function buildSignalMetrics(signal: CryptoSignal, language: "ko" | "en") {
-  const copy = SIGNAL_DETAIL_COPY[language].metrics;
-  const rows: Array<{ label: string; value: string }> = [
-    { label: copy.symbol, value: `${signal.base}/USDT` },
-    { label: copy.timeframe, value: signal.timeframe },
-    { label: copy.direction, value: directionLabel(signal.direction, language) },
-    { label: copy.strength, value: signal.strength },
-    { label: copy.price, value: `$${formatPrice(signal.currentPrice)}` },
-    { label: copy.detected, value: formatRelativeTime(signal.detectedAt, language) },
-  ];
-
-  if (signal.patternName) rows.splice(3, 0, { label: copy.pattern, value: signal.patternName });
-  if (signal.przMin !== undefined && signal.przMax !== undefined) {
-    rows.push({
-      label: "PRZ",
-      value: `$${formatPrice(signal.przMin)} - $${formatPrice(signal.przMax)}`,
-    });
-  }
-
-  if (signal.viz.kind === "ZONE_BREAK") {
-    rows.push({
-      label: copy.zone,
-      value: `$${formatPrice(signal.viz.zoneLow)} - $${formatPrice(signal.viz.zoneHigh)}`,
-    });
-  }
-
-  if (signal.viz.kind === "DIVERGENCE") {
-    const latestRsi = signal.viz.rsi.at(-1)?.value;
-    if (latestRsi !== undefined) rows.push({ label: "RSI", value: latestRsi.toFixed(1) });
-  }
-
-  return rows;
-}
-
-function detailNotes(signal: CryptoSignal, language: "ko" | "en"): string {
-  const isKo = language === "ko";
-  if (signal.type === "HARMONIC" || signal.type === "HARMONIC_PRZ") {
-    return isKo
-      ? "PRZ 구간 근처의 반전 반응과 캔들 확인이 핵심입니다. 예측 신호는 아직 완성 전 구간입니다."
-      : "Watch price reaction near the PRZ. Predictive signals are not confirmed yet.";
-  }
-  if (signal.type === "DIVERGENCE") {
-    return isKo
-      ? "가격 고점/저점과 RSI 방향이 엇갈린 구간입니다. 추세 전환 가능성을 보조 신호와 함께 확인하세요."
-      : "Price and RSI are diverging. Confirm with trend and volume before acting.";
-  }
-  return isKo
-    ? "주요 매물대 돌파 또는 돌파 임박 구간입니다. 거래량과 종가 유지 여부가 중요합니다."
-    : "This is a zone breakout or approach setup. Volume and close retention matter most.";
-}
-
-const TYPE_LABEL: Record<"ko" | "en", Record<CryptoSignal["type"], string>> = {
+const TYPE_LABEL: Record<"ko" | "en", Record<UnifiedSignal["type"], string>> = {
   ko: {
     HARMONIC:      "하모닉",
     DIVERGENCE:    "다이버전스",
     ZONE_BREAK:    "매물대 돌파",
     HARMONIC_PRZ:  "⏳ PRZ 접근",
     ZONE_APPROACH: "⏳ 돌파 임박",
+    EMA_CROSS:     "EMA 크로스",
+    BB_SQUEEZE:    "BB 스퀴즈",
+    VOL_SPIKE:     "거래량 급등",
+    STOCH_RSI:     "Stoch RSI",
   },
   en: {
     HARMONIC:      "Harmonic",
@@ -592,46 +638,17 @@ const TYPE_LABEL: Record<"ko" | "en", Record<CryptoSignal["type"], string>> = {
     ZONE_BREAK:    "Zone Break",
     HARMONIC_PRZ:  "⏳ PRZ Watch",
     ZONE_APPROACH: "⏳ Breakout Soon",
+    EMA_CROSS:     "EMA Cross",
+    BB_SQUEEZE:    "BB Squeeze",
+    VOL_SPIKE:     "Vol Spike",
+    STOCH_RSI:     "Stoch RSI",
   },
 };
-
-const SIGNAL_DETAIL_COPY = {
-  ko: {
-    kicker: "DETAIL",
-    chart: "차트 보기",
-    noteLabel: "체크포인트",
-    metrics: {
-      symbol: "심볼",
-      timeframe: "타임프레임",
-      direction: "방향",
-      strength: "강도",
-      price: "현재가",
-      detected: "탐지",
-      pattern: "패턴",
-      zone: "구간",
-    },
-  },
-  en: {
-    kicker: "DETAIL",
-    chart: "Open Chart",
-    noteLabel: "Checkpoint",
-    metrics: {
-      symbol: "Symbol",
-      timeframe: "Timeframe",
-      direction: "Direction",
-      strength: "Strength",
-      price: "Price",
-      detected: "Detected",
-      pattern: "Pattern",
-      zone: "Zone",
-    },
-  },
-} as const;
 
 const COPY = {
   ko: {
     title:    "기술적 시그널 스캐너",
-    hint:     "하모닉 패턴 · RSI 다이버전스 · 매물대 돌파 — 브라우저에서 실시간 감지 (60초 주기)",
+    hint:     "하모닉 패턴 · RSI 다이버전스 · 매물대 돌파 · EMA/BB/거래량/Stoch RSI — 브라우저에서 실시간 감지 (60초 주기)",
     scanning: "스캔 중…",
     updated:  "·",
     refresh:  "새로고침",
@@ -665,16 +682,21 @@ const COPY = {
       ZONE_BREAK:    "매물대",
       HARMONIC_PRZ:  "PRZ 접근",
       ZONE_APPROACH: "돌파 임박",
+      EMA_CROSS:     "EMA 크로스",
+      BB_SQUEEZE:    "BB 스퀴즈",
+      VOL_SPIKE:     "거래량 급등",
+      STOCH_RSI:     "Stoch RSI",
     },
     dirLabels: {
       ALL:     "전체",
       BULLISH: "▲ 상승",
       BEARISH: "▼ 하락",
+      NEUTRAL: "중립",
     },
   },
   en: {
     title:    "Technical Signal Scanner",
-    hint:     "Harmonic patterns · RSI divergence · Zone breakouts — Live browser detection (60s cadence)",
+    hint:     "Harmonic patterns · RSI divergence · Zone breakouts · EMA/BB/Volume/Stoch RSI — Live browser detection (60s cadence)",
     scanning: "Scanning…",
     updated:  "·",
     refresh:  "Refresh",
@@ -708,11 +730,16 @@ const COPY = {
       ZONE_BREAK:    "Zone",
       HARMONIC_PRZ:  "PRZ Watch",
       ZONE_APPROACH: "Breakout Soon",
+      EMA_CROSS:     "EMA Cross",
+      BB_SQUEEZE:    "BB Squeeze",
+      VOL_SPIKE:     "Vol Spike",
+      STOCH_RSI:     "Stoch RSI",
     },
     dirLabels: {
       ALL:     "All",
       BULLISH: "▲ Bull",
       BEARISH: "▼ Bear",
+      NEUTRAL: "Neutral",
     },
   },
 } as const;

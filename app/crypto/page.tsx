@@ -4,7 +4,6 @@ import { useState, useEffect, useRef } from "react";
 import { useLanguage } from "@/components/i18n/LanguageProvider";
 import SignalsPanel from "@/components/crypto/SignalsPanel";
 import FundingPanel from "@/components/crypto/FundingPanel";
-import TechnicalsPanel from "@/components/crypto/TechnicalsPanel";
 import LiquidationMap from "@/components/crypto/LiquidationMap";
 import CloudChart from "@/components/crypto/CloudChart";
 import FvgObPanel from "@/components/crypto/FvgObPanel";
@@ -105,7 +104,7 @@ function useClock() {
 }
 
 // ── Page ──────────────────────────────────────────────────────────────────
-type PanelTab = "signals" | "futures" | "liquidations" | "cloud" | "zones" | "technicals";
+type PanelTab = "signals" | "futures" | "liquidations" | "cloud" | "zones";
 
 export default function CryptoPage() {
   const { language } = useLanguage();
@@ -135,7 +134,6 @@ export default function CryptoPage() {
       tabLiq:      "청산 맵",
       tabCloud:    "구름대",
       tabZones:    "매물대",
-      tabTech:     "테크니컬",
       picker:      "코인 선택",
       pickerHint:  "카드를 클릭하면 상세 분석 섹션으로 이동합니다",
       detailKicker:"DETAIL",
@@ -162,7 +160,6 @@ export default function CryptoPage() {
       tabLiq:      "Liq Map",
       tabCloud:    "Cloud",
       tabZones:    "FVG / OB",
-      tabTech:     "Technicals",
       picker:      "Select Coin",
       pickerHint:  "Click a card to jump to detailed analysis",
       detailKicker:"DETAIL",
@@ -293,7 +290,7 @@ export default function CryptoPage() {
         </section>
 
         {/* ═══════════════════════════════════════════════════════════════ */}
-        {/* PANEL TABS: 시그널 / 선물 지표 / 테크니컬                        */}
+        {/* PANEL TABS: 시그널 / 선물 지표 / 청산맵 / 구름대 / 매물대          */}
         {/* ═══════════════════════════════════════════════════════════════ */}
         <div className={styles.panelTabWrap}>
           <div className={styles.panelTabBar}>
@@ -303,19 +300,17 @@ export default function CryptoPage() {
               { key: "liquidations", label: c.tabLiq     },
               { key: "cloud",        label: c.tabCloud   },
               { key: "zones",        label: c.tabZones   },
-              { key: "technicals",   label: c.tabTech    },
             ] as const).map(({ key, label }) => (
               <button
                 key={key}
                 type="button"
-                className={`${styles.panelTabBtn} ${panelTab === key ? styles.panelTabBtnActive : ""} ${key === "technicals" ? styles.panelTabBtnPersonal : ""}`}
+                className={`${styles.panelTabBtn} ${panelTab === key ? styles.panelTabBtnActive : ""}`}
                 onClick={() => setPanelTab(key)}
               >
                 {key === "futures"      && <span className={styles.tabIcon}>📊</span>}
                 {key === "liquidations" && <span className={styles.tabIcon}>🔥</span>}
                 {key === "cloud"        && <span className={styles.tabIcon}>☁️</span>}
                 {key === "zones"        && <span className={styles.tabIcon}>🎯</span>}
-                {key === "technicals"   && <span className={styles.tabIcon}>🔬</span>}
                 {label}
               </button>
             ))}
@@ -326,7 +321,6 @@ export default function CryptoPage() {
             {panelTab === "liquidations" && <LiquidationMap />}
             {panelTab === "cloud"        && <CloudChart />}
             {panelTab === "zones"        && <FvgObPanel />}
-            {panelTab === "technicals"   && <TechnicalsPanel />}
           </div>
         </div>
 
