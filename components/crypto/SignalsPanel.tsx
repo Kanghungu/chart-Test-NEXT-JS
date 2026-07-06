@@ -17,6 +17,16 @@ import SignalChartModal from "./SignalChartModal";
 import TechChartModal from "./TechChartModal";
 import styles from "./SignalsPanel.module.css";
 import techStyles from "./TechnicalsPanel.module.css";
+import {
+  loadAlertRules,
+  saveAlertRules,
+  loadNotifiedSignalIds,
+  saveNotifiedSignalIds,
+  ensureNotificationPermission,
+  fireNotification,
+  makeAlertId,
+  type SignalAlertRule,
+} from "@/lib/alerts";
 
 type PatternSignal = CryptoSignal & { kind: "pattern" };
 type TechUnifiedSignal = TechSignal & { kind: "tech" };
@@ -69,8 +79,65 @@ export default function SignalsPanel() {
   const [viewCompact, setViewCompact] = useState(false);
   const [sortKey, setSortKey] = useState<SortKey>("recent");
   const [groupBySymbol, setGroupBySymbol] = useState(false);
+  const [alertRules, setAlertRules] = useState<SignalAlertRule[]>([]);
+  const [showAlertForm, setShowAlertForm] = useState(false);
+  const [alertBase, setAlertBase] = useState<string>("ALL");
+  const [alertType, setAlertType] = useState<string>("ALL");
+  const [alertDir, setAlertDir] = useState<"ALL" | "BULLISH" | "BEARISH">("ALL");
 
   const C = COPY[language];
+
+  useEffect(() => {
+    setAlertRules(loadAlertRules().filter((r): r is SignalAlertRule => r.kind === "signal"));
+  }, []);
+
+  function persistAlertRules(next: SignalAlertRule[]) {
+    const others = loadAlertRules().filter((r) => r.kind !== "signal");
+    saveAlertRules([...others, ...next]);
+    setAlertRules(next);
+  }
+
+  async function addAlertRule() {
+    await ensureNotificationPermission();
+    const newRule: SignalAlertRule = {
+      id: makeAlertId(),
+      kind: "signal",
+      base: alertBase,
+      type: alertType,
+      direction: alertDir,
+      enabled: true,
+    };
+    persistAlertRules([...alertRules, newRule]);
+    setShowAlertForm(false);
+  }
+
+  function removeAlertRule(id: string) {
+    persistAlertRules(alertRules.filter((r) => r.id !== id));
+  }
+
+  function checkSignalAlerts(list: UnifiedSignal[]) {
+    const rules = loadAlertRules().filter((r): r is SignalAlertRule => r.kind === "signal" && r.enabled);
+    if (rules.length === 0) return;
+    const notified = loadNotifiedSignalIds();
+    let changed = false;
+    for (const s of list) {
+      if (notified.has(s.id)) continue;
+      const matches = rules.some((r) =>
+        (r.base === "ALL" || r.base === s.base) &&
+        (r.type === "ALL" || r.type === s.type) &&
+        (r.direction === "ALL" || r.direction === s.direction)
+      );
+      if (matches) {
+        fireNotification(
+          `${s.base} · ${TYPE_LABEL.ko[s.type]}`,
+          s.kind === "pattern" ? s.descriptionKo : s.descKo,
+        );
+        notified.add(s.id);
+        changed = true;
+      }
+    }
+    if (changed) saveNotifiedSignalIds(notified);
+  }
 
   // 브라우저에서 저장된 보기·정렬·그룹 옵션 복원 (SSR 이후)
   useEffect(() => {
@@ -96,14 +163,21 @@ export default function SignalsPanel() {
       scanAllCryptoSignals(),
       scanTechnicalSignals(),
     ]);
-    if (patternRes.status === "fulfilled") setPatternSignals(patternRes.value);
-    if (techRes.status === "fulfilled") setTechSignals(techRes.value);
+    const newPattern = patternRes.status === "fulfilled" ? patternRes.value : [];
+    const newTech = techRes.status === "fulfilled" ? techRes.value : [];
+    if (patternRes.status === "fulfilled") setPatternSignals(newPattern);
+    if (techRes.status === "fulfilled") setTechSignals(newTech);
     if (patternRes.status === "rejected" && techRes.status === "rejected") {
       const reason = patternRes.reason;
       setError(reason instanceof Error ? reason.message : String(reason));
     }
     setLastScan(Date.now());
     setLoading(false);
+
+    checkSignalAlerts([
+      ...newPattern.map((s): PatternSignal => ({ ...s, kind: "pattern" })),
+      ...newTech.map((s): TechUnifiedSignal => ({ ...s, kind: "tech" })),
+    ]);
   }
 
   useEffect(() => {
@@ -215,6 +289,46 @@ export default function SignalsPanel() {
           ))}
         </div>
       </div>
+
+      {/* 시그널 알림 규칙 (브라우저 알림, localStorage 유지) */}
+      <div className={styles.viewRow}>
+        <span className={styles.filterLabel}>{C.fAlert}</span>
+        <div className={styles.viewToggles}>
+          {alertRules.map((r) => (
+            <span key={r.id} className={styles.togglePill}>
+              {r.base === "ALL" ? C.typeLabels.ALL : r.base}
+              {" / "}
+              {r.type === "ALL" ? C.typeLabels.ALL : TYPE_LABEL[language][r.type as UnifiedSignal["type"]]}
+              {" / "}
+              {r.direction === "ALL" ? C.dirLabels.ALL : C.dirLabels[r.direction]}
+              <button type="button" onClick={() => removeAlertRule(r.id)} aria-label="remove alert rule">×</button>
+            </span>
+          ))}
+          <button type="button" className={styles.togglePill} onClick={() => setShowAlertForm((v) => !v)}>
+            🔔 {C.alertAdd}
+          </button>
+        </div>
+      </div>
+      {showAlertForm && (
+        <div className={styles.viewRow}>
+          <select className={styles.alertSelect} value={alertBase} onChange={(e) => setAlertBase(e.target.value)}>
+            <option value="ALL">{C.typeLabels.ALL}</option>
+            {Object.keys(COIN_TINT).map((b) => <option key={b} value={b}>{b}</option>)}
+          </select>
+          <select className={styles.alertSelect} value={alertType} onChange={(e) => setAlertType(e.target.value)}>
+            <option value="ALL">{C.typeLabels.ALL}</option>
+            {(["HARMONIC", "DIVERGENCE", "ZONE_BREAK", "EMA_CROSS", "BB_SQUEEZE", "VOL_SPIKE", "STOCH_RSI"] as const).map((t) => (
+              <option key={t} value={t}>{C.typeLabels[t]}</option>
+            ))}
+          </select>
+          <select className={styles.alertSelect} value={alertDir} onChange={(e) => setAlertDir(e.target.value as "ALL" | "BULLISH" | "BEARISH")}>
+            <option value="ALL">{C.dirLabels.ALL}</option>
+            <option value="BULLISH">{C.dirLabels.BULLISH}</option>
+            <option value="BEARISH">{C.dirLabels.BEARISH}</option>
+          </select>
+          <button type="button" className={styles.pill} onClick={addAlertRule}>{C.alertSave}</button>
+        </div>
+      )}
 
       {/* 보기: 설명 / PRZ / 밀집 레이아웃 — 온오프 필터 (localStorage 유지) */}
       <div className={styles.viewRow}>
@@ -674,6 +788,9 @@ const COPY = {
       timeframe: "타임프레임",
     },
     groupBySymbol: "심볼별 그룹",
+    fAlert: "알림",
+    alertAdd: "알림 추가",
+    alertSave: "저장",
     typeLabels: {
       ALL:           "전체",
       PREDICTIVE:    "⏳ 예측",
@@ -722,6 +839,9 @@ const COPY = {
       timeframe: "Timeframe",
     },
     groupBySymbol: "Group by coin",
+    fAlert: "Alerts",
+    alertAdd: "Add alert",
+    alertSave: "Save",
     typeLabels: {
       ALL:           "All",
       PREDICTIVE:    "⏳ Predict",

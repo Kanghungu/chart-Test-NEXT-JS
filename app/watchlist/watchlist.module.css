@@ -78,3 +78,92 @@
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
+
+/* 가격 알림 */
+.alertRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.alertChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.67rem;
+  font-weight: 600;
+  color: var(--brand);
+  background: rgba(99, 102, 241, 0.1);
+  border: 1px solid rgba(99, 102, 241, 0.25);
+  border-radius: 999px;
+  padding: 0.16rem 0.3rem 0.16rem 0.55rem;
+  white-space: nowrap;
+}
+
+.alertChipDone {
+  color: var(--text-3);
+  background: rgba(255, 255, 255, 0.04);
+  border-color: var(--hair-2);
+}
+
+.alertChip button {
+  color: inherit;
+  opacity: 0.7;
+  font-size: 0.8rem;
+  line-height: 1;
+  padding: 0 0.15rem;
+}
+.alertChip button:hover { opacity: 1; }
+
+.alertAddBtn {
+  font-size: 0.67rem;
+  font-weight: 600;
+  color: var(--text-2);
+  background: transparent;
+  border: 1px solid var(--hair-2);
+  border-radius: 999px;
+  padding: 0.2rem 0.55rem;
+  white-space: nowrap;
+  transition: border-color 0.15s, color 0.15s;
+}
+.alertAddBtn:hover { color: var(--text); border-color: var(--brand); }
+
+.alertForm {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.alertSelect,
+.alertInput {
+  font-size: 0.67rem;
+  color: var(--text);
+  background: var(--bg-0);
+  border: 1px solid var(--hair-2);
+  border-radius: var(--radius-sm);
+  padding: 0.2rem 0.35rem;
+}
+
+.alertInput { width: 6.5rem; }
+
+.alertBtn,
+.alertBtnGhost {
+  font-size: 0.67rem;
+  font-weight: 600;
+  border-radius: var(--radius-sm);
+  padding: 0.2rem 0.5rem;
+  white-space: nowrap;
+}
+
+.alertBtn {
+  color: #fff;
+  background: var(--brand);
+}
+.alertBtn:hover { background: #5457e5; }
+
+.alertBtnGhost {
+  color: var(--text-2);
+  background: transparent;
+  border: 1px solid var(--hair-2);
+}

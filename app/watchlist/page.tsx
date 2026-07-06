@@ -6,6 +6,14 @@ import wStyles from "./watchlist.module.css";
 import { formatCurrency, formatPercent } from "@/lib/formatters";
 import { useLanguage } from "@/components/i18n/LanguageProvider";
 import { getLocalizedAssetName } from "@/lib/marketLocalization";
+import {
+  loadAlertRules,
+  saveAlertRules,
+  ensureNotificationPermission,
+  fireNotification,
+  makeAlertId,
+  type PriceAlertRule,
+} from "@/lib/alerts";
 
 type WatchGroup = "korea" | "stock";
 
@@ -45,6 +53,9 @@ const COPY = {
     emaAlign: "EMA 배열", week52: "52주 위치", volRatio: "거래량 배율",
     bullAlign: "정배열", bearAlign: "역배열", mixAlign: "혼합",
     overbought: "과매수", oversold: "과매도",
+    alertAdd: "알림 추가", alertAbove: "이상", alertBelow: "이하",
+    alertPricePlaceholder: "목표가", alertSave: "저장", alertCancel: "취소",
+    alertDone: "발동됨",
   },
   en: {
     eyebrow: "WATCHLIST HUB",
@@ -61,6 +72,9 @@ const COPY = {
     emaAlign: "EMA align", week52: "52-wk pos", volRatio: "Vol ratio",
     bullAlign: "Bull", bearAlign: "Bear", mixAlign: "Mixed",
     overbought: "Overbought", oversold: "Oversold",
+    alertAdd: "Add alert", alertAbove: "above", alertBelow: "below",
+    alertPricePlaceholder: "Target price", alertSave: "Save", alertCancel: "Cancel",
+    alertDone: "Triggered",
   }
 } as const;
 
@@ -158,21 +172,82 @@ export default function WatchlistPage() {
   const [techMap, setTechMap] = useState<Record<string, TechData>>({});
   const [group, setGroup] = useState<"all" | WatchGroup>("all");
   const [techLoading, setTechLoading] = useState(true);
+  const [rules, setRules] = useState<PriceAlertRule[]>([]);
+  const [openAlertFor, setOpenAlertFor] = useState<string | null>(null);
+  const [alertDirection, setAlertDirection] = useState<"above" | "below">("above");
+  const [alertPrice, setAlertPrice] = useState("");
 
-  // 가격 데이터 로드
+  // 가격 데이터 로드 + 가격 알림 체크
   useEffect(() => {
     let mounted = true;
     const load = async () => {
       try {
         const res = await fetch("/api/market/watchlist", { cache: "no-store" });
         const json = await res.json();
-        if (mounted) setItems(Array.isArray(json?.items) ? json.items : []);
+        const nextItems: WatchItem[] = Array.isArray(json?.items) ? json.items : [];
+        if (mounted) setItems(nextItems);
+
+        const allRules = loadAlertRules();
+        const priceRules = allRules.filter((r): r is PriceAlertRule => r.kind === "price");
+        let changed = false;
+        for (const rule of priceRules) {
+          if (!rule.enabled) continue;
+          const item = nextItems.find((i) => i.symbol === rule.symbol);
+          if (!item || item.price == null) continue;
+          const hit = rule.direction === "above"
+            ? item.price >= rule.targetPrice
+            : item.price <= rule.targetPrice;
+          if (hit) {
+            fireNotification(
+              `${rule.label}`,
+              rule.direction === "above"
+                ? `목표가 ${rule.targetPrice} 이상 도달 (현재 ${item.price})`
+                : `목표가 ${rule.targetPrice} 이하 도달 (현재 ${item.price})`,
+            );
+            rule.enabled = false;
+            rule.triggeredAt = Date.now();
+            changed = true;
+          }
+        }
+        if (changed) {
+          const others = allRules.filter((r) => r.kind !== "price");
+          saveAlertRules([...others, ...priceRules]);
+        }
+        if (mounted) setRules(priceRules);
       } catch { if (mounted) setItems([]); }
     };
     load();
     const timer = setInterval(load, 60000);
     return () => { mounted = false; clearInterval(timer); };
   }, []);
+
+  function persistPriceRules(next: PriceAlertRule[]) {
+    const others = loadAlertRules().filter((r) => r.kind !== "price");
+    saveAlertRules([...others, ...next]);
+    setRules(next);
+  }
+
+  async function addAlertRule(item: WatchItem) {
+    const price = parseFloat(alertPrice);
+    if (!isFinite(price) || price <= 0) return;
+    await ensureNotificationPermission();
+    const newRule: PriceAlertRule = {
+      id: makeAlertId(),
+      kind: "price",
+      symbol: item.symbol,
+      label: getLocalizedAssetName(item, language),
+      direction: alertDirection,
+      targetPrice: price,
+      enabled: true,
+    };
+    persistPriceRules([...rules, newRule]);
+    setOpenAlertFor(null);
+    setAlertPrice("");
+  }
+
+  function removeAlertRule(id: string) {
+    persistPriceRules(rules.filter((r) => r.id !== id));
+  }
 
   // 기술 지표 로드 (심볼별 병렬)
   useEffect(() => {
@@ -351,6 +426,50 @@ export default function WatchlistPage() {
                         )}
                       </div>
                     )}
+
+                    {/* 가격 알림 */}
+                    <div className={wStyles.alertRow}>
+                      {rules.filter((r) => r.symbol === item.symbol).map((r) => (
+                        <span key={r.id} className={`${wStyles.alertChip} ${!r.enabled ? wStyles.alertChipDone : ""}`}>
+                          {r.direction === "above" ? "≥" : "≤"} {r.targetPrice}
+                          {!r.enabled && ` · ${copy.alertDone}`}
+                          <button type="button" onClick={() => removeAlertRule(r.id)} aria-label="remove alert">×</button>
+                        </span>
+                      ))}
+                      {openAlertFor === item.symbol ? (
+                        <span className={wStyles.alertForm}>
+                          <select
+                            className={wStyles.alertSelect}
+                            value={alertDirection}
+                            onChange={(e) => setAlertDirection(e.target.value as "above" | "below")}
+                          >
+                            <option value="above">{copy.alertAbove}</option>
+                            <option value="below">{copy.alertBelow}</option>
+                          </select>
+                          <input
+                            className={wStyles.alertInput}
+                            type="number"
+                            value={alertPrice}
+                            placeholder={copy.alertPricePlaceholder}
+                            onChange={(e) => setAlertPrice(e.target.value)}
+                          />
+                          <button type="button" className={wStyles.alertBtn} onClick={() => addAlertRule(item)}>
+                            {copy.alertSave}
+                          </button>
+                          <button type="button" className={wStyles.alertBtnGhost} onClick={() => setOpenAlertFor(null)}>
+                            {copy.alertCancel}
+                          </button>
+                        </span>
+                      ) : (
+                        <button
+                          type="button"
+                          className={wStyles.alertAddBtn}
+                          onClick={() => { setOpenAlertFor(item.symbol); setAlertPrice(""); }}
+                        >
+                          🔔 {copy.alertAdd}
+                        </button>
+                      )}
+                    </div>
                   </div>
                 );
               })}
