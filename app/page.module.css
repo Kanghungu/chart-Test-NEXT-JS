@@ -256,34 +256,18 @@
 }
 
 /* ════════════════════════════════════════════════════════════
-   AI ORB PANEL
+   AI PANEL
 ════════════════════════════════════════════════════════════ */
 .aiPanel { padding: 1.25rem 1.35rem; display: flex; flex-direction: column; gap: 0.85rem; }
-.aiTop   { display: grid; grid-template-columns: 108px 1fr; gap: 1rem; align-items: center; }
+.aiTop   { display: grid; grid-template-columns: 40px 1fr; gap: 0.85rem; align-items: center; }
 
-.orb {
-  position: relative;
-  width: 108px; height: 108px;
+.aiIcon {
+  width: 40px; height: 40px;
+  border-radius: var(--radius-md);
+  background: var(--brand);
   display: flex; align-items: center; justify-content: center;
   flex-shrink: 0;
 }
-.orbCore {
-  position: absolute;
-  inset: 22%;
-  border-radius: 50%;
-  background: var(--brand);
-}
-.orbCore::after {
-  content: "";
-  position: absolute;
-  inset: 18% 30% 60% 18%;
-  background: rgba(255,255,255,0.35);
-  border-radius: 50%;
-}
-.orbSvg { position: absolute; inset: 0; }
-.ringA { animation: spin 18s linear infinite; transform-origin: center; }
-.ringB { animation: spin 28s linear infinite reverse; transform-origin: center; }
-@keyframes spin { to { transform: rotate(360deg); } }
 
 .aiName {
   font-size: 1.05rem; font-weight: 700; letter-spacing: -0.01em;

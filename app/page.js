@@ -194,29 +194,22 @@ export default function Home() {
             </div>
           </div>
 
-          {/* ── AI HOLOGRAM ── */}
+          {/* ── AI 어시스턴트 ── */}
           <div className={`${styles.panel} ${styles.aiPanel}`}>
             <div className={styles.eyebrow}>
               <span className={styles.eyebrowDot} />
               <span className={styles.eyebrowTitle}>AI 어시스턴트</span>
-              <span className={styles.eyebrowMeta}>홀로그램 코어 · 응답 대기</span>
+              <span className={styles.eyebrowMeta}>AI 코어 · 응답 대기</span>
             </div>
 
             <div className={styles.aiTop}>
-              {/* 홀로그램 ORB */}
-              <div className={styles.orb}>
-                <svg className={styles.orbSvg} viewBox="0 0 108 108">
-                  <circle className={styles.ringA} cx="54" cy="54" r="50" fill="none"
-                    stroke="rgba(125,211,252,0.35)" strokeDasharray="3 5" />
+              <div className={styles.aiIcon} aria-hidden="true">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                  <path
+                    d="M10 1.5L11.8 7.2L17.5 9L11.8 10.8L10 16.5L8.2 10.8L2.5 9L8.2 7.2L10 1.5Z"
+                    fill="#fff"
+                  />
                 </svg>
-                <svg className={styles.orbSvg} viewBox="0 0 108 108">
-                  <g className={styles.ringB}>
-                    <circle cx="54" cy="54" r="42" fill="none"
-                      stroke="rgba(196,181,253,0.3)" strokeDasharray="6 4" />
-                    <circle cx="54" cy="12" r="2" fill="var(--cy)" />
-                  </g>
-                </svg>
-                <div className={styles.orbCore} />
               </div>
 
               <div>

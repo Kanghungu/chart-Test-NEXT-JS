@@ -1,7 +1,7 @@
 import "./globals.css";
 import { JetBrains_Mono } from "next/font/google";
 import styles from "./layout.module.css";
-import HeaderBar from "@/components/layout/HeaderBar";
+import Sidebar from "@/components/layout/Sidebar";
 import FooterBar from "@/components/layout/FooterBar";
 import { LanguageProvider } from "@/components/i18n/LanguageProvider";
 
@@ -51,9 +51,11 @@ export default function RootLayout({ children }) {
       <body className={styles.body}>
         <LanguageProvider>
           <div className={styles.appShell}>
-            <HeaderBar />
-            <main className={styles.main}>{children}</main>
-            <FooterBar />
+            <Sidebar />
+            <div className={styles.mainCol}>
+              <main className={styles.main}>{children}</main>
+              <FooterBar />
+            </div>
           </div>
         </LanguageProvider>
       </body>
